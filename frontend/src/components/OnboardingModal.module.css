@@ -1,0 +1,61 @@
+.overlay {
+  position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.65); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.modal {
+  background: var(--card-bg); border-radius: 22px; width: 100%; max-width: 420px;
+  padding: 2rem 1.75rem 1.5rem; box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes popIn { from { opacity:0; transform: scale(0.88); } to { opacity:1; transform: scale(1); } }
+
+.dots { display: flex; gap: 0.4rem; justify-content: center; margin-bottom: 1.5rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: background 0.25s, transform 0.25s; }
+.dotOn { background: #d32f2f; transform: scale(1.25); }
+
+.step { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.heroIcon { font-size: 3rem; margin-bottom: 0.75rem; animation: bounce 0.6s ease; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+.title { font-size: 1.3rem; font-weight: 800; color: var(--heading); margin: 0 0 0.5rem; }
+.desc  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; margin: 0 0 1.25rem; }
+
+.highlights { width: 100%; margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.highlight {
+  display: flex; align-items: center; gap: 0.75rem; text-align: left;
+  background: var(--input-bg); border-radius: 10px; padding: 0.6rem 0.85rem;
+  font-size: 0.84rem; color: var(--text);
+}
+.highlight span:first-child { font-size: 1.1rem; flex-shrink: 0; }
+
+/* Blood group grid */
+.bgGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; width: 100%; margin-bottom: 1.25rem; }
+.bgBtn {
+  padding: 0.75rem 0.5rem; border-radius: 12px; border: 2px solid var(--border);
+  background: var(--input-bg); color: var(--text); font-size: 1rem; font-weight: 800;
+  cursor: pointer; transition: all 0.18s;
+}
+.bgBtn:hover { border-color: #d32f2f; color: #d32f2f; background: rgba(211,47,47,0.06); }
+.bgBtnOn { border-color: #d32f2f !important; background: rgba(211,47,47,0.12) !important; color: #d32f2f !important; transform: scale(1.06); }
+
+/* Location fields */
+.field { width: 100%; margin-bottom: 0.75rem; text-align: left; }
+.field label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--muted); margin-bottom: 0.3rem; }
+.field select {
+  width: 100%; padding: 0.6rem 0.8rem; border-radius: 10px;
+  border: 1.5px solid var(--border); background: var(--input-bg);
+  color: var(--text); font-size: 0.88rem;
+}
+
+/* Buttons */
+.primary {
+  width: 100%; padding: 0.85rem; border-radius: 13px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #d32f2f, #b71c1c); color: #fff;
+  font-size: 0.95rem; font-weight: 700; margin-bottom: 0.6rem;
+  box-shadow: 0 4px 16px rgba(211,47,47,0.3); transition: opacity 0.2s;
+}
+.primary:disabled { opacity: 0.45; cursor: default; }
+.primary:not(:disabled):hover { opacity: 0.9; }
+.skip { background: none; border: none; color: var(--muted); font-size: 0.8rem; cursor: pointer; padding: 0.25rem; }
+.skip:hover { color: var(--text); text-decoration: underline; }

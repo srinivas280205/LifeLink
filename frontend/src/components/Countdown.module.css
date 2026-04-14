@@ -1,0 +1,11 @@
+.pill {
+  display: inline-flex; align-items: center; gap: 0.2rem;
+  font-size: 0.71rem; font-weight: 700; border-radius: 20px;
+  padding: 0.18rem 0.55rem; white-space: nowrap; letter-spacing: 0.2px;
+}
+.ok       { background: rgba(56,142,60,0.14); color: #388e3c; }
+.warn     { background: rgba(245,124,0,0.14); color: #e65100; }
+.critical { background: rgba(211,47,47,0.18); color: #c62828; animation: pulse 1s infinite; }
+.dead     { background: rgba(158,158,158,0.14); color: #757575; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.55} }

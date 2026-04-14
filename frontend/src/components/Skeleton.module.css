@@ -1,0 +1,26 @@
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.bone {
+  background: linear-gradient(90deg, var(--border) 25%, color-mix(in srgb, var(--border) 60%, var(--card-bg)) 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+  display: block;
+}
+
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1rem 1.1rem;
+  box-shadow: var(--shadow);
+}
+
+.row { display: flex; align-items: center; gap: 0.75rem; }
+.col { display: flex; flex-direction: column; flex: 1; }
+
+.leaderRow {
+  display: flex; align-items: center; gap: 0;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 12px; padding: 0.7rem 1rem; margin-bottom: 0.5rem;
+}

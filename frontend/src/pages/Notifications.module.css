@@ -1,0 +1,67 @@
+.page { min-height: 100vh; background: var(--bg); padding: 1.5rem 1.25rem 3rem; }
+.inner { max-width: 640px; margin: 0 auto; }
+
+.header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+}
+.title { font-size: 1.4rem; font-weight: 800; color: var(--heading); margin: 0 0 0.2rem; }
+.sub { font-size: 0.83rem; color: var(--muted); margin: 0; }
+
+.markAllBtn {
+  padding: 0.45rem 1rem; border-radius: 20px; border: 1.5px solid #388e3c;
+  background: transparent; color: #388e3c; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; transition: all 0.18s;
+}
+.markAllBtn:hover { background: #388e3c; color: #fff; }
+
+/* Group */
+.group { margin-bottom: 1.25rem; }
+.groupLabel {
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 0.5rem; padding-left: 0.25rem;
+}
+
+/* Notification card */
+.notifCard {
+  display: flex; align-items: flex-start; gap: 0.9rem;
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 13px; padding: 0.9rem 1rem;
+  margin-bottom: 0.5rem; cursor: pointer;
+  box-shadow: var(--shadow); transition: transform 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.notifCard:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.unread { border-left: 3px solid #d32f2f; background: linear-gradient(135deg, var(--card-bg), #d32f2f06); }
+
+.iconWrap {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+}
+.body { flex: 1; min-width: 0; }
+.topRow { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.2rem; }
+.notifTitle { font-size: 0.9rem; font-weight: 700; color: var(--heading); }
+.time { font-size: 0.72rem; color: var(--muted); flex-shrink: 0; }
+.notifBody { font-size: 0.82rem; color: var(--text); margin: 0 0 0.4rem; line-height: 1.4; }
+.typePill {
+  font-size: 0.7rem; font-weight: 700; padding: 0.15rem 0.55rem;
+  border-radius: 20px; display: inline-block;
+}
+.unreadDot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #d32f2f; flex-shrink: 0; margin-top: 4px;
+}
+
+/* States */
+.loading { display: flex; justify-content: center; padding: 3rem; }
+.spinner {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: #d32f2f;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty { text-align: center; padding: 3.5rem 1rem; color: var(--muted); }
+.emptyIcon { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+.emptySub { font-size: 0.82rem; margin-top: 0.4rem; max-width: 300px; margin-inline: auto; line-height: 1.5; }

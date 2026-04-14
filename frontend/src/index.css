@@ -1,0 +1,75 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Light mode (default) ── */
+:root,
+[data-theme="light"] {
+  --red: #d32f2f;
+  --red-dark: #b71c1c;
+  --navy: #1a237e;
+
+  --bg: #f9f5f5;
+  --section-alt: #f3f4f9;
+  --nav-bg: rgba(255,255,255,0.85);
+  --footer-bg: #f1f1f6;
+  --card-bg: #ffffff;
+  --heading: #0f0f0f;
+  --text: #1a1a1a;
+  --muted: #666;
+  --border: #e5e5ea;
+  --badge-bg: rgba(211,47,47,0.07);
+  --badge-border: rgba(211,47,47,0.2);
+  --pill-bg: rgba(211,47,47,0.06);
+  --input-bg: #fafafa;
+  --shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+
+/* ── Dark mode ── */
+[data-theme="dark"] {
+  --bg: #0d0d0f;
+  --section-alt: #111318;
+  --nav-bg: rgba(13,13,15,0.88);
+  --footer-bg: #0a0a0c;
+  --card-bg: #1a1a1f;
+  --heading: #f0f0f5;
+  --text: #d0d0d8;
+  --muted: #888;
+  --border: #2a2a32;
+  --badge-bg: rgba(211,47,47,0.12);
+  --badge-border: rgba(211,47,47,0.3);
+  --pill-bg: rgba(211,47,47,0.1);
+  --input-bg: #14141a;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+input, select, button {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+a {
+  color: var(--red);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}

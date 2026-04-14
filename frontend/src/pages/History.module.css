@@ -1,0 +1,88 @@
+.page { min-height: 100vh; background: var(--bg); padding: 1.5rem 1.25rem; }
+.inner { max-width: 640px; margin: 0 auto; }
+.heading { font-size: 1.25rem; font-weight: 700; color: var(--heading); margin-bottom: 0.75rem; }
+.sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+.tabBtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.55rem 0.75rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--card-bg); color: var(--muted);
+  cursor: pointer; transition: all 0.18s;
+}
+.tabBtn:hover { border-color: #d32f2f; color: #d32f2f; }
+.tabActive { background: linear-gradient(135deg,#d32f2f,#b71c1c) !important; color: #fff !important; border-color: transparent !important; }
+.tabCount {
+  background: rgba(255,255,255,0.25); border-radius: 20px;
+  padding: 0.05rem 0.45rem; font-size: 0.72rem; font-weight: 700;
+}
+
+.card {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 14px; padding: 1.1rem 1.25rem; margin-bottom: 0.85rem;
+  box-shadow: var(--shadow);
+}
+.cardTop { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem; flex-wrap: wrap; }
+
+.bloodBadge {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c); color: #fff;
+  border-radius: 8px; padding: 0.2rem 0.65rem; font-size: 1rem; font-weight: 800;
+  box-shadow: 0 2px 6px rgba(211,47,47,0.35);
+}
+.urgencyLabel { font-size: 0.75rem; font-weight: 600; color: var(--muted); }
+.statusBadge {
+  font-size: 0.73rem; font-weight: 600; padding: 0.18rem 0.6rem; border-radius: 20px;
+  background: var(--badge-bg); border: 1px solid var(--badge-border); color: var(--text);
+  margin-left: auto;
+}
+.sosBadge {
+  font-size: 0.73rem; font-weight: 700; padding: 0.18rem 0.6rem; border-radius: 20px;
+  background: rgba(211,47,47,0.12); border: 1px solid rgba(211,47,47,0.3); color: #d32f2f;
+}
+
+.cardMeta { font-size: 0.83rem; color: var(--muted); margin-bottom: 0.3rem; }
+.cardMeta strong { color: var(--text); }
+
+.callLink { color: #d32f2f; font-weight: 700; text-decoration: none; font-size: 0.83rem; }
+.callLink:hover { text-decoration: underline; }
+
+.respondersSection { margin-top: 0.75rem; border-top: 1px solid var(--border); padding-top: 0.65rem; }
+.respondersTitle {
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 0.5rem;
+}
+.responderRow {
+  display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;
+  padding: 0.42rem 0.65rem; background: var(--input-bg);
+  border-radius: 8px; margin-bottom: 0.35rem;
+}
+.responderBlood {
+  background: linear-gradient(135deg, #d32f2f, #b71c1c); color: #fff;
+  border-radius: 6px; padding: 0.1rem 0.45rem; font-size: 0.75rem; font-weight: 800;
+}
+.responderName { font-size: 0.85rem; font-weight: 600; color: var(--heading); flex: 1; }
+.noResponders { font-size: 0.78rem; color: var(--muted); font-style: italic; margin-top: 0.4rem; }
+
+.cardDate { font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem; }
+
+.loading { display: flex; justify-content: center; align-items: center; height: 40vh; }
+.spinner {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 3px solid var(--border); border-top-color: #d32f2f;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+.emptyIcon { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+
+/* Repost */
+.cardFooter { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.25rem; }
+.repostBtn {
+  padding: 0.3rem 0.8rem; border-radius: 20px; border: 1.5px solid #1976d2;
+  background: transparent; color: #1976d2; font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+}
+.repostBtn:hover { background: #1976d2; color: #fff; }
+.repostBtn:disabled { opacity: 0.5; cursor: default; }
+.repostedTag { font-size: 0.75rem; font-weight: 700; color: #2e7d32; }

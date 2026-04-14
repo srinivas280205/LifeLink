@@ -1,0 +1,232 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg);
+  transition: background 0.25s;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: background 0.25s, border-color 0.25s;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.brand {
+  font-size: 1.75rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #d32f2f 0%, #1a237e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.tagline {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--heading);
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.2px;
+}
+
+.field input,
+.field select {
+  padding: 0.72rem 0.95rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.97rem;
+  color: var(--text);
+  background: var(--input-bg);
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.25s;
+  outline: none;
+  width: 100%;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
+.field select {
+  cursor: pointer;
+}
+
+.error {
+  font-size: 0.875rem;
+  color: #ef5350;
+  background: var(--badge-bg);
+  border: 1px solid var(--badge-border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.btn {
+  margin-top: 0.25rem;
+  padding: 0.82rem;
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 50%, #1a237e 100%);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 16px rgba(211,47,47,0.25);
+}
+
+.btn:hover:not(:disabled) {
+  opacity: 0.9;
+  box-shadow: 0 6px 20px rgba(211,47,47,0.35);
+}
+
+.btn:active:not(:disabled) { transform: scale(0.98); }
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.switch {
+  text-align: center;
+  margin-top: 1.25rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.switch a {
+  color: #d32f2f;
+  font-weight: 700;
+}
+
+/* ── OTP step ────────────────────────────────────────────── */
+.optionalTag { font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+
+.otpIcon { font-size: 2.8rem; text-align: center; margin-bottom: 0.5rem; }
+
+.otpHint {
+  font-size: 0.72rem; color: var(--muted);
+  font-style: italic; display: block; margin-top: 0.25rem;
+}
+
+.otpBoxes {
+  display: flex; gap: 0.6rem; justify-content: center; margin: 0.5rem 0;
+}
+
+.otpBox {
+  width: 46px; height: 56px;
+  text-align: center; font-size: 1.6rem; font-weight: 700;
+  border: 2px solid var(--border); border-radius: 12px;
+  background: var(--input-bg); color: var(--text);
+  outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+  caret-color: transparent;
+}
+.otpBox:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211,47,47,0.15);
+}
+
+.skipBtn {
+  background: none; border: none; color: var(--muted);
+  font-size: 0.82rem; cursor: pointer; text-decoration: underline;
+  padding: 0.25rem; margin-top: -0.25rem;
+}
+
+/* ── Welcome step ────────────────────────────────────────── */
+.welcomeWrap {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.75rem; padding: 1rem 0;
+}
+
+.welcomeHeart {
+  font-size: 3.5rem;
+  animation: welcomeBeat 0.8s ease-in-out infinite;
+}
+@keyframes welcomeBeat {
+  0%,100% { transform: scale(1);    }
+  14%      { transform: scale(1.2); }
+  28%      { transform: scale(1);   }
+  42%      { transform: scale(1.12);}
+  56%      { transform: scale(1);   }
+}
+
+.welcomeTitle {
+  font-size: 1.5rem; font-weight: 800; color: var(--heading);
+  background: linear-gradient(135deg, #d32f2f, #1a237e);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin: 0;
+}
+
+.welcomeSub {
+  font-size: 0.88rem; color: var(--muted); text-align: center;
+  line-height: 1.6; max-width: 320px;
+}
+
+.welcomeLoader {
+  display: flex; gap: 6px; margin-top: 0.5rem;
+}
+.welcomeLoader span {
+  width: 8px; height: 8px; border-radius: 50%; background: #d32f2f;
+  animation: dotBounce 1.2s ease-in-out infinite;
+}
+.welcomeLoader span:nth-child(2) { animation-delay: 0.2s; }
+.welcomeLoader span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dotBounce {
+  0%,80%,100% { transform: scale(0.7); opacity: 0.5; }
+  40%         { transform: scale(1.2); opacity: 1; }
+}
+
+.welcomeRedirect {
+  font-size: 0.78rem; color: var(--muted); font-style: italic;
+}

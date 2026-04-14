@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Dashed rings -->
+  <circle cx="58" cy="55" r="52" fill="none" stroke="#c8c8c8" stroke-width="1.2" stroke-dasharray="3.5,3.5"/>
+  <circle cx="58" cy="55" r="40" fill="none" stroke="#c8c8c8" stroke-width="1.2" stroke-dasharray="3.5,3.5"/>
+  <circle cx="58" cy="55" r="28" fill="none" stroke="#c8c8c8" stroke-width="1.2" stroke-dasharray="3.5,3.5"/>
+
+  <!-- Red heart -->
+  <path d="M56,78 C56,78 22,58 22,38 C22,28 31,21 42,25 C48,27 53,32 56,37 C59,32 64,27 70,25 C81,21 90,28 90,38 C90,42 88,47 85,51"
+        fill="#d32f2f"/>
+
+  <!-- Navy location pin (overlapping right side of heart) -->
+  <path d="M78,24 C69,24 62,31 62,40 C62,53 78,70 78,70 C78,70 94,53 94,40 C94,31 87,24 78,24 Z"
+        fill="#283593"/>
+
+  <!-- White circle inside pin -->
+  <circle cx="78" cy="40" r="9" fill="white" opacity="0.95"/>
+
+  <!-- Main ECG line across heart and pin -->
+  <polyline
+    points="22,44 32,44 38,44 43,31 47,57 52,44 60,44 68,40 72,48 76,44 90,44"
+    fill="none" stroke="white" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Mini ECG inside pin circle -->
+  <polyline
+    points="70,40 72,40 74,36 77,44 80,40 84,40"
+    fill="none" stroke="#d32f2f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
