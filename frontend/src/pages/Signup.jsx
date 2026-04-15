@@ -4,12 +4,21 @@ import styles from './Auth.module.css';
 import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const API = '';
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
-// ── Step 1: Registration form ────────────────────────────────────────────────
+// ── Step 1: Registration form ─────────────────────────────────────────────────
+// Format phone as "XXXXX XXXXX"
+function formatPhone(raw) {
+  const digits = raw.replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 5) return digits;
+  return digits.slice(0, 5) + ' ' + digits.slice(5);
+}
+
 function SignupForm({ onSuccess }) {
+  const { t } = useLanguage();
   const [form, setForm] = useState({
     fullName: '', phone: '', password: '',
     bloodGroup: '',
@@ -21,7 +30,8 @@ function SignupForm({ onSuccess }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(p => ({
-      ...p, [name]: value,
+      ...p,
+      [name]: name === 'phone' ? formatPhone(value) : value,
       ...(name === 'country' ? { state: '', district: '' } : {}),
       ...(name === 'state'   ? { district: '' } : {}),
     }));
@@ -38,11 +48,17 @@ function SignupForm({ onSuccess }) {
       const res = await fetch(`${API}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, phone: form.phone.replace(/\s/g, '') }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.message || 'Signup failed'); return; }
-      onSuccess({ token: data.token, user: data.user, phone: form.phone, name: form.fullName });
+      onSuccess({
+        token: data.token,
+        user: data.user,
+        phone: form.phone,
+        name: form.fullName,
+        devMode: data.devMode,
+      });
     } catch {
       setError('Unable to connect to server. Please try again.');
     } finally { setLoading(false); }
@@ -50,38 +66,41 @@ function SignupForm({ onSuccess }) {
 
   return (
     <>
-      <h2 className={styles.title}>Create account</h2>
-      <p className={styles.subtitle}>Join India's Emergency Blood Network</p>
+      <h2 className={styles.title}>{t('createAccount')}</h2>
+      <p className={styles.subtitle}>{t('joinNetwork')}</p>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.field}>
-          <label htmlFor="fullName">Full Name</label>
-          <input id="fullName" name="fullName" type="text" placeholder="Your full name"
+          <label htmlFor="fullName">{t('fullName')}</label>
+          <input id="fullName" name="fullName" type="text" placeholder={t('namePlaceholder')}
             value={form.fullName} onChange={handleChange} required autoComplete="name" />
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="phone">Phone Number</label>
-          <input id="phone" name="phone" type="tel" placeholder="10-digit mobile number"
-            maxLength={10} value={form.phone} onChange={handleChange} required autoComplete="tel" />
+          <label htmlFor="phone">{t('phone')}</label>
+          <input id="phone" name="phone" type="tel" placeholder="12345 12345"
+            maxLength={11} value={form.phone} onChange={handleChange} required
+            autoComplete="tel" inputMode="numeric" />
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="Minimum 6 characters"
+          <label htmlFor="password">{t('password')}</label>
+          <input id="password" name="password" type="password" placeholder={t('passwordPlaceholder')}
             value={form.password} onChange={handleChange} required minLength={6} autoComplete="new-password" />
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="bloodGroup">Your Blood Group <span className={styles.optionalTag}>(optional — set in profile later)</span></label>
+          <label htmlFor="bloodGroup">
+            {t('bloodGroup')} <span className={styles.optionalTag}>{t('bloodOptional')}</span>
+          </label>
           <select id="bloodGroup" name="bloodGroup" value={form.bloodGroup} onChange={handleChange}>
-            <option value="">I don't know / Skip</option>
+            <option value="">{t('dontKnow')}</option>
             {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
           </select>
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="country">Country</label>
+          <label htmlFor="country">{t('country')}</label>
           <select id="country" name="country" value={form.country} onChange={handleChange}>
             {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -89,9 +108,9 @@ function SignupForm({ onSuccess }) {
 
         {form.country === 'India' && (
           <div className={styles.field}>
-            <label htmlFor="state">State / UT</label>
+            <label htmlFor="state">{t('state')}</label>
             <select id="state" name="state" value={form.state} onChange={handleChange}>
-              <option value="">Select state</option>
+              <option value="">{t('selectState')}</option>
               {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
@@ -99,9 +118,9 @@ function SignupForm({ onSuccess }) {
 
         {districts.length > 0 && (
           <div className={styles.field}>
-            <label htmlFor="district">District</label>
+            <label htmlFor="district">{t('district')}</label>
             <select id="district" name="district" value={form.district} onChange={handleChange}>
-              <option value="">Select district</option>
+              <option value="">{t('selectDistrict')}</option>
               {districts.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
@@ -110,23 +129,38 @@ function SignupForm({ onSuccess }) {
         {error && <p className={styles.error}>{error}</p>}
 
         <button type="submit" className={styles.btn} disabled={loading}>
-          {loading ? 'Creating account…' : 'Create Account →'}
+          {loading ? t('creating') : `${t('createAccount')} →`}
         </button>
       </form>
 
       <p className={styles.switch}>
-        Already have an account? <Link to="/login">Sign in</Link>
+        {t('alreadyHaveAccount')} <Link to="/login">{t('login')}</Link>
       </p>
     </>
   );
 }
 
 // ── Step 2: OTP verification ──────────────────────────────────────────────────
-function OtpStep({ phone, name, token, user, onVerified }) {
-  const [otp, setOtp]         = useState(['', '', '', '', '', '']);
-  const [error, setError]     = useState('');
-  const [loading, setLoading] = useState(false);
+function OtpStep({ phone, name, token, user, devMode, onVerified }) {
+  const { t } = useLanguage();
+  const [otp, setOtp]           = useState(['', '', '', '', '', '']);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState('');
+  const [countdown, setCountdown] = useState(30); // resend cooldown seconds
   const inputs = useRef([]);
+
+  // Countdown timer for resend button
+  const startCountdown = () => {
+    setCountdown(30);
+    const id = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) { clearInterval(id); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const handleKey = (i, e) => {
     const val = e.target.value.replace(/\D/, '');
@@ -153,7 +187,7 @@ function OtpStep({ phone, name, token, user, onVerified }) {
   const handleVerify = async (e) => {
     e.preventDefault();
     const code = otp.join('');
-    if (code.length < 6) { setError('Enter all 6 digits'); return; }
+    if (code.length < 6) { setError(t('enterOtp')); return; }
     setLoading(true); setError('');
     try {
       const res = await fetch(`${API}/api/auth/verify-otp`, {
@@ -168,13 +202,32 @@ function OtpStep({ phone, name, token, user, onVerified }) {
     finally { setLoading(false); }
   };
 
+  const handleResend = async () => {
+    if (countdown > 0 || resending) return;
+    setResending(true); setResendMsg(''); setError('');
+    try {
+      const res = await fetch(`${API}/api/auth/resend-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      setResendMsg(data.message || 'OTP resent');
+      startCountdown();
+    } catch { setResendMsg('Failed to resend. Try again.'); }
+    finally { setResending(false); }
+  };
+
   return (
     <>
       <div className={styles.otpIcon}>🔐</div>
-      <h2 className={styles.title}>Verify your phone</h2>
+      <h2 className={styles.title}>{t('verifyPhone')}</h2>
       <p className={styles.subtitle}>
-        OTP sent to <strong>{phone.replace(/(\d{2})(\d{4})(\d{4})/, '$1XXXX$3')}</strong>
-        <br /><span className={styles.otpHint}>(Demo: enter any 6 digits)</span>
+        {t('otpSentTo')} <strong>{phone.replace(/(\d{2})(\d{4})(\d{4})/, '$1XXXX$3')}</strong>
+        {devMode && (
+          <><br /><span className={styles.otpHint}>⚠️ Dev mode — OTP printed to server console</span></>
+        )}
+        <br /><span className={styles.otpHint}>⏱ {t('otpExpiry')}</span>
       </p>
 
       <form onSubmit={handleVerify} className={styles.form}>
@@ -193,14 +246,29 @@ function OtpStep({ phone, name, token, user, onVerified }) {
           ))}
         </div>
 
-        {error && <p className={styles.error}>{error}</p>}
+        {error   && <p className={styles.error}>{error}</p>}
+        {resendMsg && <p className={styles.resendMsg}>{resendMsg}</p>}
 
         <button type="submit" className={styles.btn} disabled={loading || otp.join('').length < 6}>
-          {loading ? 'Verifying…' : '✅ Verify & Continue'}
+          {loading ? t('verifying') : t('verifyBtn')}
+        </button>
+
+        {/* Resend OTP */}
+        <button
+          type="button"
+          className={styles.resendBtn}
+          onClick={handleResend}
+          disabled={countdown > 0 || resending}
+        >
+          {resending
+            ? t('resending')
+            : countdown > 0
+              ? `${t('resendOtp')} (${countdown}s)`
+              : t('resendOtp')}
         </button>
 
         <button type="button" className={styles.skipBtn} onClick={() => onVerified({ token, user })}>
-          Skip for now
+          {t('skipForNow')}
         </button>
       </form>
     </>
@@ -209,10 +277,13 @@ function OtpStep({ phone, name, token, user, onVerified }) {
 
 // ── Step 3: Welcome screen ────────────────────────────────────────────────────
 function WelcomeStep({ name }) {
+  const { lang } = useLanguage();
   return (
     <div className={styles.welcomeWrap}>
       <div className={styles.welcomeHeart}>❤️</div>
-      <h2 className={styles.welcomeTitle}>Welcome, {name.split(' ')[0]}!</h2>
+      <h2 className={styles.welcomeTitle}>
+        {lang === 'ta' ? `வருக, ${name.split(' ')[0]}!` : `Welcome, ${name.split(' ')[0]}!`}
+      </h2>
       <p className={styles.welcomeSub}>
         Your account is ready. You can now request blood or help others by responding to emergency broadcasts near you.
       </p>
@@ -228,6 +299,7 @@ function WelcomeStep({ name }) {
 export default function Signup() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { lang, toggle: toggleLang } = useLanguage();
   const [step, setStep]       = useState('form');
   const [session, setSession] = useState(null);
 
@@ -246,6 +318,7 @@ export default function Signup() {
 
   return (
     <div className={styles.page}>
+      {/* Theme toggle */}
       <button
         onClick={toggle}
         aria-label="Toggle theme"
@@ -255,6 +328,30 @@ export default function Signup() {
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
+
+      {/* Language toggle — top-left, shows current language with heading */}
+      <div
+        onClick={toggleLang}
+        role="button"
+        tabIndex={0}
+        aria-label="Change language"
+        onKeyDown={e => e.key === 'Enter' && toggleLang()}
+        style={{ position:'fixed', top:'1rem', left:'1rem', display:'flex', flexDirection:'column',
+          alignItems:'center', gap:'2px', cursor:'pointer', zIndex:10 }}
+      >
+        <span style={{ fontSize:'0.58rem', color:'var(--muted)', fontWeight:600,
+          letterSpacing:'0.4px', textTransform:'uppercase' }}>
+          Change Language
+        </span>
+        <span style={{ background:'var(--card-bg)', border:'1px solid var(--border)',
+          borderRadius:14, padding:'0.2rem 0.75rem', fontSize:'0.8rem', fontWeight:800,
+          color:'var(--text)', display:'flex', alignItems:'center', gap:'0.3rem' }}>
+          <span style={{ width:7, height:7, borderRadius:'50%', background:'#4caf50',
+            display:'inline-block', boxShadow:'0 0 5px #4caf50' }} />
+          {lang === 'en' ? 'English' : 'தமிழ்'}
+        </span>
+      </div>
+
       <div className={styles.card}>
         <div className={styles.logo}>
           <BrandLogo size={72} pulse />
@@ -269,6 +366,7 @@ export default function Signup() {
             name={session.name}
             token={session.token}
             user={session.user}
+            devMode={session.devMode}
             onVerified={handleVerified}
           />
         )}

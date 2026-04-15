@@ -72,6 +72,50 @@
 }
 .themeBtn:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.9); }
 
+/* Language toggle — shows current language with "Change Language" label */
+.langWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  cursor: pointer;
+  position: relative;
+}
+.langLabel {
+  font-size: 0.58rem;
+  color: rgba(255,255,255,0.45);
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  line-height: 1;
+  margin-bottom: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.langBtn {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 14px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+  color: #fff;
+  letter-spacing: 0.2px;
+  transition: background 0.18s, border-color 0.18s;
+  white-space: nowrap;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.langBtn:hover { background: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.5); }
+.langDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #69f0ae;
+  box-shadow: 0 0 5px #69f0ae;
+  flex-shrink: 0;
+}
+
 .userPill {
   display: flex; align-items: center; gap: 0.35rem;
   background: rgba(255,82,82,0.12); border: 1px solid rgba(255,82,82,0.25);

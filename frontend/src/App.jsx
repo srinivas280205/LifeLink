@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './context/LanguageContext';
 import SplashScreen from './components/SplashScreen';
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -67,6 +68,7 @@ export default function App() {
   return (
     <ErrorBoundary>
     <ThemeProvider>
+    <LanguageProvider>
       <InstallPrompt />
       <OfflineBanner />
       <SplashGate>
@@ -74,6 +76,7 @@ export default function App() {
           <AnimatedRoutes />
         </BrowserRouter>
       </SplashGate>
+    </LanguageProvider>
     </ThemeProvider>
     </ErrorBoundary>
   );

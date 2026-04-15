@@ -1,11 +1,49 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const express  = require('express');
+const bcrypt   = require('bcryptjs');
+const jwt      = require('jsonwebtoken');
+const axios    = require('axios');
+const User     = require('../models/User');
+const OTP      = require('../models/OTP');
 
 const router = express.Router();
 
-// POST /api/auth/signup
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+/**
+ * Send OTP via Fast2SMS (India SMS gateway).
+ * Falls back to console log if FAST2SMS_API_KEY not set (dev mode).
+ */
+async function sendSMS(phone, otp) {
+  const apiKey = process.env.FAST2SMS_API_KEY;
+  if (!apiKey) {
+    // Dev mode — print to console instead of sending SMS
+    console.log(`📱 [DEV OTP] Phone: ${phone} → OTP: ${otp}`);
+    return { success: true, dev: true };
+  }
+
+  try {
+    const res = await axios.get('https://www.fast2sms.com/dev/bulkV2', {
+      params: {
+        authorization: apiKey,
+        route:           'otp',
+        variables_values: otp,
+        flash:           0,
+        numbers:         phone,
+      },
+      timeout: 8000,
+    });
+    console.log(`📱 SMS sent to ${phone}:`, res.data);
+    return { success: true };
+  } catch (err) {
+    console.error('Fast2SMS error:', err?.response?.data || err.message);
+    return { success: false, error: err?.response?.data || err.message };
+  }
+}
+
+// ── POST /api/auth/signup ─────────────────────────────────────────────────────
 router.post('/signup', async (req, res) => {
   try {
     const { fullName, phone, password, bloodGroup, country, state, district } = req.body;
@@ -26,9 +64,9 @@ router.post('/signup', async (req, res) => {
       phone,
       password: hashedPassword,
       bloodGroup: bloodGroup || '',
-      country:   country  || 'India',
-      state:     state    || '',
-      district:  district || '',
+      country:    country   || 'India',
+      state:      state     || '',
+      district:   district  || '',
     });
 
     // First user ever → automatically becomes admin
@@ -40,6 +78,18 @@ router.post('/signup', async (req, res) => {
 
     await user.save();
 
+    // Generate + send OTP
+    const otp       = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await OTP.findOneAndUpdate(
+      { phone },
+      { phone, otp, attempts: 0, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    const smsResult = await sendSMS(phone, otp);
+
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
@@ -47,7 +97,11 @@ router.post('/signup', async (req, res) => {
     );
 
     res.status(201).json({
-      message: 'Account created successfully',
+      message: smsResult.dev
+        ? 'Account created — OTP printed to server console (dev mode)'
+        : 'Account created — OTP sent to your mobile',
+      otpSent: true,
+      devMode: !!smsResult.dev,
       token,
       user: {
         id:          user._id,
@@ -64,12 +118,10 @@ router.post('/signup', async (req, res) => {
     });
   } catch (err) {
     console.error('Signup error:', err.message);
-    // Mongoose validation errors → send 400 with readable message
     if (err.name === 'ValidationError') {
       const msg = Object.values(err.errors).map(e => e.message).join('. ');
       return res.status(400).json({ message: msg });
     }
-    // Duplicate key (race condition after findOne check)
     if (err.code === 11000) {
       return res.status(409).json({ message: 'Phone number already registered' });
     }
@@ -77,7 +129,82 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
+// ── POST /api/auth/resend-otp ────────────────────────────────────────────────
+router.post('/resend-otp', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: 'Phone is required' });
+
+    const user = await User.findOne({ phone });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ message: 'Phone already verified' });
+
+    const otp       = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    await OTP.findOneAndUpdate(
+      { phone },
+      { phone, otp, attempts: 0, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    const smsResult = await sendSMS(phone, otp);
+    if (!smsResult.success && !smsResult.dev) {
+      return res.status(502).json({ message: 'Failed to send SMS. Try again shortly.' });
+    }
+
+    res.json({ message: smsResult.dev ? 'OTP printed to console (dev)' : 'OTP resent successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ── POST /api/auth/verify-otp ────────────────────────────────────────────────
+router.post('/verify-otp', async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!otp || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: 'Enter a valid 6-digit OTP' });
+    }
+
+    const record = await OTP.findOne({ phone });
+
+    if (!record) {
+      return res.status(400).json({ message: 'OTP expired or not sent. Request a new one.' });
+    }
+
+    // Too many wrong attempts
+    if (record.attempts >= 5) {
+      await OTP.deleteOne({ phone });
+      return res.status(400).json({ message: 'Too many wrong attempts. Request a new OTP.' });
+    }
+
+    if (record.otp !== otp) {
+      await OTP.findOneAndUpdate({ phone }, { $inc: { attempts: 1 } });
+      const left = 4 - record.attempts;
+      return res.status(400).json({ message: `Wrong OTP. ${left} attempt(s) left.` });
+    }
+
+    // ✅ Correct OTP
+    await OTP.deleteOne({ phone });
+
+    const user = await User.findOneAndUpdate(
+      { phone },
+      { isVerified: true },
+      { new: true }
+    ).select('-password');
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({ message: 'Phone verified successfully', user });
+  } catch (err) {
+    console.error('verify-otp error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ── POST /api/auth/login ──────────────────────────────────────────────────────
 router.post('/login', async (req, res) => {
   try {
     const { phone, password } = req.body;
@@ -121,25 +248,6 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err.message);
     res.status(500).json({ message: 'Server error during login' });
-  }
-});
-
-// POST /api/auth/verify-otp — mock: any 6-digit code works
-router.post('/verify-otp', async (req, res) => {
-  try {
-    const { phone, otp } = req.body;
-    if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
-      return res.status(400).json({ message: 'Enter a valid 6-digit OTP' });
-    }
-    const user = await User.findOneAndUpdate(
-      { phone },
-      { isVerified: true },
-      { new: true }
-    ).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json({ message: 'Phone verified successfully', user });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
   }
 });
 
