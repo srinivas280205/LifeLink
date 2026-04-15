@@ -4,8 +4,14 @@ const webpush = require('web-push');
 const jwt     = require('jsonwebtoken');
 const PushSub = require('../models/PushSubscription');
 
+// Auto-fix: ensure VAPID_MAILTO has mailto: prefix
+const vapidMailto = (() => {
+  const m = process.env.VAPID_MAILTO || 'mailto:lifelink@example.com';
+  return m.startsWith('mailto:') ? m : `mailto:${m}`;
+})();
+
 webpush.setVapidDetails(
-  process.env.VAPID_MAILTO,
+  vapidMailto,
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY,
 );
