@@ -14,13 +14,17 @@
   box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
 }
 
-/* ── Flag image ────────────────────────────────────────────── */
-.flagImg {
+/* ── Flag icon (flag-icons library: fi fi-xx) ──────────────── */
+.flagIcon {
+  width: 1.5em !important;
+  height: 1em !important;
   border-radius: 3px;
-  object-fit: cover;
-  display: block;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   flex-shrink: 0;
+  display: inline-block;
+  background-size: cover;
+  background-position: center;
+  vertical-align: middle;
 }
 
 /* ── Country trigger area ──────────────────────────────────── */

@@ -2,40 +2,37 @@ import { useState, useRef, useEffect } from 'react';
 import COUNTRY_CODES from '../data/countryCodes';
 import styles from './PhoneInput.module.css';
 
-/** Real flag image from flagcdn.com — works on ALL browsers including Windows */
-function Flag({ iso, size = 24 }) {
+/**
+ * Flag using flag-icons CSS library — works on all browsers, no CDN needed.
+ * Uses class "fi fi-{iso}" e.g. "fi fi-in" for India 🇮🇳
+ */
+function Flag({ iso, className = '' }) {
   return (
-    <img
-      src={`https://flagcdn.com/w${size * 2}/${iso}.png`}
-      srcSet={`https://flagcdn.com/w${size * 2}/${iso}.png 2x`}
-      width={size}
-      height={size * 0.67}
-      alt={iso.toUpperCase()}
-      className={styles.flagImg}
-      loading="lazy"
-      onError={e => { e.currentTarget.style.display = 'none'; }}
+    <span
+      className={`fi fi-${iso} ${styles.flagIcon} ${className}`}
+      title={iso.toUpperCase()}
+      aria-hidden="true"
     />
   );
 }
 
 /**
  * PhoneInput — country code picker + formatted number field.
- *
  * Props:
  *   value    { countryCode: '+91', number: '93447 63919' }
  *   onChange (newValue) => void
  *   required bool
  */
 export default function PhoneInput({ value, onChange, required = true }) {
-  const [open, setOpen]       = useState(false);
-  const [search, setSearch]   = useState('');
-  const dropRef  = useRef(null);
+  const [open, setOpen]     = useState(false);
+  const [search, setSearch] = useState('');
+  const dropRef   = useRef(null);
   const searchRef = useRef(null);
 
   const selected = COUNTRY_CODES.find(c => c.code === value.countryCode)
     || COUNTRY_CODES[0];
 
-  // Close dropdown on outside click
+  // Close on outside click
   useEffect(() => {
     const handler = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target)) {
@@ -52,7 +49,6 @@ export default function PhoneInput({ value, onChange, required = true }) {
     if (open) setTimeout(() => searchRef.current?.focus(), 50);
   }, [open]);
 
-  // Format phone: split at halfway point with a space
   const formatDigits = (raw, max) => {
     const digits = raw.replace(/\D/g, '').slice(0, max);
     const half = Math.ceil(max / 2);
@@ -79,13 +75,14 @@ export default function PhoneInput({ value, onChange, required = true }) {
     c.code.includes(search)
   );
 
-  const maxChars = selected.maxDigits + Math.floor(selected.maxDigits / 5);
-  const half     = Math.ceil(selected.maxDigits / 2);
+  const maxChars    = selected.maxDigits + Math.floor(selected.maxDigits / 5);
+  const half        = Math.ceil(selected.maxDigits / 2);
   const placeholder = `${'X'.repeat(half)} ${'X'.repeat(selected.maxDigits - half)}`;
 
   return (
     <div className={styles.wrap}>
-      {/* ── Country trigger ── */}
+
+      {/* ── Country code trigger ───────────────────────────── */}
       <div ref={dropRef} className={styles.codeTrigger}>
         <button
           type="button"
@@ -95,14 +92,15 @@ export default function PhoneInput({ value, onChange, required = true }) {
           aria-expanded={open}
           aria-haspopup="listbox"
         >
-          <Flag iso={selected.iso} size={22} />
+          <Flag iso={selected.iso} />
           <span className={styles.code}>{selected.code}</span>
           <span className={`${styles.arrow} ${open ? styles.arrowUp : ''}`}>▾</span>
         </button>
 
-        {/* ── Dropdown ── */}
+        {/* ── Dropdown ─────────────────────────────────────── */}
         {open && (
           <div className={styles.dropdown} role="listbox">
+
             {/* Search */}
             <div className={styles.searchWrap}>
               <span className={styles.searchIcon}>🔍</span>
@@ -110,7 +108,7 @@ export default function PhoneInput({ value, onChange, required = true }) {
                 ref={searchRef}
                 className={styles.searchInput}
                 type="text"
-                placeholder="Search country or code…"
+                placeholder="Search country or +code…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -128,7 +126,7 @@ export default function PhoneInput({ value, onChange, required = true }) {
                   role="option"
                   aria-selected={country.code === value.countryCode}
                 >
-                  <Flag iso={country.iso} size={20} />
+                  <Flag iso={country.iso} />
                   <span className={styles.itemName}>{country.name}</span>
                   <span className={styles.itemCode}>{country.code}</span>
                   {country.code === value.countryCode && (
@@ -141,7 +139,7 @@ export default function PhoneInput({ value, onChange, required = true }) {
         )}
       </div>
 
-      {/* ── Number field ── */}
+      {/* ── Phone number input ────────────────────────────── */}
       <input
         className={styles.numberInput}
         type="tel"
@@ -158,7 +156,7 @@ export default function PhoneInput({ value, onChange, required = true }) {
 }
 
 /**
- * toApiPhone — combines country code + digits for backend
+ * Combine country code + digits for API
  * { countryCode: '+91', number: '93447 63919' } → '+919344763919'
  */
 export function toApiPhone({ countryCode, number }) {
