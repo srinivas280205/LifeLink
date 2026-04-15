@@ -2,24 +2,40 @@ import { useState, useRef, useEffect } from 'react';
 import COUNTRY_CODES from '../data/countryCodes';
 import styles from './PhoneInput.module.css';
 
+/** Real flag image from flagcdn.com — works on ALL browsers including Windows */
+function Flag({ iso, size = 24 }) {
+  return (
+    <img
+      src={`https://flagcdn.com/w${size * 2}/${iso}.png`}
+      srcSet={`https://flagcdn.com/w${size * 2}/${iso}.png 2x`}
+      width={size}
+      height={size * 0.67}
+      alt={iso.toUpperCase()}
+      className={styles.flagImg}
+      loading="lazy"
+      onError={e => { e.currentTarget.style.display = 'none'; }}
+    />
+  );
+}
+
 /**
  * PhoneInput — country code picker + formatted number field.
  *
  * Props:
- *   value        { countryCode: '+91', number: '93447 63919' }
- *   onChange     (newValue) => void
- *   placeholder  optional — defaults to country's digit hint
- *   required     bool
+ *   value    { countryCode: '+91', number: '93447 63919' }
+ *   onChange (newValue) => void
+ *   required bool
  */
 export default function PhoneInput({ value, onChange, required = true }) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const dropRef = useRef(null);
+  const [open, setOpen]       = useState(false);
+  const [search, setSearch]   = useState('');
+  const dropRef  = useRef(null);
+  const searchRef = useRef(null);
 
   const selected = COUNTRY_CODES.find(c => c.code === value.countryCode)
     || COUNTRY_CODES[0];
 
-  // Close dropdown when clicking outside
+  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
       if (dropRef.current && !dropRef.current.contains(e.target)) {
@@ -31,7 +47,12 @@ export default function PhoneInput({ value, onChange, required = true }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Format phone digits as "XXXXX XXXXX" (split at half of maxDigits)
+  // Auto-focus search when dropdown opens
+  useEffect(() => {
+    if (open) setTimeout(() => searchRef.current?.focus(), 50);
+  }, [open]);
+
+  // Format phone: split at halfway point with a space
   const formatDigits = (raw, max) => {
     const digits = raw.replace(/\D/g, '').slice(0, max);
     const half = Math.ceil(max / 2);
@@ -42,7 +63,6 @@ export default function PhoneInput({ value, onChange, required = true }) {
   const handleCountrySelect = (country) => {
     setOpen(false);
     setSearch('');
-    // Reformat existing number with new country's maxDigits
     const cleanDigits = value.number.replace(/\D/g, '');
     onChange({
       countryCode: country.code,
@@ -51,63 +71,69 @@ export default function PhoneInput({ value, onChange, required = true }) {
   };
 
   const handleNumberChange = (e) => {
-    const formatted = formatDigits(e.target.value, selected.maxDigits);
-    onChange({ ...value, number: formatted });
+    onChange({ ...value, number: formatDigits(e.target.value, selected.maxDigits) });
   };
 
-  // Filter countries by search
   const filtered = COUNTRY_CODES.filter(c =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.code.includes(search)
   );
 
-  // Max chars = digits + spaces
   const maxChars = selected.maxDigits + Math.floor(selected.maxDigits / 5);
+  const half     = Math.ceil(selected.maxDigits / 2);
+  const placeholder = `${'X'.repeat(half)} ${'X'.repeat(selected.maxDigits - half)}`;
 
   return (
     <div className={styles.wrap}>
-      {/* Country code trigger */}
-      <div className={styles.codeTrigger} ref={dropRef}>
+      {/* ── Country trigger ── */}
+      <div ref={dropRef} className={styles.codeTrigger}>
         <button
           type="button"
-          className={styles.codeBtn}
-          onClick={() => { setOpen(o => !o); setSearch(''); }}
+          className={`${styles.codeBtn} ${open ? styles.codeBtnOpen : ''}`}
+          onClick={() => setOpen(o => !o)}
           aria-label="Select country code"
           aria-expanded={open}
+          aria-haspopup="listbox"
         >
-          <span className={styles.flag}>{selected.flag}</span>
+          <Flag iso={selected.iso} size={22} />
           <span className={styles.code}>{selected.code}</span>
           <span className={`${styles.arrow} ${open ? styles.arrowUp : ''}`}>▾</span>
         </button>
 
-        {/* Dropdown */}
+        {/* ── Dropdown ── */}
         {open && (
-          <div className={styles.dropdown}>
+          <div className={styles.dropdown} role="listbox">
+            {/* Search */}
             <div className={styles.searchWrap}>
+              <span className={styles.searchIcon}>🔍</span>
               <input
+                ref={searchRef}
                 className={styles.searchInput}
                 type="text"
-                placeholder="Search country…"
+                placeholder="Search country or code…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                autoFocus
               />
             </div>
-            <ul className={styles.list} role="listbox">
+
+            <ul className={styles.list}>
               {filtered.length === 0 && (
                 <li className={styles.noResult}>No country found</li>
               )}
               {filtered.map(country => (
                 <li
-                  key={country.code + country.name}
+                  key={country.code + country.iso}
                   className={`${styles.item} ${country.code === value.countryCode ? styles.itemActive : ''}`}
                   onClick={() => handleCountrySelect(country)}
                   role="option"
                   aria-selected={country.code === value.countryCode}
                 >
-                  <span className={styles.itemFlag}>{country.flag}</span>
+                  <Flag iso={country.iso} size={20} />
                   <span className={styles.itemName}>{country.name}</span>
                   <span className={styles.itemCode}>{country.code}</span>
+                  {country.code === value.countryCode && (
+                    <span className={styles.checkMark}>✓</span>
+                  )}
                 </li>
               ))}
             </ul>
@@ -115,12 +141,12 @@ export default function PhoneInput({ value, onChange, required = true }) {
         )}
       </div>
 
-      {/* Number input */}
+      {/* ── Number field ── */}
       <input
         className={styles.numberInput}
         type="tel"
         inputMode="numeric"
-        placeholder={`${'X'.repeat(Math.ceil(selected.maxDigits / 2))} ${'X'.repeat(Math.floor(selected.maxDigits / 2))}`}
+        placeholder={placeholder}
         value={value.number}
         onChange={handleNumberChange}
         maxLength={maxChars}
@@ -132,8 +158,8 @@ export default function PhoneInput({ value, onChange, required = true }) {
 }
 
 /**
- * Helper: convert PhoneInput value → plain phone string for API
- * e.g. { countryCode: '+91', number: '93447 63919' } → '+919344763919'
+ * toApiPhone — combines country code + digits for backend
+ * { countryCode: '+91', number: '93447 63919' } → '+919344763919'
  */
 export function toApiPhone({ countryCode, number }) {
   return countryCode + number.replace(/\s/g, '');
