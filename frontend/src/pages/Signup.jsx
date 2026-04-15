@@ -5,23 +5,18 @@ import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationDat
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import PhoneInput, { toApiPhone } from '../components/PhoneInput';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 // ── Step 1: Registration form ─────────────────────────────────────────────────
-// Format phone as "XXXXX XXXXX"
-function formatPhone(raw) {
-  const digits = raw.replace(/\D/g, '').slice(0, 10);
-  if (digits.length <= 5) return digits;
-  return digits.slice(0, 5) + ' ' + digits.slice(5);
-}
-
 function SignupForm({ onSuccess }) {
   const { t } = useLanguage();
+  const [phone, setPhone] = useState({ countryCode: '+91', number: '' });
   const [form, setForm] = useState({
-    fullName: '', phone: '', password: '',
+    fullName: '', password: '',
     bloodGroup: '',
     country: 'India', state: '', district: '',
   });
@@ -31,8 +26,7 @@ function SignupForm({ onSuccess }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm(p => ({
-      ...p,
-      [name]: name === 'phone' ? formatPhone(value) : value,
+      ...p, [name]: value,
       ...(name === 'country' ? { state: '', district: '' } : {}),
       ...(name === 'state'   ? { district: '' } : {}),
     }));
@@ -45,18 +39,19 @@ function SignupForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); setError('');
+    const apiPhone = toApiPhone(phone); // e.g. "+919344763919"
     try {
       const res = await fetch(`${API}/api/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, phone: form.phone.replace(/\s/g, '') }),
+        body: JSON.stringify({ ...form, phone: apiPhone }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.message || 'Signup failed'); return; }
       onSuccess({
         token: data.token,
         user: data.user,
-        phone: form.phone,
+        phone: apiPhone,
         name: form.fullName,
         devMode: data.devMode,
       });
@@ -77,11 +72,10 @@ function SignupForm({ onSuccess }) {
             value={form.fullName} onChange={handleChange} required autoComplete="name" />
         </div>
 
+        {/* Phone with country code picker */}
         <div className={styles.field}>
-          <label htmlFor="phone">{t('phone')}</label>
-          <input id="phone" name="phone" type="tel" placeholder="12345 12345"
-            maxLength={11} value={form.phone} onChange={handleChange} required
-            autoComplete="tel" inputMode="numeric" />
+          <label>{t('phone')}</label>
+          <PhoneInput value={phone} onChange={setPhone} required />
         </div>
 
         <div className={styles.field}>
@@ -224,7 +218,7 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
       <div className={styles.otpIcon}>🔐</div>
       <h2 className={styles.title}>{t('verifyPhone')}</h2>
       <p className={styles.subtitle}>
-        {t('otpSentTo')} <strong>{phone.replace(/(\d{2})(\d{4})(\d{4})/, '$1XXXX$3')}</strong>
+        {t('otpSentTo')} <strong>{phone.replace(/(\+\d{1,3})(\d{2})(\d+)(\d{4})/, '$1 $2XXXX$4')}</strong>
         {devMode && (
           <><br /><span className={styles.otpHint}>⚠️ Dev mode — OTP printed to server console</span></>
         )}

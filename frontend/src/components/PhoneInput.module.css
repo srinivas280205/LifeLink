@@ -1,0 +1,142 @@
+/* ── Outer wrapper: code picker + number input side by side ── */
+.wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: visible;
+  background: var(--input-bg);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.wrap:focus-within {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
+/* ── Country code trigger button ── */
+.codeTrigger {
+  position: relative;
+  flex-shrink: 0;
+}
+.codeBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding: 0.72rem 0.65rem 0.72rem 0.85rem;
+  background: none;
+  border: none;
+  border-right: 1.5px solid var(--border);
+  cursor: pointer;
+  border-radius: 0;
+  transition: background 0.15s;
+  white-space: nowrap;
+  height: 100%;
+}
+.codeBtn:hover { background: rgba(0,0,0,0.04); }
+[data-theme='dark'] .codeBtn:hover { background: rgba(255,255,255,0.06); }
+
+.flag { font-size: 1.2rem; line-height: 1; }
+.code {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 2.5rem;
+  text-align: left;
+}
+.arrow {
+  font-size: 0.65rem;
+  color: var(--muted);
+  transition: transform 0.18s;
+  display: inline-block;
+}
+.arrowUp { transform: rotate(180deg); }
+
+/* ── Dropdown ── */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 999;
+  background: var(--card-bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  width: 260px;
+  overflow: hidden;
+  animation: slideDown 0.15s ease-out;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.searchWrap {
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid var(--border);
+}
+.searchInput {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.85rem;
+  background: var(--input-bg);
+  color: var(--text);
+  outline: none;
+}
+.searchInput:focus { border-color: #d32f2f; }
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0.3rem 0;
+  max-height: 220px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+.list::-webkit-scrollbar { width: 4px; }
+.list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.12s;
+  font-size: 0.88rem;
+}
+.item:hover { background: rgba(211,47,47,0.07); }
+.itemActive { background: rgba(211,47,47,0.1); }
+.itemActive .itemName { color: #d32f2f; font-weight: 700; }
+
+.itemFlag { font-size: 1.15rem; flex-shrink: 0; }
+.itemName { flex: 1; color: var(--text); font-size: 0.85rem; }
+.itemCode {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.noResult {
+  padding: 0.75rem 1rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* ── Phone number input ── */
+.numberInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0.72rem 0.95rem;
+  font-size: 0.97rem;
+  color: var(--text);
+  width: 100%;
+  min-width: 0;
+  letter-spacing: 0.5px;
+}
+.numberInput::placeholder { color: var(--muted); letter-spacing: 0.3px; }
