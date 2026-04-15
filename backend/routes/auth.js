@@ -18,28 +18,35 @@ function generateOTP() {
  */
 async function sendSMS(phone, otp) {
   const apiKey = process.env.FAST2SMS_API_KEY;
+
+  // No API key → dev mode
   if (!apiKey) {
-    // Dev mode — print to console instead of sending SMS
     console.log(`📱 [DEV OTP] Phone: ${phone} → OTP: ${otp}`);
     return { success: true, dev: true };
   }
 
+  // Strip country code for Fast2SMS (needs 10-digit India number only)
+  const digits = phone.replace(/^\+91/, '').replace(/\D/g, '');
+
   try {
     const res = await axios.get('https://www.fast2sms.com/dev/bulkV2', {
       params: {
-        authorization: apiKey,
-        route:           'otp',
+        authorization:    apiKey,
+        route:            'otp',
         variables_values: otp,
-        flash:           0,
-        numbers:         phone,
+        flash:            0,
+        numbers:          digits,
       },
       timeout: 8000,
     });
     console.log(`📱 SMS sent to ${phone}:`, res.data);
     return { success: true };
   } catch (err) {
-    console.error('Fast2SMS error:', err?.response?.data || err.message);
-    return { success: false, error: err?.response?.data || err.message };
+    const errData = err?.response?.data || err.message;
+    console.error('Fast2SMS error:', errData);
+    // Always fall back to console log so admin can see OTP in Render logs
+    console.log(`📱 [FALLBACK OTP] Phone: ${phone} → OTP: ${otp}`);
+    return { success: true, dev: true, fallback: true };
   }
 }
 

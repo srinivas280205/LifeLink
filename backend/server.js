@@ -36,6 +36,7 @@ const io = new Server(server, {
 });
 
 app.set('io', io);
+app.set('trust proxy', 1); // Required for Render.com — fixes rate-limit X-Forwarded-For error
 app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled — SPA handles it
 app.use(cors());
 app.use(express.json({ limit: '50kb' }));   // reject oversized payloads
