@@ -4,7 +4,8 @@ import AppShell from '../components/AppShell';
 import styles from './Leaderboard.module.css';
 import { SkeletonLeaderRow } from '../components/Skeleton';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
 const RANK_ICONS = { 1: '🥇', 2: '🥈', 3: '🥉' };

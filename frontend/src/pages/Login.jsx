@@ -4,6 +4,8 @@ import styles from './Auth.module.css';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -32,7 +34,7 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(`${API}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form, phone: form.phone.replace(/\s/g, '') }),

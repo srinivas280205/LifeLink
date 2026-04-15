@@ -4,7 +4,8 @@ import AppShell from '../components/AppShell';
 import styles from './Events.module.css';
 import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 const BLOOD_GROUPS = ['A+','A-','B+','B-','AB+','AB-','O+','O-'];
 

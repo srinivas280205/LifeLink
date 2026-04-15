@@ -4,7 +4,8 @@ import AppShell from '../components/AppShell';
 import styles from './MapView.module.css';
 import { BLOOD_BANKS } from '../data/bloodBanks';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
 // Indian city coordinates lookup

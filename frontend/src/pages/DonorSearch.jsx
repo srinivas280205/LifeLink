@@ -4,7 +4,8 @@ import styles from './DonorSearch.module.css';
 import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 import { BLOOD_BANKS, BLOOD_BANK_STATES, filterBloodBanks } from '../data/bloodBanks';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];

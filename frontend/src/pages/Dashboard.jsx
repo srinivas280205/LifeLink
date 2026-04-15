@@ -9,7 +9,8 @@ import { SkeletonFeed } from '../components/Skeleton';
 import OnboardingModal from '../components/OnboardingModal';
 import { usePushSubscription } from '../hooks/usePushSubscription';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const URGENCY_LABELS = { critical: '🔴 Critical', urgent: '🟠 Urgent', normal: '🟡 Normal' };
 

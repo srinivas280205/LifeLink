@@ -4,7 +4,8 @@ import styles from './Admin.module.css';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];

@@ -5,7 +5,8 @@ import styles from './Profile.module.css';
 import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 import EligibilityChecker from '../components/EligibilityChecker';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 

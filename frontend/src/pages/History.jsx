@@ -2,10 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './History.module.css';
+import API_BASE from '../config/api.js';
+
+const API = API_BASE;
+const token = () => localStorage.getItem('token');
 
 async function repostBroadcast(b) {
   const token = localStorage.getItem('token');
-  return fetch('/api/broadcasts', {
+  return fetch(`${API}/api/broadcasts`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify({
@@ -14,9 +18,6 @@ async function repostBroadcast(b) {
     }),
   });
 }
-
-const API = '';
-const token = () => localStorage.getItem('token');
 const STATUS_LABELS  = { active: '🟢 Active', fulfilled: '✅ Need Met', cancelled: '⛔ Cancelled' };
 const URGENCY_LABELS = { critical: '🔴 Critical', urgent: '🟠 Urgent', normal: '🟡 Normal' };
 

@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Landing.module.css';
 import BrandLogo from '../components/BrandLogo';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 
 const features = [
   {
@@ -53,7 +55,7 @@ export default function Landing() {
   ]);
 
   useEffect(() => {
-    fetch('/api/stats')
+    fetch(`${API}/api/stats`)
       .then(r => r.json())
       .then(d => {
         setStats([

@@ -6,7 +6,8 @@ import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 // ── Step 1: Registration form ─────────────────────────────────────────────────

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './Notifications.module.css';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
 function timeAgo(dateStr) {

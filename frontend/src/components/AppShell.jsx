@@ -6,7 +6,8 @@ import styles from './AppShell.module.css';
 import BrandLogo from './BrandLogo';
 import OnboardingBanner from './OnboardingBanner';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();

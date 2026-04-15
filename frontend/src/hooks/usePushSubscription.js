@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
-const API = '';
+import API_BASE from '../config/api.js';
+const API = API_BASE;
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
