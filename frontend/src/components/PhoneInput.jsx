@@ -49,12 +49,8 @@ export default function PhoneInput({ value, onChange, required = true }) {
     if (open) setTimeout(() => searchRef.current?.focus(), 50);
   }, [open]);
 
-  const formatDigits = (raw, max) => {
-    const digits = raw.replace(/\D/g, '').slice(0, max);
-    const half = Math.ceil(max / 2);
-    if (digits.length <= half) return digits;
-    return digits.slice(0, half) + ' ' + digits.slice(half);
-  };
+  // Only digits, no spaces
+  const formatDigits = (raw, max) => raw.replace(/\D/g, '').slice(0, max);
 
   const handleCountrySelect = (country) => {
     setOpen(false);
@@ -75,9 +71,8 @@ export default function PhoneInput({ value, onChange, required = true }) {
     c.code.includes(search)
   );
 
-  const maxChars    = selected.maxDigits + Math.floor(selected.maxDigits / 5);
-  const half        = Math.ceil(selected.maxDigits / 2);
-  const placeholder = `${'X'.repeat(half)} ${'X'.repeat(selected.maxDigits - half)}`;
+  const maxChars    = selected.maxDigits;
+  const placeholder = 'X'.repeat(selected.maxDigits);
 
   return (
     <div className={styles.wrap}>

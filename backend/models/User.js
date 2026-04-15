@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
     fullName:  { type: String, required: [true, 'Full name is required'], trim: true },
     phone: {
       type: String, required: true, unique: true,
-      match: [/^\d{7,15}$/, 'Phone number must be 7–15 digits'],
+      match: [/^\+?\d{7,15}$/, 'Phone number must be 7–15 digits'],
     },
     password:   { type: String, required: true, minlength: 6 },
     bloodGroup: {
