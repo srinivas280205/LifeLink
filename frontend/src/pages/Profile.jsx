@@ -8,13 +8,18 @@ import EligibilityChecker from '../components/EligibilityChecker';
 import API_BASE from '../config/api.js';
 const API = API_BASE;
 const token = () => localStorage.getItem('token');
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_GROUPS = [
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
+  'A1+', 'A1-', 'A2+', 'A2-',
+  'A1B+', 'A1B-', 'A2B+', 'A2B-',
+  'Bombay (hh)', 'Oh+', 'Oh-',
+];
 
 export default function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
-    fullName: '', bloodGroup: '', country: 'India', state: '', district: '', isAvailable: true,
+    fullName: '', gender: '', bloodGroup: '', country: 'India', state: '', district: '', isAvailable: true,
   });
   const [saving, setSaving]       = useState(false);
   const [saved, setSaved]         = useState(false);
@@ -42,6 +47,7 @@ export default function Profile() {
         setMyStats(stats);
         setForm({
           fullName:    data.fullName    || '',
+          gender:      data.gender      || '',
           bloodGroup:  data.bloodGroup  || '',
           country:     data.country     || 'India',
           state:       data.state       || '',
@@ -69,7 +75,8 @@ export default function Profile() {
     setSaving(true); setError(''); setSaved(false);
     try {
       // isAvailable is saved instantly by its own toggle — exclude from form save
-      const { isAvailable: _unused, ...formData } = form;
+      const { isAvailable: _unused, gender, ...rest } = form;
+      const formData = { ...rest, gender }; // include gender explicitly
       const res = await fetch(`${API}/api/users/profile`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
@@ -293,6 +300,16 @@ export default function Profile() {
             <label>Full Name</label>
             <input type="text" name="fullName" value={form.fullName}
               onChange={handleChange} required placeholder="Your full name" />
+          </div>
+
+          <div className={styles.field}>
+            <label>Gender</label>
+            <select name="gender" value={form.gender} onChange={handleChange}>
+              <option value="">Prefer not to say</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           <div className={styles.field}>

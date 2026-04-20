@@ -74,6 +74,11 @@ export default function Admin() {
   const [evPages, setEvPages]       = useState(1);
   const [evLoading, setEvLoading]   = useState(false);
 
+  // Ban modal
+  const [banModal, setBanModal]   = useState(null); // { id, name }
+  const [banReason, setBanReason] = useState('');
+  const [banSaving, setBanSaving] = useState(false);
+
   // Announce
   const [annTitle, setAnnTitle]     = useState('');
   const [annBody, setAnnBody]       = useState('');
@@ -172,6 +177,32 @@ export default function Admin() {
     }
   };
 
+  const openBanModal = (u) => { setBanModal({ id: u._id, name: u.fullName }); setBanReason(''); };
+
+  const confirmBan = async () => {
+    if (!banModal) return;
+    setBanSaving(true);
+    const res = await fetch(`${API}/api/admin/users/${banModal.id}/ban`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      body: JSON.stringify({ reason: banReason }),
+    });
+    if (res.ok) {
+      setUsers(prev => prev.map(u => u._id === banModal.id ? { ...u, isBanned: true, banReason } : u));
+    }
+    setBanModal(null); setBanSaving(false);
+  };
+
+  const unbanUser = async (id) => {
+    const res = await fetch(`${API}/api/admin/users/${id}/unban`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token()}` },
+    });
+    if (res.ok) {
+      setUsers(prev => prev.map(u => u._id === id ? { ...u, isBanned: false, banReason: '' } : u));
+    }
+  };
+
   const cancelBroadcast = async (id) => {
     await fetch(`${API}/api/admin/broadcasts/${id}/cancel`, { method: 'PATCH', headers: { Authorization: `Bearer ${token()}` } });
     fetchBroadcasts(bcPage); fetchStats();
@@ -206,6 +237,61 @@ export default function Admin() {
 
   return (
     <div className={styles.shell}>
+
+      {/* ── Ban Confirmation Modal ── */}
+      {banModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }}>
+          <div style={{
+            background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: 16, padding: '1.6rem', width: '100%', maxWidth: 400,
+            boxShadow: '0 16px 48px rgba(0,0,0,0.35)',
+          }}>
+            <h3 style={{ margin: '0 0 0.5rem', color: '#b71c1c' }}>🚫 Ban User</h3>
+            <p style={{ margin: '0 0 1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
+              You are about to ban <strong>{banModal.name}</strong>. They will be unable to log in.
+            </p>
+            <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+              Reason (optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Spam, fake account, misuse..."
+              value={banReason}
+              onChange={e => setBanReason(e.target.value)}
+              style={{
+                width: '100%', padding: '0.65rem 0.85rem', borderRadius: 8,
+                border: '1.5px solid var(--border)', background: 'var(--input-bg)',
+                color: 'var(--text)', fontSize: '0.9rem', boxSizing: 'border-box', marginBottom: '1rem',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
+              <button
+                onClick={confirmBan}
+                disabled={banSaving}
+                style={{
+                  flex: 1, padding: '0.75rem', background: '#b71c1c', color: '#fff',
+                  border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+                }}
+              >
+                {banSaving ? 'Banning…' : '🚫 Confirm Ban'}
+              </button>
+              <button
+                onClick={() => setBanModal(null)}
+                style={{
+                  flex: '0 0 auto', padding: '0.75rem 1rem', background: 'var(--card-bg)',
+                  border: '1.5px solid var(--border)', borderRadius: 8, cursor: 'pointer',
+                  color: 'var(--muted)', fontWeight: 600,
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Header */}
       <header className={styles.header}>
@@ -442,17 +528,24 @@ export default function Admin() {
                     <thead>
                       <tr>
                         <th>Name</th><th>Phone</th><th>Blood</th><th>Location</th>
-                        <th>Verified</th><th>Admin</th><th>Available</th><th>Joined</th><th>Delete</th>
+                        <th>Verified</th><th>Admin</th><th>Available</th><th>Joined</th><th>Ban</th><th>Delete</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.length === 0
-                        ? <tr><td colSpan={9} className={styles.emptyCell}>No users found</td></tr>
+                        ? <tr><td colSpan={10} className={styles.emptyCell}>No users found</td></tr>
                         : users.map(u => (
                           <tr key={u._id}>
                             <td className={styles.nameCell}>
                               {u.isAdmin && <span className={styles.adminTag}>Admin</span>}
-                              {u.fullName}
+                              {u.isBanned && (
+                                <span style={{ background: '#b71c1c22', color: '#b71c1c', border: '1px solid #ef9a9a', borderRadius: 4, padding: '0.05rem 0.35rem', fontSize: '0.7rem', fontWeight: 700, marginRight: '0.3rem' }}>
+                                  🚫 BANNED
+                                </span>
+                              )}
+                              <span style={{ color: u.isBanned ? 'var(--muted)' : 'var(--text)', textDecoration: u.isBanned ? 'line-through' : 'none' }}>
+                                {u.fullName}
+                              </span>
                             </td>
                             <td>{u.phone}</td>
                             <td>{u.bloodGroup ? <span className={styles.bloodPill}>{u.bloodGroup}</span> : <span className={styles.noBG}>—</span>}</td>
@@ -475,6 +568,22 @@ export default function Admin() {
                               </span>
                             </td>
                             <td className={styles.timeCell}>{timeAgo(u.createdAt)}</td>
+                            <td>
+                              {!u.isAdmin && (
+                                u.isBanned ? (
+                                  <button
+                                    style={{ padding: '0.2rem 0.5rem', background: '#e8f5e9', color: '#2e7d32', border: '1px solid #a5d6a7', borderRadius: 6, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                                    onClick={() => unbanUser(u._id)}
+                                    title={u.banReason ? `Banned: ${u.banReason}` : 'Banned'}
+                                  >Unban</button>
+                                ) : (
+                                  <button
+                                    style={{ padding: '0.2rem 0.5rem', background: '#fce4ec', color: '#b71c1c', border: '1px solid #ef9a9a', borderRadius: 6, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                                    onClick={() => openBanModal(u)}
+                                  >Ban</button>
+                                )
+                              )}
+                            </td>
                             <td>
                               {!u.isAdmin && (
                                 <button className={styles.deleteBtn} onClick={() => deleteUser(u._id, u.fullName)}>Del</button>

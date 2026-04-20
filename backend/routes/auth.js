@@ -53,7 +53,7 @@ async function sendSMS(phone, otp) {
 // ── POST /api/auth/signup ─────────────────────────────────────────────────────
 router.post('/signup', async (req, res) => {
   try {
-    const { fullName, phone, password, bloodGroup, country, state, district } = req.body;
+    const { fullName, phone, password, gender, bloodGroup, country, state, district } = req.body;
 
     if (!fullName || !phone || !password) {
       return res.status(400).json({ message: 'Name, phone and password are required' });
@@ -70,6 +70,7 @@ router.post('/signup', async (req, res) => {
       fullName,
       phone,
       password: hashedPassword,
+      gender:     gender     || '',
       bloodGroup: bloodGroup || '',
       country:    country   || 'India',
       state:      state     || '',
@@ -223,6 +224,13 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ phone });
     if (!user) {
       return res.status(401).json({ message: 'Invalid phone number or password' });
+    }
+
+    // Check if account is banned
+    if (user.isBanned) {
+      return res.status(403).json({
+        message: `Your account has been suspended. Reason: ${user.banReason || 'Violation of community guidelines'}. Contact support if you believe this is a mistake.`,
+      });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);

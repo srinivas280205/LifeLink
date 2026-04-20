@@ -224,7 +224,7 @@
 /* ── SOS Floating Action Button ── */
 .sosFab {
   position: fixed;
-  bottom: 2rem;
+  bottom: 2.8rem;
   right: 1.5rem;
   width: 68px;
   height: 68px;
@@ -236,12 +236,28 @@
   z-index: 200;
   display: flex;
   align-items: center;
+  overflow: visible;
   justify-content: center;
   box-shadow: 0 6px 24px rgba(211,47,47,0.55);
   transition: transform 0.15s;
 }
 .sosFab:hover { transform: scale(1.08); }
-.sosFab:active { transform: scale(0.95); }
+.sosFab:active { transform: scale(0.97); }
+
+/* Static label shown below FAB via ::after */
+.sosFab::after {
+  content: 'Hold for SOS';
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #d32f2f;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
 
 .sosFabInner { font-size: 1.6rem; position: relative; z-index: 1; }
 

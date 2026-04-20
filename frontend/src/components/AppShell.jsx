@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
-import { useLanguage } from '../context/LanguageContext';
 import styles from './AppShell.module.css';
 import BrandLogo from './BrandLogo';
 import OnboardingBanner from './OnboardingBanner';
@@ -23,7 +22,6 @@ export default function AppShell({ children, connected, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggle } = useTheme();
-  const { lang, toggle: toggleLang, t } = useLanguage();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user.id || user._id || '';
 
@@ -135,14 +133,14 @@ export default function AppShell({ children, connected, socket }) {
   };
 
   const tabs = [
-    { path: '/dashboard',   icon: '📡', label: t('liveFeed')  },
-    { path: '/map',         icon: '🗺️', label: t('donorMap')  },
-    { path: '/search',      icon: '🔍', label: t('search')    },
-    { path: '/leaderboard', icon: '🏆', label: t('leaders')   },
-    { path: '/events',      icon: '🩸', label: t('events')    },
-    { path: '/history',     icon: '📋', label: t('history')   },
-    { path: '/profile',     icon: '👤', label: t('profile')   },
-    ...(user.isAdmin ? [{ path: '/admin', icon: '🛡️', label: t('admin') }] : []),
+    { path: '/dashboard',   icon: '📡', label: 'Live Feed'  },
+    { path: '/map',         icon: '🗺️', label: 'Donor Map'  },
+    { path: '/search',      icon: '🔍', label: 'Search'    },
+    { path: '/leaderboard', icon: '🏆', label: 'Leaders'   },
+    { path: '/events',      icon: '🩸', label: 'Events'    },
+    { path: '/history',     icon: '📋', label: 'History'   },
+    { path: '/profile',     icon: '👤', label: 'Profile'   },
+    ...(user.isAdmin ? [{ path: '/admin', icon: '🛡️', label: 'Admin' }] : []),
   ];
 
   return (
@@ -152,10 +150,10 @@ export default function AppShell({ children, connected, socket }) {
         <div className={styles.installBanner}>
           <span className={styles.installIcon}>📲</span>
           <div className={styles.installText}>
-            <strong>{t('installApp')}</strong>
-            <span>{t('installHint')}</span>
+            <strong>Install LifeLink</strong>
+            <span>Add to home screen for instant access during emergencies</span>
           </div>
-          <button className={styles.installBtn} onClick={handleInstall}>{t('install')}</button>
+          <button className={styles.installBtn} onClick={handleInstall}>Install</button>
           <button className={styles.installClose} onClick={dismissInstall}>✕</button>
         </div>
       )}
@@ -170,7 +168,7 @@ export default function AppShell({ children, connected, socket }) {
 
           <div className={styles.headerMeta}>
             <span className={connected ? styles.dotOn : styles.dotOff} />
-            <span className={styles.connLabel}>{connected ? t('live') : t('connecting')}</span>
+            <span className={styles.connLabel}>{connected ? 'Live' : 'Connecting'}</span>
           </div>
 
           <div className={styles.headerRight}>
@@ -183,7 +181,7 @@ export default function AppShell({ children, connected, socket }) {
                 title={available ? 'You are available to donate — click to go offline' : 'You are unavailable — click to go available'}
               >
                 <span className={available ? styles.availDotOn : styles.availDotOff} />
-                {available ? t('available') : t('offline')}
+                {available ? 'Available' : 'Offline'}
               </button>
             )}
 
@@ -200,17 +198,6 @@ export default function AppShell({ children, connected, socket }) {
               {unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 9 ? '9+' : unread}</span>}
             </button>
 
-            {/* Language toggle — shows current language name */}
-            <div className={styles.langWrap} onClick={toggleLang} role="button" tabIndex={0}
-              aria-label="Change language"
-              onKeyDown={e => e.key === 'Enter' && toggleLang()}>
-              <span className={styles.langLabel}>Change Language</span>
-              <span className={styles.langBtn}>
-                <span className={styles.langDot} />
-                {lang === 'en' ? 'English' : 'தமிழ்'}
-              </span>
-            </div>
-
             <button className={styles.themeBtn} onClick={toggle} title="Toggle theme"
               aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
               {theme === 'light' ? '🌙' : '☀️'}
@@ -219,7 +206,7 @@ export default function AppShell({ children, connected, socket }) {
               <span className={styles.userBlood}>{user.bloodGroup || '👤'}</span>
               <span className={styles.userName}>{user.fullName?.split(' ')[0]}</span>
             </div>
-            <button className={styles.logoutBtn} onClick={handleLogout} aria-label="Log out of LifeLink">{t('logout')}</button>
+            <button className={styles.logoutBtn} onClick={handleLogout} aria-label="Log out of LifeLink">Logout</button>
           </div>
         </div>
 
@@ -246,15 +233,15 @@ export default function AppShell({ children, connected, socket }) {
           <div className={styles.notifDrawer} onClick={(e) => e.stopPropagation()}
             role="dialog" aria-modal="true" aria-label="Notifications">
             <div className={styles.notifHeader}>
-              <span className={styles.notifTitle}>{t('notifications')}</span>
+              <span className={styles.notifTitle}>Notifications</span>
               {notifications.some((n) => !n.read) && (
-                <button className={styles.markReadBtn} onClick={markAllRead}>{t('markAllRead')}</button>
+                <button className={styles.markReadBtn} onClick={markAllRead}>Mark all read</button>
               )}
               <button
                 className={styles.markReadBtn}
                 style={{ borderColor: '#1976d2', color: '#1976d2' }}
                 onClick={() => { setNotifOpen(false); navigate('/notifications'); }}
-              >{t('viewAll')}</button>
+              >View all</button>
               <button className={styles.notifClose} onClick={() => setNotifOpen(false)}>✕</button>
             </div>
 
@@ -262,8 +249,8 @@ export default function AppShell({ children, connected, socket }) {
               {notifications.length === 0 ? (
                 <div className={styles.notifEmpty}>
                   <span>🔔</span>
-                  <p>{t('noNotifications')}</p>
-                  <small>{t('notifHint')}</small>
+                  <p>No notifications yet</p>
+                  <small>You'll be notified when blood requests match your type</small>
                 </div>
               ) : (
                 notifications.map((n, i) => (

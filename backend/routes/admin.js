@@ -213,6 +213,36 @@ router.post('/announce', adminAuth, async (req, res) => {
   }
 });
 
+// PATCH /api/admin/users/:id/ban — ban a user
+router.patch('/users/:id/ban', adminAuth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const u = await User.findById(req.params.id).select('isAdmin fullName isBanned');
+    if (!u) return res.status(404).json({ message: 'User not found' });
+    if (u.isAdmin) return res.status(400).json({ message: 'Cannot ban an admin user' });
+    u.isBanned   = true;
+    u.banReason  = reason || 'Violation of community guidelines';
+    await u.save();
+    res.json({ isBanned: true, banReason: u.banReason, fullName: u.fullName });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// PATCH /api/admin/users/:id/unban — unban a user
+router.patch('/users/:id/unban', adminAuth, async (req, res) => {
+  try {
+    const u = await User.findById(req.params.id).select('fullName isBanned banReason');
+    if (!u) return res.status(404).json({ message: 'User not found' });
+    u.isBanned  = false;
+    u.banReason = '';
+    await u.save();
+    res.json({ isBanned: false, fullName: u.fullName });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // PATCH /api/admin/users/:id/toggle-admin — grant or revoke admin
 router.patch('/users/:id/toggle-admin', adminAuth, async (req, res) => {
   try {

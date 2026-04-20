@@ -8,7 +8,12 @@ import API_BASE from '../config/api.js';
 const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_GROUPS = [
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
+  'A1+', 'A1-', 'A2+', 'A2-',
+  'A1B+', 'A1B-', 'A2B+', 'A2B-',
+  'Bombay (hh)', 'Oh+', 'Oh-',
+];
 
 const COMPATIBLE_DONORS = {
   'A+':  ['A+','A-','O+','O-'],
@@ -182,8 +187,13 @@ export default function DonorSearch() {
                         </div>
                         <span className={styles.availBadge}>● Available</span>
                       </div>
-                      <a href={`tel:${donor.phone}`} className={styles.callBtn}>
-                        📞 Contact Donor
+                      <a
+                        href={`https://wa.me/${donor.phone.replace(/\D/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.callBtn}
+                      >
+                        💬 Contact via WhatsApp
                       </a>
                       <div className={styles.compatRow}>
                         <span className={styles.compatLabel}>Can donate to:</span>

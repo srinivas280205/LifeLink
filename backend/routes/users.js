@@ -27,9 +27,10 @@ router.get('/me', auth, async (req, res) => {
 // PATCH /api/users/profile — update profile
 router.patch('/profile', auth, async (req, res) => {
   try {
-    const { fullName, country, state, district, isAvailable, location, bloodGroup } = req.body;
+    const { fullName, gender, country, state, district, isAvailable, location, bloodGroup } = req.body;
     const update = {};
     if (fullName    !== undefined) update.fullName    = fullName;
+    if (gender      !== undefined) update.gender      = gender;
     if (country     !== undefined) update.country     = country;
     if (state       !== undefined) update.state       = state;
     if (district    !== undefined) update.district    = district;

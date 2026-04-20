@@ -47,6 +47,12 @@ export default function Dashboard() {
   const [sosResult, setSosResult] = useState(null);
   const [sosError, setSosError] = useState('');
 
+  // SOS hold-to-activate state
+  const [holdProgress, setHoldProgress] = useState(0); // 0–100
+  const holdTimerRef  = useRef(null);
+  const holdStartRef  = useRef(null);
+  const HOLD_DURATION = 3000; // ms
+
   // Load existing broadcasts
   const loadBroadcasts = useCallback(async () => {
     try {
@@ -178,6 +184,27 @@ export default function Dashboard() {
         body: JSON.stringify({ status }),
       });
     } catch { /* ignore */ }
+  };
+
+  // SOS hold-to-activate handlers
+  const startHold = (e) => {
+    e.preventDefault();
+    holdStartRef.current = Date.now();
+    holdTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - holdStartRef.current;
+      const pct = Math.min((elapsed / HOLD_DURATION) * 100, 100);
+      setHoldProgress(pct);
+      if (pct >= 100) {
+        clearInterval(holdTimerRef.current);
+        setHoldProgress(0);
+        openSOS();
+      }
+    }, 30);
+  };
+
+  const cancelHold = () => {
+    clearInterval(holdTimerRef.current);
+    setHoldProgress(0);
   };
 
   // SOS — get location then open modal
@@ -407,11 +434,62 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── SOS Floating Button (all users) ── */}
-      <button className={styles.sosFab} onClick={openSOS} title="SOS Emergency Broadcast">
-        <span className={styles.sosFabRing} />
-        <span className={styles.sosFabRing2} />
-        <span className={styles.sosFabInner}>🆘</span>
+      {/* ── SOS Floating Action Button — hold 3s to activate ── */}
+      <button
+        className={styles.sosFab}
+        onMouseDown={startHold}
+        onMouseUp={cancelHold}
+        onMouseLeave={cancelHold}
+        onTouchStart={startHold}
+        onTouchEnd={cancelHold}
+        title="Hold 3 seconds to send SOS"
+        style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
+      >
+        {/* Pulsing rings (hidden while holding) */}
+        {holdProgress === 0 && <span className={styles.sosFabRing} />}
+        {holdProgress === 0 && <span className={styles.sosFabRing2} />}
+
+        {/* Hold progress ring (SVG circle) */}
+        {holdProgress > 0 && (
+          <svg
+            width="84" height="84"
+            style={{ position: 'absolute', top: '-8px', left: '-8px', transform: 'rotate(-90deg)' }}
+          >
+            <circle
+              cx="42" cy="42" r="38"
+              fill="none"
+              stroke="rgba(255,255,255,0.25)"
+              strokeWidth="4"
+            />
+            <circle
+              cx="42" cy="42" r="38"
+              fill="none"
+              stroke="#fff"
+              strokeWidth="4"
+              strokeDasharray={`${2 * Math.PI * 38}`}
+              strokeDashoffset={`${2 * Math.PI * 38 * (1 - holdProgress / 100)}`}
+              strokeLinecap="round"
+              style={{ transition: 'stroke-dashoffset 0.03s linear' }}
+            />
+          </svg>
+        )}
+
+        <span className={styles.sosFabInner} style={{ fontSize: holdProgress > 0 ? '1.3rem' : '1.6rem', transition: 'font-size 0.1s' }}>
+          {holdProgress > 0 ? '🆘' : '🆘'}
+        </span>
+
+        {/* Hold progress label */}
+        {holdProgress > 0 && (
+          <span style={{
+            position: 'absolute', bottom: '-28px', left: '50%', transform: 'translateX(-50%)',
+            color: '#d32f2f', fontWeight: 800, fontSize: '0.72rem', whiteSpace: 'nowrap',
+            textShadow: '0 1px 3px rgba(0,0,0,0.4)',
+            background: 'var(--card-bg)', padding: '0.1rem 0.4rem', borderRadius: 6,
+            border: '1px solid var(--border)',
+          }}>
+            Hold… {Math.ceil(((100 - holdProgress) / 100) * 3)}s
+          </span>
+        )}
       </button>
 
       {/* ── SOS Modal ── */}
