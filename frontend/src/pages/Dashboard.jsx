@@ -11,7 +11,12 @@ import { usePushSubscription } from '../hooks/usePushSubscription';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_GROUPS = [
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
+  'A1+', 'A1-', 'A2+', 'A2-',
+  'A1B+', 'A1B-', 'A2B+', 'A2B-',
+  'Bombay (hh)', 'Oh+', 'Oh-',
+];
 const URGENCY_LABELS = { critical: '🔴 Critical', urgent: '🟠 Urgent', normal: '🟡 Normal' };
 
 const token = () => localStorage.getItem('token');

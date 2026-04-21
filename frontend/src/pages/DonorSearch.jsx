@@ -10,12 +10,12 @@ const token = () => localStorage.getItem('token');
 
 // Show phone as 934XXXXX19 — real but not fully visible
 function maskPhone(phone) {
-  const digits = phone.replace(/\D/g, '');           // strip non-digits
-  const last10 = digits.slice(-10);                   // take last 10 digits
+  if (!phone) return '—';
+  const digits = phone.replace(/\D/g, '');
+  const last10 = digits.slice(-10);
   if (last10.length < 10) return phone;
   const prefix = phone.startsWith('+') ? phone.slice(0, phone.length - 10).trim() + ' ' : '';
   return `${prefix}${last10.slice(0, 3)}XXXXX${last10.slice(8)}`;
-  // e.g. +91 934XXXXX19
 }
 
 const BLOOD_GROUPS = [
@@ -199,14 +199,14 @@ export default function DonorSearch() {
                       </div>
                       <div className={styles.contactRow}>
                         <span className={styles.maskedPhone}>📞 {maskPhone(donor.phone)}</span>
-                        <a
-                          href={`https://wa.me/${donor.phone.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.callBtn}
-                        >
-                          💬 Contact
-                        </a>
+                        {donor.phone && (
+                          <a
+                            href={`tel:${donor.phone}`}
+                            className={styles.callBtn}
+                          >
+                            📞 Call
+                          </a>
+                        )}
                       </div>
                       <div className={styles.compatRow}>
                         <span className={styles.compatLabel}>Can donate to:</span>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Admin.module.css';
 import BrandLogo from '../components/BrandLogo';
@@ -8,7 +8,11 @@ import API_BASE from '../config/api.js';
 const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
-const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const BLOOD_GROUPS = [
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
+  'A1+', 'A1-', 'A2+', 'A2-', 'A1B+', 'A1B-', 'A2B+', 'A2B-',
+  'Bombay (hh)', 'Oh+', 'Oh-',
+];
 const STATUS_COLORS  = { active: '#2196f3', fulfilled: '#4caf50', cancelled: '#9e9e9e' };
 const URGENCY_COLORS = { critical: '#d32f2f', urgent: '#f57c00', normal: '#388e3c' };
 
@@ -56,6 +60,7 @@ export default function Admin() {
   const [usersPages, setUsersPages] = useState(1);
   const [userSearch, setUserSearch] = useState('');
   const [userBG, setUserBG]         = useState('');
+  const [showBanned, setShowBanned] = useState(false);
   const [usersLoading, setUsersLoading] = useState(false);
 
   // Broadcasts
@@ -85,28 +90,36 @@ export default function Admin() {
   const [annSending, setAnnSending] = useState(false);
   const [annResult, setAnnResult]   = useState('');
 
+  // Track which tabs have already loaded — prevents re-fetch on every tab switch
+  const loadedRef = useRef({ overview: false, users: false, broadcasts: false, events: false });
+
   useEffect(() => {
     if (!token()) { navigate('/login'); return; }
     if (!user.isAdmin) navigate('/dashboard');
   }, [navigate, user.isAdmin]);
 
   /* ── Fetchers ─────────────────────────────────────────────────────── */
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (force = false) => {
+    if (!force && loadedRef.current.overview) return; // already loaded
     setStatsLoading(true);
     try {
-      const [sRes, aRes, tRes] = await Promise.all([
-        fetch(`${API}/api/admin/stats`,        { headers: { Authorization: `Bearer ${token()}` } }),
-        fetch(`${API}/api/admin/activity`,     { headers: { Authorization: `Bearer ${token()}` } }),
-        fetch(`${API}/api/admin/stats/trends`, { headers: { Authorization: `Bearer ${token()}` } }),
+      // Parallel fetch — stats + activity together, trends separate (non-critical)
+      const [sRes, aRes] = await Promise.all([
+        fetch(`${API}/api/admin/stats`,    { headers: { Authorization: `Bearer ${token()}` } }),
+        fetch(`${API}/api/admin/activity`, { headers: { Authorization: `Bearer ${token()}` } }),
       ]);
       if (sRes.ok) setStats(await sRes.json());
       if (aRes.ok) setActivity((await aRes.json()).feed || []);
-      if (tRes.ok) setTrends(await tRes.json());
+      // Trends in background — don't block UI
+      fetch(`${API}/api/admin/stats/trends`, { headers: { Authorization: `Bearer ${token()}` } })
+        .then(r => r.ok ? r.json() : null).then(d => { if (d) setTrends(d); }).catch(() => {});
+      loadedRef.current.overview = true;
     } catch { /* ignore */ }
     setStatsLoading(false);
   }, []);
 
-  const fetchUsers = useCallback(async (page = 1) => {
+  const fetchUsers = useCallback(async (page = 1, force = false) => {
+    if (!force && loadedRef.current.users && page === 1 && !userSearch && !userBG) return;
     setUsersLoading(true);
     const p = new URLSearchParams({ page });
     if (userSearch) p.set('search', userSearch);
@@ -116,12 +129,14 @@ export default function Admin() {
       if (res.ok) {
         const d = await res.json();
         setUsers(d.users); setUsersTotal(d.total); setUsersPage(d.page); setUsersPages(d.pages);
+        loadedRef.current.users = true;
       }
     } catch { /* ignore */ }
     setUsersLoading(false);
   }, [userSearch, userBG]);
 
-  const fetchBroadcasts = useCallback(async (page = 1) => {
+  const fetchBroadcasts = useCallback(async (page = 1, force = false) => {
+    if (!force && loadedRef.current.broadcasts && page === 1 && !bcStatus && !bcBG) return;
     setBcLoading(true);
     const p = new URLSearchParams({ page });
     if (bcStatus) p.set('status', bcStatus);
@@ -131,23 +146,27 @@ export default function Admin() {
       if (res.ok) {
         const d = await res.json();
         setBroadcasts(d.broadcasts); setBcTotal(d.total); setBcPage(d.page); setBcPages(d.pages);
+        loadedRef.current.broadcasts = true;
       }
     } catch { /* ignore */ }
     setBcLoading(false);
   }, [bcStatus, bcBG]);
 
-  const fetchEvents = useCallback(async (page = 1) => {
+  const fetchEvents = useCallback(async (page = 1, force = false) => {
+    if (!force && loadedRef.current.events && page === 1) return;
     setEvLoading(true);
     try {
       const res = await fetch(`${API}/api/admin/events?page=${page}`, { headers: { Authorization: `Bearer ${token()}` } });
       if (res.ok) {
         const d = await res.json();
         setEvents(d.events); setEvTotal(d.total); setEvPage(d.page); setEvPages(d.pages);
+        loadedRef.current.events = true;
       }
     } catch { /* ignore */ }
     setEvLoading(false);
   }, []);
 
+  // Load overview on mount; load other tabs only when first visited
   useEffect(() => { fetchStats(); }, [fetchStats]);
   useEffect(() => { if (tab === 'users')      fetchUsers(1); },      [tab, fetchUsers]);
   useEffect(() => { if (tab === 'broadcasts') fetchBroadcasts(1); }, [tab, fetchBroadcasts]);
@@ -157,7 +176,8 @@ export default function Admin() {
   const deleteUser = async (id, name) => {
     if (!window.confirm(`Delete user "${name}"? This cannot be undone.`)) return;
     await fetch(`${API}/api/admin/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
-    fetchUsers(usersPage); fetchStats();
+    loadedRef.current.users = false; loadedRef.current.overview = false;
+    fetchUsers(usersPage, true); fetchStats(true);
   };
 
   const toggleVerify = async (id) => {
@@ -205,13 +225,15 @@ export default function Admin() {
 
   const cancelBroadcast = async (id) => {
     await fetch(`${API}/api/admin/broadcasts/${id}/cancel`, { method: 'PATCH', headers: { Authorization: `Bearer ${token()}` } });
-    fetchBroadcasts(bcPage); fetchStats();
+    loadedRef.current.broadcasts = false; loadedRef.current.overview = false;
+    fetchBroadcasts(bcPage, true); fetchStats(true);
   };
 
   const deleteEvent = async (id, title) => {
     if (!window.confirm(`Delete event "${title}"?`)) return;
     await fetch(`${API}/api/admin/events/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
-    fetchEvents(evPage);
+    loadedRef.current.events = false;
+    fetchEvents(evPage, true);
   };
 
   const sendAnnouncement = async () => {
@@ -421,6 +443,49 @@ export default function Admin() {
                   </div>
                 </div>
 
+                <div className={styles.statCard}>
+                  <div className={styles.statCardTop}>
+                    <div>
+                      <div className={styles.statNum} style={{ color: '#b71c1c' }}>
+                        {stats.users.banned ?? 0}
+                      </div>
+                      <div className={styles.statLabel}>Banned Accounts</div>
+                      <div className={styles.statSub}>
+                        {stats.users.banned > 0 ? 'Suspended from platform' : 'No bans yet'}
+                      </div>
+                    </div>
+                    <div className={styles.statIconBig}>🚫</div>
+                  </div>
+                </div>
+
+                <div className={styles.statCard}>
+                  <div className={styles.statCardTop}>
+                    <div>
+                      <div className={styles.statNum} style={{ color: '#1565c0' }}>
+                        {stats.users.withBloodGroup}
+                      </div>
+                      <div className={styles.statLabel}>With Blood Group</div>
+                      <div className={styles.statSub}>
+                        {stats.users.total > 0 ? `${Math.round((stats.users.withBloodGroup / stats.users.total) * 100)}% of users` : '—'}
+                      </div>
+                    </div>
+                    <div className={styles.statIconBig}>🩸</div>
+                  </div>
+                </div>
+
+                {/* Quick-action: refresh overview */}
+                <div className={styles.statCard} style={{ cursor: 'pointer' }}
+                  onClick={() => { loadedRef.current.overview = false; fetchStats(true); }}>
+                  <div className={styles.statCardTop}>
+                    <div>
+                      <div className={styles.statNum} style={{ color: '#388e3c', fontSize: '1.6rem' }}>↻</div>
+                      <div className={styles.statLabel}>Refresh Stats</div>
+                      <div className={styles.statSub}>Click to reload overview</div>
+                    </div>
+                    <div className={styles.statIconBig}>📊</div>
+                  </div>
+                </div>
+
               </div>
 
               {/* Charts row */}
@@ -510,14 +575,14 @@ export default function Admin() {
             <div className={styles.tableControls}>
               <input className={styles.searchInput} placeholder="Search name or phone…"
                 value={userSearch} onChange={e => setUserSearch(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && fetchUsers(1)} />
+                onKeyDown={e => { if (e.key === 'Enter') { loadedRef.current.users = false; fetchUsers(1, true); } }} />
               <select className={styles.filterSelect} value={userBG}
-                onChange={e => setUserBG(e.target.value)}>
+                onChange={e => { setUserBG(e.target.value); loadedRef.current.users = false; }}>
                 <option value="">All Blood Groups</option>
                 {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
               </select>
-              <button className={styles.searchBtn} onClick={() => fetchUsers(1)}>Search</button>
-              <button className={styles.refreshBtn} onClick={() => fetchUsers(usersPage)}>↻</button>
+              <button className={styles.searchBtn} onClick={() => { loadedRef.current.users = false; fetchUsers(1, true); }}>Search</button>
+              <button className={styles.refreshBtn} onClick={() => { loadedRef.current.users = false; fetchUsers(usersPage, true); }}>↻ Refresh</button>
               <span className={styles.totalCount}>{usersTotal} users</span>
             </div>
 
@@ -527,13 +592,13 @@ export default function Admin() {
                   <table className={styles.table}>
                     <thead>
                       <tr>
-                        <th>Name</th><th>Phone</th><th>Blood</th><th>Location</th>
-                        <th>Verified</th><th>Admin</th><th>Available</th><th>Joined</th><th>Ban</th><th>Delete</th>
+                        <th>Name</th><th>Phone</th><th>Blood</th><th>Gender</th><th>Location</th>
+                        <th>Verified</th><th>Admin</th><th>Avail.</th><th>Joined</th><th>Ban</th><th>Del</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.length === 0
-                        ? <tr><td colSpan={10} className={styles.emptyCell}>No users found</td></tr>
+                        ? <tr><td colSpan={11} className={styles.emptyCell}>No users found</td></tr>
                         : users.map(u => (
                           <tr key={u._id}>
                             <td className={styles.nameCell}>
@@ -549,6 +614,9 @@ export default function Admin() {
                             </td>
                             <td>{u.phone}</td>
                             <td>{u.bloodGroup ? <span className={styles.bloodPill}>{u.bloodGroup}</span> : <span className={styles.noBG}>—</span>}</td>
+                            <td className={styles.center} style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+                              {u.gender || '—'}
+                            </td>
                             <td className={styles.locCell}>{[u.district, u.state].filter(Boolean).join(', ') || '—'}</td>
                             <td>
                               <button className={u.isVerified ? styles.verifyOnBtn : styles.verifyOffBtn}

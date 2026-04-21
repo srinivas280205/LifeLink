@@ -44,6 +44,7 @@ router.get('/stats', adminAuth, async (req, res) => {
       totalUsers,
       verifiedUsers,
       usersWithBlood,
+      bannedUsers,
       totalBroadcasts,
       activeBroadcasts,
       fulfilledBroadcasts,
@@ -56,6 +57,7 @@ router.get('/stats', adminAuth, async (req, res) => {
       User.countDocuments(),
       User.countDocuments({ isVerified: true }),
       User.countDocuments({ bloodGroup: { $nin: ['', null] } }),
+      User.countDocuments({ isBanned: true }),
       Broadcast.countDocuments(),
       Broadcast.countDocuments({ status: 'active' }),
       Broadcast.countDocuments({ status: 'fulfilled' }),
@@ -81,7 +83,7 @@ router.get('/stats', adminAuth, async (req, res) => {
     ]);
 
     res.json({
-      users: { total: totalUsers, verified: verifiedUsers, withBloodGroup: usersWithBlood },
+      users: { total: totalUsers, verified: verifiedUsers, withBloodGroup: usersWithBlood, banned: bannedUsers },
       broadcasts: {
         total: totalBroadcasts, active: activeBroadcasts,
         fulfilled: fulfilledBroadcasts, cancelled: cancelledBroadcasts, sos: sosBroadcasts,
