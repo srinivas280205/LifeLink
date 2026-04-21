@@ -218,6 +218,13 @@ export default function Landing() {
             <span className={styles.life}>Life</span><span className={styles.link}>Link</span>
           </div>
           <p className={styles.footerSub}>Dynamic Real-Time Emergency Network · India</p>
+          <div className={styles.footerLinks}>
+            <Link to="/terms" className={styles.footerLink}>Terms of Service</Link>
+            <span className={styles.footerDot}>·</span>
+            <Link to="/privacy" className={styles.footerLink}>Privacy Policy</Link>
+            <span className={styles.footerDot}>·</span>
+            <a href="mailto:generalworks2k25@gmail.com" className={styles.footerLink}>Contact Us</a>
+          </div>
           <p className={styles.footerCopy}>© 2026 LifeLink. Built to save lives.</p>
         </div>
       </footer>

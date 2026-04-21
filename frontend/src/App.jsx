@@ -20,6 +20,9 @@ import OfflineBanner from './components/OfflineBanner';
 import ErrorBoundary from './components/ErrorBoundary';
 import NotFound from './pages/NotFound';
 import PageFade from './components/PageFade';
+import ForgotPassword from './pages/ForgotPassword';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -48,7 +51,10 @@ function AnimatedRoutes() {
         <Route path="/leaderboard"   element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
         <Route path="/events"        element={<PrivateRoute><Events /></PrivateRoute>} />
-        <Route path="/home"      element={<Navigate to="/dashboard" replace />} />
+        <Route path="/home"            element={<Navigate to="/dashboard" replace />} />
+        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+        <Route path="/terms"           element={<Terms />} />
+        <Route path="/privacy"         element={<Privacy />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </PageFade>

@@ -266,4 +266,125 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// ── POST /api/auth/forgot-password ───────────────────────────────────────────
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) return res.status(400).json({ message: 'Phone is required' });
+
+    const user = await User.findOne({ phone });
+    if (!user) return res.status(404).json({ message: 'No account found with this phone number' });
+
+    const otp       = generateOTP();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await OTP.findOneAndUpdate(
+      { phone },
+      { phone, otp, attempts: 0, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    const smsResult = await sendSMS(phone, otp);
+
+    res.json({
+      message: smsResult.dev
+        ? 'OTP printed to server console (dev mode)'
+        : 'OTP sent to your mobile',
+      devMode: !!smsResult.dev,
+    });
+  } catch (err) {
+    console.error('forgot-password error:', err.message);
+    res.status(500).json({ message: 'Server error. Please try again.' });
+  }
+});
+
+// ── POST /api/auth/verify-forgot-otp ─────────────────────────────────────────
+router.post('/verify-forgot-otp', async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+
+    if (!otp || !/^\d{6}$/.test(otp)) {
+      return res.status(400).json({ message: 'Enter a valid 6-digit OTP' });
+    }
+
+    const record = await OTP.findOne({ phone });
+
+    if (!record) {
+      return res.status(400).json({ message: 'OTP expired or not sent. Request a new one.' });
+    }
+
+    if (record.attempts >= 5) {
+      await OTP.deleteOne({ phone });
+      return res.status(400).json({ message: 'Too many wrong attempts. Request a new OTP.' });
+    }
+
+    if (record.otp !== otp) {
+      await OTP.findOneAndUpdate({ phone }, { $inc: { attempts: 1 } });
+      const left = 4 - record.attempts;
+      return res.status(400).json({ message: `Wrong OTP. ${left} attempt(s) left.` });
+    }
+
+    // Correct OTP — do NOT delete yet; delete after password reset
+    const user = await User.findOne({ phone });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const resetToken = jwt.sign(
+      { userId: user._id, purpose: 'reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '10m' }
+    );
+
+    await OTP.deleteOne({ phone });
+
+    res.json({ message: 'OTP verified', resetToken });
+  } catch (err) {
+    console.error('verify-forgot-otp error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ── POST /api/auth/reset-password ─────────────────────────────────────────────
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { resetToken, newPassword } = req.body;
+
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ message: 'Reset token and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    let payload;
+    try {
+      payload = jwt.verify(resetToken, process.env.JWT_SECRET);
+    } catch {
+      return res.status(401).json({ message: 'Reset link has expired. Please start again.' });
+    }
+
+    if (payload.purpose !== 'reset') {
+      return res.status(401).json({ message: 'Invalid reset token' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    const user = await User.findByIdAndUpdate(
+      payload.userId,
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Clean up any leftover OTP records for this user's phone
+    await OTP.deleteMany({ phone: user.phone });
+
+    res.json({ message: 'Password reset successfully. You can now log in.' });
+  } catch (err) {
+    console.error('reset-password error:', err.message);
+    res.status(500).json({ message: 'Server error. Please try again.' });
+  }
+});
+
 module.exports = router;

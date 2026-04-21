@@ -79,6 +79,10 @@ export default function Admin() {
   const [evPages, setEvPages]       = useState(1);
   const [evLoading, setEvLoading]   = useState(false);
 
+  // User detail modal
+  const [userDetail, setUserDetail] = useState(null);
+  const [userDetailLoading, setUserDetailLoading] = useState(false);
+
   // Ban modal
   const [banModal, setBanModal]   = useState(null); // { id, name }
   const [banReason, setBanReason] = useState('');
@@ -229,6 +233,36 @@ export default function Admin() {
     fetchBroadcasts(bcPage, true); fetchStats(true);
   };
 
+  const deleteBroadcast = async (id) => {
+    if (!window.confirm('Permanently delete this broadcast? This cannot be undone.')) return;
+    await fetch(`${API}/api/admin/broadcasts/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
+    loadedRef.current.broadcasts = false; loadedRef.current.overview = false;
+    fetchBroadcasts(bcPage, true); fetchStats(true);
+  };
+
+  const openUserDetail = async (id) => {
+    setUserDetailLoading(true);
+    setUserDetail({ _loading: true });
+    try {
+      const res = await fetch(`${API}/api/admin/users/${id}/detail`, { headers: { Authorization: `Bearer ${token()}` } });
+      if (res.ok) setUserDetail(await res.json());
+      else setUserDetail(null);
+    } catch { setUserDetail(null); }
+    setUserDetailLoading(false);
+  };
+
+  const exportCSV = async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/users/export`, { headers: { Authorization: `Bearer ${token()}` } });
+      if (!res.ok) { alert('Export failed'); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'lifelink-users.csv'; a.click();
+      URL.revokeObjectURL(url);
+    } catch { alert('Export failed'); }
+  };
+
   const deleteEvent = async (id, title) => {
     if (!window.confirm(`Delete event "${title}"?`)) return;
     await fetch(`${API}/api/admin/events/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
@@ -311,6 +345,56 @@ export default function Admin() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── User Detail Modal ── */}
+      {userDetail && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+          zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }} onClick={() => setUserDetail(null)}>
+          <div style={{
+            background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: 16, padding: '1.6rem', width: '100%', maxWidth: 480,
+            boxShadow: '0 16px 48px rgba(0,0,0,0.35)', maxHeight: '90vh', overflowY: 'auto',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, color: 'var(--text)' }}>👤 User Profile</h3>
+              <button onClick={() => setUserDetail(null)} style={{
+                background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--muted)', lineHeight: 1,
+              }}>✕</button>
+            </div>
+            {userDetailLoading || userDetail._loading ? (
+              <div className={styles.loading}><div className={styles.spinner} /></div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.9rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.3rem' }}>
+                  {userDetail.isVerified && <span style={{ background: '#e8f5e9', color: '#2e7d32', border: '1px solid #a5d6a7', borderRadius: 6, padding: '0.1rem 0.5rem', fontSize: '0.78rem', fontWeight: 700 }}>✅ Verified</span>}
+                  {userDetail.isAdmin && <span style={{ background: '#e3f2fd', color: '#1565c0', border: '1px solid #90caf9', borderRadius: 6, padding: '0.1rem 0.5rem', fontSize: '0.78rem', fontWeight: 700 }}>🛡️ Admin</span>}
+                  {userDetail.isBanned && <span style={{ background: '#fce4ec', color: '#b71c1c', border: '1px solid #ef9a9a', borderRadius: 6, padding: '0.1rem 0.5rem', fontSize: '0.78rem', fontWeight: 700 }}>🚫 Banned</span>}
+                </div>
+                {[
+                  ['Full Name',     userDetail.fullName],
+                  ['Phone',         userDetail.phone],
+                  ['Gender',        userDetail.gender || '—'],
+                  ['Blood Group',   userDetail.bloodGroup || '—'],
+                  ['District',      userDetail.district || '—'],
+                  ['State',         userDetail.state || '—'],
+                  ['Ban Reason',    userDetail.isBanned ? (userDetail.banReason || 'No reason given') : null],
+                  ['Joined',        userDetail.createdAt ? new Date(userDetail.createdAt).toLocaleString('en-IN') : '—'],
+                  ['Last Active',   userDetail.lastActive ? new Date(userDetail.lastActive).toLocaleString('en-IN') : '—'],
+                  ['Requests Posted',  userDetail.requestsPosted ?? 0],
+                  ['Responses Given',  userDetail.responsesGiven ?? 0],
+                ].filter(([, v]) => v !== null).map(([label, value]) => (
+                  <div key={label} style={{ display: 'flex', gap: '0.5rem' }}>
+                    <span style={{ color: 'var(--muted)', minWidth: 130, flexShrink: 0 }}>{label}:</span>
+                    <span style={{ color: 'var(--text)', fontWeight: 500, wordBreak: 'break-all' }}>{String(value)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -583,6 +667,7 @@ export default function Admin() {
               </select>
               <button className={styles.searchBtn} onClick={() => { loadedRef.current.users = false; fetchUsers(1, true); }}>Search</button>
               <button className={styles.refreshBtn} onClick={() => { loadedRef.current.users = false; fetchUsers(usersPage, true); }}>↻ Refresh</button>
+              <button className={styles.refreshBtn} onClick={exportCSV} title="Download all users as CSV">⬇ Export CSV</button>
               <span className={styles.totalCount}>{usersTotal} users</span>
             </div>
 
@@ -601,14 +686,14 @@ export default function Admin() {
                         ? <tr><td colSpan={11} className={styles.emptyCell}>No users found</td></tr>
                         : users.map(u => (
                           <tr key={u._id}>
-                            <td className={styles.nameCell}>
+                            <td className={styles.nameCell} style={{ cursor: 'pointer' }} onClick={() => openUserDetail(u._id)} title="View full profile">
                               {u.isAdmin && <span className={styles.adminTag}>Admin</span>}
                               {u.isBanned && (
                                 <span style={{ background: '#b71c1c22', color: '#b71c1c', border: '1px solid #ef9a9a', borderRadius: 4, padding: '0.05rem 0.35rem', fontSize: '0.7rem', fontWeight: 700, marginRight: '0.3rem' }}>
                                   🚫 BANNED
                                 </span>
                               )}
-                              <span style={{ color: u.isBanned ? 'var(--muted)' : 'var(--text)', textDecoration: u.isBanned ? 'line-through' : 'none' }}>
+                              <span style={{ color: u.isBanned ? 'var(--muted)' : '#1565c0', textDecoration: u.isBanned ? 'line-through' : 'underline', textDecorationStyle: 'dotted' }}>
                                 {u.fullName}
                               </span>
                             </td>
@@ -699,12 +784,12 @@ export default function Admin() {
                     <thead>
                       <tr>
                         <th>Blood</th><th>Requester</th><th>Location</th>
-                        <th>Urgency</th><th>Status</th><th>Resp.</th><th>Time</th><th>Action</th>
+                        <th>Urgency</th><th>Status</th><th>Resp.</th><th>Time</th><th>Cancel</th><th>Del</th>
                       </tr>
                     </thead>
                     <tbody>
                       {broadcasts.length === 0
-                        ? <tr><td colSpan={8} className={styles.emptyCell}>No broadcasts found</td></tr>
+                        ? <tr><td colSpan={9} className={styles.emptyCell}>No broadcasts found</td></tr>
                         : broadcasts.map(b => (
                           <tr key={b._id}>
                             <td><span className={styles.bloodPill}>{b.bloodGroup}</span></td>
@@ -734,6 +819,9 @@ export default function Admin() {
                               {b.status === 'active' && (
                                 <button className={styles.cancelBtn} onClick={() => cancelBroadcast(b._id)}>Cancel</button>
                               )}
+                            </td>
+                            <td>
+                              <button className={styles.deleteBtn} onClick={() => deleteBroadcast(b._id)}>Del</button>
                             </td>
                           </tr>
                         ))

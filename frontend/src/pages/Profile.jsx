@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './Profile.module.css';
@@ -34,6 +34,17 @@ export default function Profile() {
   const [pwSaving, setPwSaving] = useState(false);
   const [pwError, setPwError]   = useState('');
   const [pwSaved, setPwSaved]   = useState(false);
+
+  // Re-verify phone state
+  const [reverifying, setReverifying] = useState(false);
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [verifyOtp, setVerifyOtp] = useState(['', '', '', '', '', '']);
+  const [verifyError, setVerifyError] = useState('');
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const otpRefs = useRef([]);
+
+  // Delete account state
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const hdrs = { Authorization: `Bearer ${token()}` };
@@ -164,6 +175,79 @@ export default function Profile() {
     );
   };
 
+  const handleResendVerification = async () => {
+    setReverifying(true);
+    setVerifyError('');
+    try {
+      const res = await fetch(`${API}/api/users/resend-verification`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      const data = await res.json();
+      if (!res.ok) { setVerifyError(data.message); setReverifying(false); return; }
+      setShowOtpInput(true);
+    } catch { setVerifyError('Failed to send OTP. Check your connection.'); }
+    setReverifying(false);
+  };
+
+  const handleOtpKey = (i, e) => {
+    const val = e.target.value.replace(/\D/, '');
+    if (!val) {
+      const next = [...verifyOtp]; next[i] = '';
+      setVerifyOtp(next);
+      if (i > 0) otpRefs.current[i - 1]?.focus();
+      return;
+    }
+    const next = [...verifyOtp]; next[i] = val.slice(-1);
+    setVerifyOtp(next);
+    if (i < 5) otpRefs.current[i + 1]?.focus();
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const code = verifyOtp.join('');
+    if (code.length < 6) { setVerifyError('Please enter the 6-digit OTP'); return; }
+    setVerifyLoading(true); setVerifyError('');
+    try {
+      const res = await fetch(`${API}/api/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: profile.phone, otp: code }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setVerifyError(data.message); setVerifyLoading(false); return; }
+      setProfile(p => ({ ...p, isVerified: true }));
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({ ...stored, isVerified: true }));
+      setShowOtpInput(false);
+      setVerifyOtp(['', '', '', '', '', '']);
+    } catch { setVerifyError('Verification failed. Try again.'); }
+    setVerifyLoading(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      'Are you sure? This permanently deletes all your data and cannot be undone.'
+    );
+    if (!confirmed) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API}/api/users/me`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/');
+      } else {
+        const data = await res.json();
+        alert(data.message || 'Failed to delete account.');
+      }
+    } catch { alert('Failed to delete account. Check your connection.'); }
+    setDeleting(false);
+  };
+
   if (!profile) return (
     <AppShell connected={true}>
       <div className={styles.loading}><div className={styles.spinner} /></div>
@@ -195,6 +279,58 @@ export default function Profile() {
               {profile.isVerified ? '✅ Verified' : '⏳ Unverified'}
             </span>
           </div>
+
+          {/* Re-verify phone for unverified users */}
+          {!profile.isVerified && (
+            <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
+              {!showOtpInput ? (
+                <button
+                  onClick={handleResendVerification}
+                  disabled={reverifying}
+                  style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8,
+                    padding: '0.5rem 1.1rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}
+                >
+                  {reverifying ? '📡 Sending OTP…' : '📱 Verify My Phone'}
+                </button>
+              ) : (
+                <form onSubmit={handleVerifyOtp} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>Enter the 6-digit OTP sent to {profile.phone}</p>
+                  <div style={{ display: 'flex', gap: '0.35rem' }}>
+                    {verifyOtp.map((d, i) => (
+                      <input
+                        key={i}
+                        ref={el => otpRefs.current[i] = el}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={d}
+                        onChange={e => handleOtpKey(i, e)}
+                        onKeyDown={e => { if (e.key === 'Backspace' && !d && i > 0) otpRefs.current[i - 1]?.focus(); }}
+                        autoFocus={i === 0}
+                        style={{ width: 36, height: 42, textAlign: 'center', fontSize: '1.2rem',
+                          fontWeight: 700, border: '2px solid var(--border)', borderRadius: 8,
+                          background: 'var(--input-bg, var(--card-bg))', color: 'var(--text)' }}
+                      />
+                    ))}
+                  </div>
+                  {verifyError && <p style={{ color: '#d32f2f', fontSize: '0.8rem', margin: 0 }}>{verifyError}</p>}
+                  <button
+                    type="submit"
+                    disabled={verifyLoading || verifyOtp.join('').length < 6}
+                    style={{ background: '#388e3c', color: '#fff', border: 'none', borderRadius: 8,
+                      padding: '0.45rem 1.1rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}
+                  >
+                    {verifyLoading ? 'Verifying…' : '✅ Verify'}
+                  </button>
+                  <button type="button" onClick={() => { setShowOtpInput(false); setVerifyOtp(['','','','','','']); setVerifyError(''); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.8rem' }}>
+                    Cancel
+                  </button>
+                </form>
+              )}
+              {verifyError && !showOtpInput && <p style={{ color: '#d32f2f', fontSize: '0.8rem', marginTop: '0.4rem' }}>{verifyError}</p>}
+            </div>
+          )}
         </div>
 
         {/* ── Personal impact stats ── */}
@@ -490,6 +626,24 @@ export default function Profile() {
           </p>
           <button className={styles.gpsBtn} onClick={handleGeolocate} disabled={locating} type="button">
             {locating ? '📡 Getting location…' : '📍 Share My Location'}
+          </button>
+        </div>
+
+        {/* ── Delete Account ── */}
+        <div className={styles.card} style={{ borderColor: '#d32f2f55', background: 'linear-gradient(135deg, var(--card-bg), #d32f2f08)' }}>
+          <h2 className={styles.cardTitle} style={{ color: '#d32f2f' }}>⚠️ Delete Account</h2>
+          <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '0.9rem', lineHeight: 1.6 }}>
+            Permanently deletes your account, profile, and all associated data from LifeLink. This action cannot be undone.
+          </p>
+          <button
+            type="button"
+            disabled={deleting}
+            onClick={handleDeleteAccount}
+            style={{ background: '#d32f2f', color: '#fff', border: 'none', borderRadius: 8,
+              padding: '0.6rem 1.4rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
+              opacity: deleting ? 0.7 : 1 }}
+          >
+            {deleting ? 'Deleting…' : '🗑️ Delete My Account'}
           </button>
         </div>
 

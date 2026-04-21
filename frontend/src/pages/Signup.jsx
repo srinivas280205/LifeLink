@@ -4,6 +4,7 @@ import styles from './Auth.module.css';
 import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import PhoneInput, { toApiPhone } from '../components/PhoneInput';
 
 import API_BASE from '../config/api.js';
@@ -306,6 +307,7 @@ function WelcomeStep({ name }) {
 export default function Signup() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { lang, toggle: toggleLang } = useLanguage();
   const [step, setStep]       = useState('form');
   const [session, setSession] = useState(null);
 
@@ -324,16 +326,26 @@ export default function Signup() {
 
   return (
     <div className={styles.page}>
-      {/* Theme toggle */}
-      <button
-        onClick={toggle}
-        aria-label="Toggle theme"
-        style={{ position:'fixed', top:'1rem', right:'1rem', background:'var(--card-bg)',
-          border:'1px solid var(--border)', borderRadius:8, padding:'0.35rem 0.55rem',
-          fontSize:'1.1rem', cursor:'pointer', lineHeight:1, zIndex:10 }}
-      >
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </button>
+      {/* Theme + language toggles */}
+      <div style={{ position:'fixed', top:'1rem', right:'1rem', display:'flex', gap:'0.5rem', zIndex:10 }}>
+        <button
+          onClick={toggleLang}
+          title={lang === 'en' ? 'Switch to Tamil' : 'Switch to English'}
+          style={{ background:'var(--card-bg)', border:'1px solid var(--border)', borderRadius:8,
+            padding:'0.35rem 0.55rem', cursor:'pointer', fontSize:'0.78rem',
+            fontWeight:700, color:'var(--text)', lineHeight:1 }}
+        >
+          {lang === 'en' ? 'தமிழ்' : 'EN'}
+        </button>
+        <button
+          onClick={toggle}
+          aria-label="Toggle theme"
+          style={{ background:'var(--card-bg)', border:'1px solid var(--border)', borderRadius:8,
+            padding:'0.35rem 0.55rem', fontSize:'1.1rem', cursor:'pointer', lineHeight:1 }}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+      </div>
 
       <div className={styles.card}>
         <div className={styles.logo}>

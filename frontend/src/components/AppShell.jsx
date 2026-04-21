@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import styles from './AppShell.module.css';
 import BrandLogo from './BrandLogo';
 import OnboardingBanner from './OnboardingBanner';
@@ -22,6 +23,7 @@ export default function AppShell({ children, connected, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggle } = useTheme();
+  const { lang, toggle: toggleLang } = useLanguage();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user.id || user._id || '';
 
@@ -198,6 +200,15 @@ export default function AppShell({ children, connected, socket }) {
               {unread > 0 && <span className={styles.badge} aria-hidden="true">{unread > 9 ? '9+' : unread}</span>}
             </button>
 
+            <button
+              onClick={toggleLang}
+              title={lang === 'en' ? 'Switch to Tamil' : 'Switch to English'}
+              style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6,
+                padding: '0.25rem 0.55rem', cursor: 'pointer', fontSize: '0.78rem',
+                fontWeight: 700, color: 'var(--text)' }}
+            >
+              {lang === 'en' ? 'தமிழ்' : 'EN'}
+            </button>
             <button className={styles.themeBtn} onClick={toggle} title="Toggle theme"
               aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}>
               {theme === 'light' ? '🌙' : '☀️'}

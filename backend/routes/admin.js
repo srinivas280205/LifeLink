@@ -125,6 +125,41 @@ router.get('/users', adminAuth, async (req, res) => {
   }
 });
 
+// GET /api/admin/users/export — CSV download (must be BEFORE /users/:id routes)
+router.get('/users/export', adminAuth, async (req, res) => {
+  try {
+    const users = await User.find({}).select('-password').lean();
+    const headers = 'Name,Phone,Gender,Blood Group,State,District,Verified,Admin,Banned,Joined';
+    const rows = users.map(u => [
+      u.fullName, u.phone, u.gender || '', u.bloodGroup || '',
+      u.state || '', u.district || '',
+      u.isVerified ? 'Yes' : 'No', u.isAdmin ? 'Yes' : 'No', u.isBanned ? 'Yes' : 'No',
+      new Date(u.createdAt).toLocaleDateString('en-IN'),
+    ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+    const csv = [headers, ...rows].join('\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="lifelink-users.csv"');
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// GET /api/admin/users/:id/detail — full user profile + broadcast/response counts
+router.get('/users/:id/detail', adminAuth, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('-password').lean();
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    const [requestsPosted, responsesGiven] = await Promise.all([
+      Broadcast.countDocuments({ requestedBy: user._id }),
+      Broadcast.countDocuments({ 'responses.donorId': user._id.toString() }),
+    ]);
+    res.json({ ...user, requestsPosted, responsesGiven });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // GET /api/admin/broadcasts?page=1&status=&bloodGroup=
 router.get('/broadcasts', adminAuth, async (req, res) => {
   try {
@@ -182,6 +217,16 @@ router.patch('/broadcasts/:id/cancel', adminAuth, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('broadcast_updated', { broadcastId: b._id, status: 'cancelled' });
     res.json({ message: 'Broadcast cancelled', broadcast: b });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/admin/broadcasts/:id — hard delete a broadcast
+router.delete('/broadcasts/:id', adminAuth, async (req, res) => {
+  try {
+    await Broadcast.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Broadcast deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

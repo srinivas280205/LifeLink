@@ -113,4 +113,39 @@ router.get('/mystats', auth, async (req, res) => {
   }
 });
 
+// POST /api/users/resend-verification — resend OTP for existing unverified user
+router.post('/resend-verification', auth, async (req, res) => {
+  try {
+    const OTP = require('../models/OTP');
+    const user = await User.findById(req.user.userId).select('phone isVerified');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ message: 'Phone already verified' });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await OTP.findOneAndUpdate(
+      { phone: user.phone },
+      { phone: user.phone, otp, attempts: 0, expiresAt },
+      { upsert: true, new: true }
+    );
+    console.log(`📱 [REVERIFY OTP] ${user.phone} → ${otp}`);
+    res.json({ message: 'OTP sent to your phone', phone: user.phone });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// DELETE /api/users/me — delete own account
+router.delete('/me', auth, async (req, res) => {
+  try {
+    const Notification = require('../models/Notification');
+    await Promise.all([
+      User.findByIdAndDelete(req.user.userId),
+      Notification.deleteMany({ userId: req.user.userId }),
+    ]);
+    res.json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
