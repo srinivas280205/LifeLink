@@ -20,8 +20,10 @@ function timeAgo(dateStr) {
 }
 
 const TYPE_META = {
-  new_broadcast:    { icon: '🩸', label: 'Blood Request', color: '#d32f2f' },
+  new_broadcast:    { icon: '🩸', label: 'Blood Request',  color: '#d32f2f' },
   donor_responded:  { icon: '✅', label: 'Donor Responded', color: '#388e3c' },
+  announcement:     { icon: '📢', label: 'Announcement',    color: '#f57c00' },
+  admin_dm:         { icon: '✉️', label: 'Admin Message',   color: '#1565c0' },
 };
 
 export default function Notifications() {
@@ -96,7 +98,11 @@ export default function Notifications() {
                   <div
                     key={n._id || i}
                     className={`${styles.notifCard} ${!n.read ? styles.unread : ''}`}
-                    onClick={() => navigate('/dashboard')}
+                    onClick={() => {
+                      if (n.type === 'admin_dm' || n.type === 'announcement') return; // stay on page
+                      navigate('/dashboard');
+                    }}
+                    style={{ cursor: (n.type === 'admin_dm' || n.type === 'announcement') ? 'default' : 'pointer' }}
                   >
                     <div className={styles.iconWrap} style={{ background: `${meta.color}18` }}>
                       <span>{meta.icon}</span>

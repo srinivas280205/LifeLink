@@ -260,6 +260,35 @@ router.post('/announce', adminAuth, async (req, res) => {
   }
 });
 
+// POST /api/admin/users/:id/message — send direct message to a specific user
+router.post('/users/:id/message', adminAuth, async (req, res) => {
+  try {
+    const { title, body } = req.body;
+    if (!title || !body) return res.status(400).json({ message: 'Title and body are required' });
+    const target = await User.findById(req.params.id).select('_id fullName');
+    if (!target) return res.status(404).json({ message: 'User not found' });
+
+    const notif = await Notification.create({
+      userId: target._id,
+      type: 'admin_dm',
+      title,
+      body,
+    });
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('new_notification', {
+        userId: target._id.toString(),
+        notification: { ...notif.toObject() },
+      });
+    }
+
+    res.json({ message: `Message sent to ${target.fullName}` });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // PATCH /api/admin/users/:id/ban — ban a user
 router.patch('/users/:id/ban', adminAuth, async (req, res) => {
   try {

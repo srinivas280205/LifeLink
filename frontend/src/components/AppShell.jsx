@@ -268,10 +268,18 @@ export default function AppShell({ children, connected, socket }) {
                   <div
                     key={n._id || i}
                     className={`${styles.notifItem} ${!n.read ? styles.notifUnread : ''}`}
-                    onClick={() => { setNotifOpen(false); navigate('/dashboard'); }}
+                    onClick={() => {
+                      setNotifOpen(false);
+                      if (n.type === 'admin_dm' || n.type === 'announcement') { navigate('/notifications'); }
+                      else { navigate('/dashboard'); }
+                    }}
                   >
                     <div className={styles.notifIcon}>
-                      {n.type === 'new_broadcast' ? '🩸' : '✅'}
+                      {n.type === 'new_broadcast' ? '🩸'
+                        : n.type === 'donor_responded' ? '✅'
+                        : n.type === 'announcement' ? '📢'
+                        : n.type === 'admin_dm' ? '✉️'
+                        : '🔔'}
                     </div>
                     <div className={styles.notifBody}>
                       <div className={styles.notifItemTitle}>{n.title}</div>

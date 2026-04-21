@@ -88,6 +88,13 @@ export default function Admin() {
   const [banReason, setBanReason] = useState('');
   const [banSaving, setBanSaving] = useState(false);
 
+  // DM modal
+  const [dmModal, setDmModal]     = useState(null); // { id, name }
+  const [dmTitle, setDmTitle]     = useState('');
+  const [dmBody, setDmBody]       = useState('');
+  const [dmSending, setDmSending] = useState(false);
+  const [dmResult, setDmResult]   = useState('');
+
   // Announce
   const [annTitle, setAnnTitle]     = useState('');
   const [annBody, setAnnBody]       = useState('');
@@ -270,6 +277,27 @@ export default function Admin() {
     fetchEvents(evPage, true);
   };
 
+  const openDmModal = (u) => {
+    setDmModal({ id: u._id, name: u.fullName });
+    setDmTitle(''); setDmBody(''); setDmResult('');
+  };
+
+  const sendDm = async () => {
+    if (!dmTitle.trim() || !dmBody.trim()) return;
+    setDmSending(true); setDmResult('');
+    try {
+      const res = await fetch(`${API}/api/admin/users/${dmModal.id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify({ title: dmTitle, body: dmBody }),
+      });
+      const d = await res.json();
+      setDmResult(res.ok ? `✅ ${d.message}` : `❌ ${d.message}`);
+      if (res.ok) { setDmTitle(''); setDmBody(''); setTimeout(() => setDmModal(null), 1800); }
+    } catch { setDmResult('❌ Network error'); }
+    setDmSending(false);
+  };
+
   const sendAnnouncement = async () => {
     if (!annTitle.trim() || !annBody.trim()) return;
     setAnnSending(true); setAnnResult('');
@@ -349,6 +377,85 @@ export default function Admin() {
         </div>
       )}
 
+      {/* ── DM Compose Modal ── */}
+      {dmModal && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+          zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }} onClick={() => setDmModal(null)}>
+          <div style={{
+            background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: 16, padding: '1.6rem', width: '100%', maxWidth: 460,
+            boxShadow: '0 16px 48px rgba(0,0,0,0.35)',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem' }}>
+              <h3 style={{ margin: 0, color: 'var(--text)', fontSize: '1.05rem' }}>
+                ✉️ Send Message to <span style={{ color: '#1a73e8' }}>{dmModal.name}</span>
+              </h3>
+              <button onClick={() => setDmModal(null)} style={{
+                background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--muted)', lineHeight: 1,
+              }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
+                  Subject / Title
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Important Notice"
+                  value={dmTitle}
+                  onChange={e => setDmTitle(e.target.value)}
+                  style={{
+                    width: '100%', padding: '0.6rem 0.85rem', borderRadius: 8,
+                    border: '1.5px solid var(--border)', background: 'var(--bg)',
+                    color: 'var(--text)', fontSize: '0.93rem', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '0.3rem', fontWeight: 600 }}>
+                  Message
+                </label>
+                <textarea
+                  rows={5}
+                  placeholder="Write your message here…"
+                  value={dmBody}
+                  onChange={e => setDmBody(e.target.value)}
+                  style={{
+                    width: '100%', padding: '0.6rem 0.85rem', borderRadius: 8,
+                    border: '1.5px solid var(--border)', background: 'var(--bg)',
+                    color: 'var(--text)', fontSize: '0.93rem', resize: 'vertical',
+                    boxSizing: 'border-box', fontFamily: 'inherit',
+                  }}
+                />
+              </div>
+              {dmResult && (
+                <p style={{ margin: 0, fontSize: '0.88rem', color: dmResult.startsWith('✅') ? '#2e7d32' : '#c62828', fontWeight: 600 }}>
+                  {dmResult}
+                </p>
+              )}
+              <div style={{ display: 'flex', gap: '0.7rem', justifyContent: 'flex-end', marginTop: '0.3rem' }}>
+                <button onClick={() => setDmModal(null)} style={{
+                  padding: '0.55rem 1.1rem', borderRadius: 8, border: '1.5px solid var(--border)',
+                  background: 'none', color: 'var(--muted)', cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem',
+                }}>Cancel</button>
+                <button
+                  onClick={sendDm}
+                  disabled={dmSending || !dmTitle.trim() || !dmBody.trim()}
+                  style={{
+                    padding: '0.55rem 1.3rem', borderRadius: 8, border: 'none',
+                    background: dmSending || !dmTitle.trim() || !dmBody.trim() ? '#aaa' : '#1a73e8',
+                    color: '#fff', cursor: dmSending ? 'wait' : 'pointer',
+                    fontWeight: 700, fontSize: '0.88rem',
+                  }}
+                >{dmSending ? 'Sending…' : '✉️ Send Message'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── User Detail Modal ── */}
       {userDetail && (
         <div style={{
@@ -393,6 +500,32 @@ export default function Admin() {
                     <span style={{ color: 'var(--text)', fontWeight: 500, wordBreak: 'break-all' }}>{String(value)}</span>
                   </div>
                 ))}
+              </div>
+            )}
+            {/* Actions inside user detail */}
+            {!userDetailLoading && !userDetail?._loading && userDetail && (
+              <div style={{ marginTop: '1.2rem', paddingTop: '1rem', borderTop: '1px solid var(--border)', display: 'flex', gap: '0.7rem', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => { setUserDetail(null); openDmModal(userDetail); }}
+                  style={{
+                    flex: '1 1 auto', padding: '0.55rem 1rem', borderRadius: 8,
+                    border: '1.5px solid #90caf9', background: '#e3f2fd', color: '#1565c0',
+                    cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem',
+                  }}
+                >✉️ Send Message</button>
+                {!userDetail.isAdmin && (
+                  userDetail.isBanned ? (
+                    <button
+                      onClick={() => { setUserDetail(null); unbanUser(userDetail._id); }}
+                      style={{ flex: '1 1 auto', padding: '0.55rem 1rem', borderRadius: 8, border: '1.5px solid #a5d6a7', background: '#e8f5e9', color: '#2e7d32', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}
+                    >✅ Unban User</button>
+                  ) : (
+                    <button
+                      onClick={() => { setUserDetail(null); openBanModal(userDetail); }}
+                      style={{ flex: '1 1 auto', padding: '0.55rem 1rem', borderRadius: 8, border: '1.5px solid #ef9a9a', background: '#fce4ec', color: '#b71c1c', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem' }}
+                    >🚫 Ban User</button>
+                  )
+                )}
               </div>
             )}
           </div>
@@ -736,6 +869,13 @@ export default function Admin() {
                                   >Ban</button>
                                 )
                               )}
+                            </td>
+                            <td>
+                              <button
+                                onClick={() => openDmModal(u)}
+                                title={`Send message to ${u.fullName}`}
+                                style={{ padding: '0.2rem 0.5rem', background: '#e3f2fd', color: '#1565c0', border: '1px solid #90caf9', borderRadius: 6, cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                              >✉️</button>
                             </td>
                             <td>
                               {!u.isAdmin && (
