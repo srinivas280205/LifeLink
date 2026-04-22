@@ -23,7 +23,7 @@ export default function AppShell({ children, connected, socket }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggle } = useTheme();
-  const { lang, toggle: toggleLang } = useLanguage();
+  const { lang, toggle: toggleLang, t } = useLanguage();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user.id || user._id || '';
 
@@ -135,14 +135,14 @@ export default function AppShell({ children, connected, socket }) {
   };
 
   const tabs = [
-    { path: '/dashboard',   icon: '📡', label: 'Live Feed'  },
-    { path: '/map',         icon: '🗺️', label: 'Donor Map'  },
-    { path: '/search',      icon: '🔍', label: 'Search'    },
-    { path: '/leaderboard', icon: '🏆', label: 'Leaders'   },
-    { path: '/events',      icon: '🩸', label: 'Events'    },
-    { path: '/history',     icon: '📋', label: 'History'   },
-    { path: '/profile',     icon: '👤', label: 'Profile'   },
-    ...(user.isAdmin ? [{ path: '/admin', icon: '🛡️', label: 'Admin' }] : []),
+    { path: '/dashboard',   icon: '📡', label: t('liveFeed')  },
+    { path: '/map',         icon: '🗺️', label: t('donorMap')  },
+    { path: '/search',      icon: '🔍', label: t('search')    },
+    { path: '/leaderboard', icon: '🏆', label: t('leaders')   },
+    { path: '/events',      icon: '🩸', label: t('events')    },
+    { path: '/history',     icon: '📋', label: t('history')   },
+    { path: '/profile',     icon: '👤', label: t('profile')   },
+    ...(user.isAdmin ? [{ path: '/admin', icon: '🛡️', label: t('admin') }] : []),
   ];
 
   return (
@@ -152,10 +152,10 @@ export default function AppShell({ children, connected, socket }) {
         <div className={styles.installBanner}>
           <span className={styles.installIcon}>📲</span>
           <div className={styles.installText}>
-            <strong>Install LifeLink</strong>
-            <span>Add to home screen for instant access during emergencies</span>
+            <strong>{t('installApp')}</strong>
+            <span>{t('installHint')}</span>
           </div>
-          <button className={styles.installBtn} onClick={handleInstall}>Install</button>
+          <button className={styles.installBtn} onClick={handleInstall}>{t('install')}</button>
           <button className={styles.installClose} onClick={dismissInstall}>✕</button>
         </div>
       )}
@@ -170,7 +170,7 @@ export default function AppShell({ children, connected, socket }) {
 
           <div className={styles.headerMeta}>
             <span className={connected ? styles.dotOn : styles.dotOff} />
-            <span className={styles.connLabel}>{connected ? 'Live' : 'Connecting'}</span>
+            <span className={styles.connLabel}>{connected ? t('live') : t('connecting')}</span>
           </div>
 
           <div className={styles.headerRight}>
@@ -183,7 +183,7 @@ export default function AppShell({ children, connected, socket }) {
                 title={available ? 'You are available to donate — click to go offline' : 'You are unavailable — click to go available'}
               >
                 <span className={available ? styles.availDotOn : styles.availDotOff} />
-                {available ? 'Available' : 'Offline'}
+                {available ? t('available') : t('offline')}
               </button>
             )}
 
@@ -202,7 +202,7 @@ export default function AppShell({ children, connected, socket }) {
 
             <button
               onClick={toggleLang}
-              title={lang === 'en' ? 'Switch to Tamil' : 'Switch to English'}
+              title={lang === 'en' ? t('switchToTamil') : t('switchToEnglish')}
               style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6,
                 padding: '0.25rem 0.55rem', cursor: 'pointer', fontSize: '0.78rem',
                 fontWeight: 700, color: 'var(--text)' }}
@@ -217,7 +217,7 @@ export default function AppShell({ children, connected, socket }) {
               <span className={styles.userBlood}>{user.bloodGroup || '👤'}</span>
               <span className={styles.userName}>{user.fullName?.split(' ')[0]}</span>
             </div>
-            <button className={styles.logoutBtn} onClick={handleLogout} aria-label="Log out of LifeLink">Logout</button>
+            <button className={styles.logoutBtn} onClick={handleLogout} aria-label="Log out of LifeLink">{t('logout')}</button>
           </div>
         </div>
 
@@ -244,15 +244,15 @@ export default function AppShell({ children, connected, socket }) {
           <div className={styles.notifDrawer} onClick={(e) => e.stopPropagation()}
             role="dialog" aria-modal="true" aria-label="Notifications">
             <div className={styles.notifHeader}>
-              <span className={styles.notifTitle}>Notifications</span>
+              <span className={styles.notifTitle}>{t('notifications')}</span>
               {notifications.some((n) => !n.read) && (
-                <button className={styles.markReadBtn} onClick={markAllRead}>Mark all read</button>
+                <button className={styles.markReadBtn} onClick={markAllRead}>{t('markAllRead')}</button>
               )}
               <button
                 className={styles.markReadBtn}
                 style={{ borderColor: '#1976d2', color: '#1976d2' }}
                 onClick={() => { setNotifOpen(false); navigate('/notifications'); }}
-              >View all</button>
+              >{t('viewAll')}</button>
               <button className={styles.notifClose} onClick={() => setNotifOpen(false)}>✕</button>
             </div>
 
@@ -260,8 +260,8 @@ export default function AppShell({ children, connected, socket }) {
               {notifications.length === 0 ? (
                 <div className={styles.notifEmpty}>
                   <span>🔔</span>
-                  <p>No notifications yet</p>
-                  <small>You'll be notified when blood requests match your type</small>
+                  <p>{t('noNotifications')}</p>
+                  <small>{t('notifHint')}</small>
                 </div>
               ) : (
                 notifications.map((n, i) => (

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './Leaderboard.module.css';
 import { SkeletonLeaderRow } from '../components/Skeleton';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -14,15 +15,16 @@ const BG_COLORS  = {
   'B-': '#2e7d32', 'B+': '#388e3c', 'AB-': '#4a148c', 'AB+': '#6a1b9a',
 };
 
-function getBadge(count) {
-  if (count >= 20) return { icon: '🏆', label: 'Legend', color: '#f57f17' };
-  if (count >= 10) return { icon: '⭐', label: 'Hero',   color: '#d32f2f' };
-  if (count >= 5)  return { icon: '💪', label: 'Active', color: '#1976d2' };
-  return                  { icon: '🩸', label: 'Donor',  color: '#388e3c' };
+function getBadge(count, t) {
+  if (count >= 20) return { icon: '🏆', label: t('badgeLegend'), color: '#f57f17' };
+  if (count >= 10) return { icon: '⭐', label: t('badgeHero'),   color: '#d32f2f' };
+  if (count >= 5)  return { icon: '💪', label: t('badgeActive'), color: '#1976d2' };
+  return                  { icon: '🩸', label: t('badgeDonor'),  color: '#388e3c' };
 }
 
 export default function Leaderboard() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [data, setData]       = useState(null);
   const [loading, setLoading] = useState(true);
   const me = JSON.parse(localStorage.getItem('user') || '{}');
@@ -42,8 +44,8 @@ export default function Leaderboard() {
 
           {/* Header */}
           <div className={styles.header}>
-            <h1 className={styles.title}>🏆 Donor Leaderboard</h1>
-            <p className={styles.sub}>Top blood donors making a difference across India</p>
+            <h1 className={styles.title}>{t('leaderboardTitle')}</h1>
+            <p className={styles.sub}>{t('leaderboardSub')}</p>
           </div>
 
           {/* Platform stats bar */}
@@ -51,17 +53,17 @@ export default function Leaderboard() {
             <div className={styles.statsBar}>
               <div className={styles.statItem}>
                 <span className={styles.statVal}>{data.stats.totalDonors}</span>
-                <span className={styles.statLbl}>Active Donors</span>
+                <span className={styles.statLbl}>{t('activeDonors')}</span>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statVal}>{data.stats.totalResponses}</span>
-                <span className={styles.statLbl}>Total Responses</span>
+                <span className={styles.statLbl}>{t('totalResponses')}</span>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statVal}>{data.stats.fulfilledCount}</span>
-                <span className={styles.statLbl}>Lives Saved</span>
+                <span className={styles.statLbl}>{t('livesSaved')}</span>
               </div>
             </div>
           )}
@@ -75,8 +77,8 @@ export default function Leaderboard() {
           {!loading && data?.leaderboard?.length === 0 && (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>🏆</span>
-              <p>No donors on the leaderboard yet.</p>
-              <p className={styles.emptySub}>Be the first — respond to a blood request!</p>
+              <p>{t('noDonors')}</p>
+              <p className={styles.emptySub}>{t('beFirst')}</p>
             </div>
           )}
 
@@ -88,7 +90,7 @@ export default function Leaderboard() {
                   .filter(Boolean)
                   .map((donor, i) => {
                     const pos = [2, 1, 3][i];
-                    const badge = getBadge(donor.donationsGiven);
+                    const badge = getBadge(donor.donationsGiven, t);
                     const isMe = donor.donorId === (me.id || me._id);
                     return (
                       <div
@@ -104,11 +106,11 @@ export default function Leaderboard() {
                         </div>
                         <p className={styles.podiumName}>
                           {donor.donorName.split(' ')[0]}
-                          {isMe && <span className={styles.youBadge}> (You)</span>}
+                          {isMe && <span className={styles.youBadge}> ({t('you')})</span>}
                         </p>
                         <p className={styles.podiumCount}>
                           {donor.donationsGiven}
-                          <span> donations</span>
+                          <span> {t('donations')}</span>
                         </p>
                         <span className={styles.badgePill} style={{ color: badge.color }}>
                           {badge.icon} {badge.label}
@@ -121,7 +123,7 @@ export default function Leaderboard() {
               {/* Full ranked list */}
               <div className={styles.list}>
                 {data.leaderboard.map((donor) => {
-                  const badge = getBadge(donor.donationsGiven);
+                  const badge = getBadge(donor.donationsGiven, t);
                   const isMe  = donor.donorId === (me.id || me._id);
                   return (
                     <div key={donor.donorId} className={`${styles.row} ${isMe ? styles.rowMe : ''}`}>
@@ -137,7 +139,7 @@ export default function Leaderboard() {
                       <div className={styles.rowInfo}>
                         <span className={styles.rowName}>
                           {donor.donorName}
-                          {isMe && <span className={styles.youBadge}> (You)</span>}
+                          {isMe && <span className={styles.youBadge}> ({t('you')})</span>}
                         </span>
                         <span className={styles.rowLocation}>
                           {[donor.district, donor.state].filter(Boolean).join(', ') || 'India'}
@@ -148,7 +150,7 @@ export default function Leaderboard() {
                           {badge.icon} {badge.label}
                         </span>
                         <span className={styles.rowCount}>
-                          {donor.donationsGiven} <span>donations</span>
+                          {donor.donationsGiven} <span>{t('donations')}</span>
                         </span>
                       </div>
                       <span className={`${styles.availDot} ${donor.isAvailable ? styles.availOn : styles.availOff}`} />
@@ -158,7 +160,7 @@ export default function Leaderboard() {
               </div>
 
               <p className={styles.footnote}>
-                Rankings based on broadcast responses. Updated in real-time.
+                {t('rankingsNote')}
               </p>
             </>
           )}

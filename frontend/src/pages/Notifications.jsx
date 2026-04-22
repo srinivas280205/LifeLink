@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './Notifications.module.css';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -19,18 +20,19 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-const TYPE_META = {
-  new_broadcast:    { icon: '🩸', label: 'Blood Request',  color: '#d32f2f' },
-  donor_responded:  { icon: '✅', label: 'Donor Responded', color: '#388e3c' },
-  announcement:     { icon: '📢', label: 'Announcement',    color: '#f57c00' },
-  admin_dm:         { icon: '✉️', label: 'Admin Message',   color: '#1565c0' },
-};
-
 export default function Notifications() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const TYPE_META = {
+    new_broadcast:    { icon: '🩸', label: t('notifTypeBlood'),    color: '#d32f2f' },
+    donor_responded:  { icon: '✅', label: t('notifTypeDonor'),    color: '#388e3c' },
+    announcement:     { icon: '📢', label: t('notifTypeAnnounce'), color: '#f57c00' },
+    admin_dm:         { icon: '✉️', label: t('notifTypeAdmin'),    color: '#1565c0' },
+  };
 
   useEffect(() => {
     if (!token()) { navigate('/login'); return; }
@@ -67,12 +69,12 @@ export default function Notifications() {
 
           <div className={styles.header}>
             <div>
-              <h1 className={styles.title}>🔔 Notifications</h1>
-              <p className={styles.sub}>Your activity alerts and blood request updates</p>
+              <h1 className={styles.title}>{t('notifPageTitle')}</h1>
+              <p className={styles.sub}>{t('notifPageSub')}</p>
             </div>
             {unread > 0 && (
               <button className={styles.markAllBtn} onClick={markAllRead}>
-                ✓ Mark all read ({unread})
+                ✓ {t('markAllRead')} ({unread})
               </button>
             )}
           </div>
@@ -84,8 +86,8 @@ export default function Notifications() {
           {!loading && notifications.length === 0 && (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>🔔</span>
-              <p>No notifications yet</p>
-              <p className={styles.emptySub}>You'll be notified when blood requests match your type or someone responds to your request.</p>
+              <p>{t('noNotifsYet')}</p>
+              <p className={styles.emptySub}>{t('noNotifsSub')}</p>
             </div>
           )}
 

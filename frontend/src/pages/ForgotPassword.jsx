@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import styles from './Auth.module.css';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
 import PhoneInput, { toApiPhone } from '../components/PhoneInput';
 import API_BASE from '../config/api.js';
 
@@ -11,6 +12,7 @@ const API = API_BASE;
 export default function ForgotPassword() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { lang, toggle: toggleLang, t } = useLanguage();
 
   // step: 'phone' | 'otp' | 'reset'
   const [step, setStep]             = useState('phone');
@@ -177,49 +179,56 @@ export default function ForgotPassword() {
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className={styles.page}>
-      {/* Theme toggle */}
-      <button
-        onClick={toggle}
-        aria-label="Toggle theme"
-        style={{
-          position: 'fixed', top: '1rem', right: '1rem',
-          background: 'var(--card-bg)', border: '1px solid var(--border)',
-          borderRadius: 8, padding: '0.35rem 0.55rem',
-          fontSize: '1.1rem', cursor: 'pointer', lineHeight: 1, zIndex: 10,
-        }}
-      >
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </button>
+      {/* Theme + language toggles */}
+      <div style={{ position:'fixed', top:'1rem', right:'1rem', display:'flex', gap:'0.5rem', zIndex:10 }}>
+        <button
+          onClick={toggleLang}
+          title={lang === 'en' ? t('switchToTamil') : t('switchToEnglish')}
+          style={{ background:'var(--card-bg)', border:'1px solid var(--border)', borderRadius:8,
+            padding:'0.35rem 0.55rem', cursor:'pointer', fontSize:'0.78rem',
+            fontWeight:700, color:'var(--text)', lineHeight:1 }}
+        >
+          {lang === 'en' ? 'தமிழ்' : 'EN'}
+        </button>
+        <button
+          onClick={toggle}
+          aria-label="Toggle theme"
+          style={{ background:'var(--card-bg)', border:'1px solid var(--border)', borderRadius:8,
+            padding:'0.35rem 0.55rem', fontSize:'1.1rem', cursor:'pointer', lineHeight:1 }}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+      </div>
 
       <div className={styles.card}>
         {/* Brand header */}
         <div className={styles.logo}>
           <BrandLogo size={72} pulse />
           <h1 className={styles.brand}>LifeLink</h1>
-          <p className={styles.tagline}>Dynamic Real-Time Emergency Network</p>
+          <p className={styles.tagline}>{t('tagline')}</p>
         </div>
 
         {/* ── Step 1: Enter phone ── */}
         {step === 'phone' && (
           <>
-            <h2 className={styles.title}>Forgot password?</h2>
-            <p className={styles.subtitle}>Enter your registered phone number to receive an OTP</p>
+            <h2 className={styles.title}>{t('forgotPasswordTitle')}</h2>
+            <p className={styles.subtitle}>{t('forgotPasswordSub')}</p>
 
             <form onSubmit={handleSendOtp} className={styles.form}>
               <div className={styles.field}>
-                <label>Phone Number</label>
+                <label>{t('phone')}</label>
                 <PhoneInput value={phone} onChange={setPhone} required />
               </div>
 
               {phoneError && <p className={styles.error}>{phoneError}</p>}
 
               <button type="submit" className={styles.btn} disabled={phoneBusy}>
-                {phoneBusy ? 'Sending OTP…' : 'Send OTP'}
+                {phoneBusy ? t('sendingOtp') : t('sendOtp')}
               </button>
             </form>
 
             <p className={styles.switch}>
-              Remember your password? <Link to="/login">Sign In</Link>
+              <Link to="/login">{t('backToLogin')}</Link>
             </p>
           </>
         )}
@@ -228,11 +237,11 @@ export default function ForgotPassword() {
         {step === 'otp' && (
           <>
             <div className={styles.otpIcon}>🔐</div>
-            <h2 className={styles.title}>Enter OTP</h2>
+            <h2 className={styles.title}>{t('verifyOtpTitle')}</h2>
             <p className={styles.subtitle}>
-              OTP sent to <strong>{maskPhone(apiPhone)}</strong>
+              {t('otpSentTo')} <strong>{maskPhone(apiPhone)}</strong>
               <br />
-              <span className={styles.otpHint}>⏱ OTP expires in 5 minutes</span>
+              <span className={styles.otpHint}>{t('otpExpiry')}</span>
             </p>
 
             <form onSubmit={handleVerifyOtp} className={styles.form}>
@@ -263,7 +272,7 @@ export default function ForgotPassword() {
                 className={styles.btn}
                 disabled={otpLoading || otp.join('').length < 6}
               >
-                {otpLoading ? 'Verifying…' : 'Verify OTP'}
+                {otpLoading ? t('verifying') : t('verifyOtpTitle')}
               </button>
 
               <button
@@ -273,10 +282,10 @@ export default function ForgotPassword() {
                 disabled={countdown > 0 || resending}
               >
                 {resending
-                  ? 'Resending…'
+                  ? t('resending')
                   : countdown > 0
-                    ? `Resend OTP (${countdown}s)`
-                    : 'Resend OTP'}
+                    ? `${t('resendOtp')} (${countdown}s)`
+                    : t('resendOtp')}
               </button>
 
               <button
@@ -284,7 +293,7 @@ export default function ForgotPassword() {
                 className={styles.skipBtn}
                 onClick={() => setStep('phone')}
               >
-                Back
+                {t('backToLogin')}
               </button>
             </form>
           </>
@@ -293,16 +302,16 @@ export default function ForgotPassword() {
         {/* ── Step 3: New password ── */}
         {step === 'reset' && (
           <>
-            <h2 className={styles.title}>Set new password</h2>
-            <p className={styles.subtitle}>Choose a strong password for your account</p>
+            <h2 className={styles.title}>{t('resetPasswordTitle')}</h2>
+            <p className={styles.subtitle}>{t('resetPasswordSub')}</p>
 
             <form onSubmit={handleReset} className={styles.form}>
               <div className={styles.field}>
-                <label htmlFor="newPassword">New Password</label>
+                <label htmlFor="newPassword">{t('newPasswordLabel')}</label>
                 <input
                   id="newPassword"
                   type="password"
-                  placeholder="Minimum 6 characters"
+                  placeholder={t('minPassword')}
                   value={newPassword}
                   onChange={e => { setNewPassword(e.target.value); setResetError(''); }}
                   required
@@ -312,11 +321,11 @@ export default function ForgotPassword() {
               </div>
 
               <div className={styles.field}>
-                <label htmlFor="confirmPassword">Confirm Password</label>
+                <label htmlFor="confirmPassword">{t('confirmPassword')}</label>
                 <input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Re-enter your new password"
+                  placeholder={t('confirmPasswordPh')}
                   value={confirmPassword}
                   onChange={e => { setConfirmPassword(e.target.value); setResetError(''); }}
                   required
@@ -328,7 +337,7 @@ export default function ForgotPassword() {
               {successMsg  && <p className={styles.resendMsg}>{successMsg}</p>}
 
               <button type="submit" className={styles.btn} disabled={resetBusy || !!successMsg}>
-                {resetBusy ? 'Resetting…' : 'Reset Password'}
+                {resetBusy ? t('resettingBtn') : t('resetBtn')}
               </button>
             </form>
           </>

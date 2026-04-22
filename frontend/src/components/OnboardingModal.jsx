@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './OnboardingModal.module.css';
 import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -9,6 +10,7 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export default function OnboardingModal({ onDone }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [step, setStep] = useState(1); // 1=welcome, 2=blood group, 3=location
   const [bloodGroup, setBloodGroup] = useState('');
   const [state, setState] = useState('');
@@ -46,26 +48,23 @@ export default function OnboardingModal({ onDone }) {
         {step === 1 && (
           <div className={styles.step}>
             <div className={styles.heroIcon}>❤️</div>
-            <h2 className={styles.title}>Welcome to LifeLink!</h2>
-            <p className={styles.desc}>
-              You're now part of India's emergency blood donor network.<br/>
-              Let's set up your profile so we can match you with people who need your help.
-            </p>
+            <h2 className={styles.title}>{t('onboardWelcome')}</h2>
+            <p className={styles.desc}>{t('onboardWelcomeDesc')}</p>
             <div className={styles.highlights}>
-              <div className={styles.highlight}><span>📡</span><span>Get notified about emergency requests</span></div>
-              <div className={styles.highlight}><span>🩸</span><span>Your blood group helps save lives</span></div>
-              <div className={styles.highlight}><span>🗺️</span><span>Connect with donors near you</span></div>
+              <div className={styles.highlight}><span>📡</span><span>{t('onboardHighlight1')}</span></div>
+              <div className={styles.highlight}><span>🩸</span><span>{t('onboardHighlight2')}</span></div>
+              <div className={styles.highlight}><span>🗺️</span><span>{t('onboardHighlight3')}</span></div>
             </div>
-            <button className={styles.primary} onClick={() => setStep(2)}>Let's Set Up My Profile →</button>
-            <button className={styles.skip} onClick={onDone}>Skip for now</button>
+            <button className={styles.primary} onClick={() => setStep(2)}>{t('onboardSetup')}</button>
+            <button className={styles.skip} onClick={onDone}>{t('onboardSkip')}</button>
           </div>
         )}
 
         {step === 2 && (
           <div className={styles.step}>
             <div className={styles.heroIcon}>🩸</div>
-            <h2 className={styles.title}>What's your blood group?</h2>
-            <p className={styles.desc}>This helps us alert you when someone nearby needs your specific blood type.</p>
+            <h2 className={styles.title}>{t('onboardBloodTitle')}</h2>
+            <p className={styles.desc}>{t('onboardBloodDesc')}</p>
             <div className={styles.bgGrid}>
               {BLOOD_GROUPS.map(bg => (
                 <button
@@ -76,37 +75,37 @@ export default function OnboardingModal({ onDone }) {
               ))}
             </div>
             <button className={styles.primary} disabled={!bloodGroup} onClick={() => setStep(3)}>
-              Continue →
+              {t('onboardContinue')}
             </button>
-            <button className={styles.skip} onClick={() => setStep(3)}>I don't know my blood group</button>
+            <button className={styles.skip} onClick={() => setStep(3)}>{t('onboardDontKnow')}</button>
           </div>
         )}
 
         {step === 3 && (
           <div className={styles.step}>
             <div className={styles.heroIcon}>📍</div>
-            <h2 className={styles.title}>Where are you located?</h2>
-            <p className={styles.desc}>Helps us show nearby requests and connect you with local donors.</p>
+            <h2 className={styles.title}>{t('onboardLocationTitle')}</h2>
+            <p className={styles.desc}>{t('onboardLocationDesc')}</p>
             <div className={styles.field}>
-              <label>State / UT</label>
+              <label>{t('state')}</label>
               <select value={state} onChange={e => { setState(e.target.value); setDistrict(''); }}>
-                <option value="">Select your state</option>
+                <option value="">{t('onboardSelectState')}</option>
                 {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             {state && (
               <div className={styles.field}>
-                <label>District</label>
+                <label>{t('district')}</label>
                 <select value={district} onChange={e => setDistrict(e.target.value)}>
-                  <option value="">Select your district</option>
+                  <option value="">{t('onboardSelectDist')}</option>
                   {(DISTRICTS_BY_STATE[state] || []).map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
             )}
             <button className={styles.primary} onClick={save} disabled={saving}>
-              {saving ? 'Saving…' : '✅ Complete Setup'}
+              {saving ? t('onboardSaving') : t('onboardComplete')}
             </button>
-            <button className={styles.skip} onClick={onDone}>Skip</button>
+            <button className={styles.skip} onClick={onDone}>{t('onboardSkip2')}</button>
           </div>
         )}
       </div>

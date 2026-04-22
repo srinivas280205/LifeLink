@@ -18,6 +18,7 @@ const BLOOD_GROUPS = [
 
 // ── Step 1: Registration form ─────────────────────────────────────────────────
 function SignupForm({ onSuccess }) {
+  const { t } = useLanguage();
   const [phone, setPhone] = useState({ countryCode: '+91', number: '' });
   const [form, setForm] = useState({
     fullName: '', password: '',
@@ -67,50 +68,50 @@ function SignupForm({ onSuccess }) {
 
   return (
     <>
-      <h2 className={styles.title}>Create account</h2>
-      <p className={styles.subtitle}>Join India's Emergency Blood Network</p>
+      <h2 className={styles.title}>{t('createAccount')}</h2>
+      <p className={styles.subtitle}>{t('joinNetwork')}</p>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <div className={styles.field}>
-          <label htmlFor="fullName">Full Name</label>
-          <input id="fullName" name="fullName" type="text" placeholder="Your full name"
+          <label htmlFor="fullName">{t('fullName')}</label>
+          <input id="fullName" name="fullName" type="text" placeholder={t('namePlaceholder')}
             value={form.fullName} onChange={handleChange} required autoComplete="name" />
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="gender">Gender <span className={styles.optionalTag}>(optional)</span></label>
+          <label htmlFor="gender">{t('genderOptional')}</label>
           <select id="gender" name="gender" value={form.gender} onChange={handleChange}>
-            <option value="">Prefer not to say</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-            <option value="Other">Other</option>
+            <option value="">{t('preferNotSay')}</option>
+            <option value="Male">{t('male')}</option>
+            <option value="Female">{t('female')}</option>
+            <option value="Other">{t('other')}</option>
           </select>
         </div>
 
         {/* Phone with country code picker */}
         <div className={styles.field}>
-          <label>Phone Number</label>
+          <label>{t('phone')}</label>
           <PhoneInput value={phone} onChange={setPhone} required />
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="password">Password</label>
-          <input id="password" name="password" type="password" placeholder="Minimum 6 characters"
+          <label htmlFor="password">{t('password')}</label>
+          <input id="password" name="password" type="password" placeholder={t('minPassword')}
             value={form.password} onChange={handleChange} required minLength={6} autoComplete="new-password" />
         </div>
 
         <div className={styles.field}>
           <label htmlFor="bloodGroup">
-            Your Blood Group <span className={styles.optionalTag}>(optional — set in profile later)</span>
+            {t('bloodGroup')} <span className={styles.optionalTag}>{t('bloodOptional')}</span>
           </label>
           <select id="bloodGroup" name="bloodGroup" value={form.bloodGroup} onChange={handleChange}>
-            <option value="">I don't know / Skip</option>
+            <option value="">{t('dontKnow')}</option>
             {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
           </select>
         </div>
 
         <div className={styles.field}>
-          <label htmlFor="country">Country</label>
+          <label htmlFor="country">{t('country')}</label>
           <select id="country" name="country" value={form.country} onChange={handleChange}>
             {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -118,9 +119,9 @@ function SignupForm({ onSuccess }) {
 
         {form.country === 'India' && (
           <div className={styles.field}>
-            <label htmlFor="state">State / UT</label>
+            <label htmlFor="state">{t('stateUT')}</label>
             <select id="state" name="state" value={form.state} onChange={handleChange}>
-              <option value="">Select state</option>
+              <option value="">{t('selectState')}</option>
               {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
@@ -128,9 +129,9 @@ function SignupForm({ onSuccess }) {
 
         {districts.length > 0 && (
           <div className={styles.field}>
-            <label htmlFor="district">District</label>
+            <label htmlFor="district">{t('district')}</label>
             <select id="district" name="district" value={form.district} onChange={handleChange}>
-              <option value="">Select district</option>
+              <option value="">{t('selectDistrict')}</option>
               {districts.map(d => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
@@ -139,12 +140,12 @@ function SignupForm({ onSuccess }) {
         {error && <p className={styles.error}>{error}</p>}
 
         <button type="submit" className={styles.btn} disabled={loading}>
-          {loading ? 'Creating account…' : 'Create account →'}
+          {loading ? t('creating') : `${t('createAccount')} →`}
         </button>
       </form>
 
       <p className={styles.switch}>
-        Already have an account? <Link to="/login">Sign In</Link>
+        {t('alreadyHaveAccount')} <Link to="/login">{t('login')}</Link>
       </p>
     </>
   );
@@ -152,6 +153,7 @@ function SignupForm({ onSuccess }) {
 
 // ── Step 2: OTP verification ──────────────────────────────────────────────────
 function OtpStep({ phone, name, token, user, devMode, onVerified }) {
+  const { t } = useLanguage();
   const [otp, setOtp]           = useState(['', '', '', '', '', '']);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -196,7 +198,7 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
   const handleVerify = async (e) => {
     e.preventDefault();
     const code = otp.join('');
-    if (code.length < 6) { setError('Please enter the 6-digit OTP'); return; }
+    if (code.length < 6) { setError(t('otpError6')); return; }
     setLoading(true); setError('');
     try {
       const res = await fetch(`${API}/api/auth/verify-otp`, {
@@ -207,7 +209,7 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
       const data = await res.json();
       if (!res.ok) { setError(data.message); return; }
       onVerified({ token, user: { ...user, isVerified: true } });
-    } catch { setError('Verification failed. Try again.'); }
+    } catch { setError(t('verifyFail')); }
     finally { setLoading(false); }
   };
 
@@ -230,13 +232,13 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
   return (
     <>
       <div className={styles.otpIcon}>🔐</div>
-      <h2 className={styles.title}>Verify your phone</h2>
+      <h2 className={styles.title}>{t('verifyPhone')}</h2>
       <p className={styles.subtitle}>
-        OTP sent to <strong>{phone.replace(/(\+\d{1,3})(\d{2})(\d+)(\d{4})/, '$1 $2XXXX$4')}</strong>
+        {t('otpSentTo')} <strong>{phone.replace(/(\+\d{1,3})(\d{2})(\d+)(\d{4})/, '$1 $2XXXX$4')}</strong>
         {devMode && (
-          <><br /><span className={styles.otpHint}>⚠️ Dev mode — OTP printed to server console</span></>
+          <><br /><span className={styles.otpHint}>{t('devModeOtp')}</span></>
         )}
-        <br /><span className={styles.otpHint}>⏱ OTP expires in 5 minutes</span>
+        <br /><span className={styles.otpHint}>{t('otpExpiry')}</span>
       </p>
 
       <form onSubmit={handleVerify} className={styles.form}>
@@ -259,7 +261,7 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
         {resendMsg && <p className={styles.resendMsg}>{resendMsg}</p>}
 
         <button type="submit" className={styles.btn} disabled={loading || otp.join('').length < 6}>
-          {loading ? 'Verifying…' : '✅ Verify & Continue'}
+          {loading ? t('verifying') : t('verifyBtn')}
         </button>
 
         {/* Resend OTP */}
@@ -270,14 +272,14 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
           disabled={countdown > 0 || resending}
         >
           {resending
-            ? 'Resending…'
+            ? t('resending')
             : countdown > 0
-              ? `Resend OTP (${countdown}s)`
-              : 'Resend OTP'}
+              ? `${t('resendOtp')} (${countdown}s)`
+              : t('resendOtp')}
         </button>
 
         <button type="button" className={styles.skipBtn} onClick={() => onVerified({ token, user })}>
-          Skip for now
+          {t('skipForNow')}
         </button>
       </form>
     </>
@@ -286,19 +288,20 @@ function OtpStep({ phone, name, token, user, devMode, onVerified }) {
 
 // ── Step 3: Welcome screen ────────────────────────────────────────────────────
 function WelcomeStep({ name }) {
+  const { t } = useLanguage();
   return (
     <div className={styles.welcomeWrap}>
       <div className={styles.welcomeHeart}>❤️</div>
       <h2 className={styles.welcomeTitle}>
-        {`Welcome, ${name.split(' ')[0]}!`}
+        {`${t('welcomeUser')} ${name.split(' ')[0]}!`}
       </h2>
       <p className={styles.welcomeSub}>
-        Your account is ready. You can now request blood or help others by responding to emergency broadcasts near you.
+        {t('accountReady')}
       </p>
       <div className={styles.welcomeLoader}>
         <span /><span /><span />
       </div>
-      <p className={styles.welcomeRedirect}>Taking you to your dashboard…</p>
+      <p className={styles.welcomeRedirect}>{t('takingToDash')}</p>
     </div>
   );
 }
@@ -307,7 +310,7 @@ function WelcomeStep({ name }) {
 export default function Signup() {
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
-  const { lang, toggle: toggleLang } = useLanguage();
+  const { lang, toggle: toggleLang, t } = useLanguage();
   const [step, setStep]       = useState('form');
   const [session, setSession] = useState(null);
 
@@ -330,7 +333,7 @@ export default function Signup() {
       <div style={{ position:'fixed', top:'1rem', right:'1rem', display:'flex', gap:'0.5rem', zIndex:10 }}>
         <button
           onClick={toggleLang}
-          title={lang === 'en' ? 'Switch to Tamil' : 'Switch to English'}
+          title={lang === 'en' ? t('switchToTamil') : t('switchToEnglish')}
           style={{ background:'var(--card-bg)', border:'1px solid var(--border)', borderRadius:8,
             padding:'0.35rem 0.55rem', cursor:'pointer', fontSize:'0.78rem',
             fontWeight:700, color:'var(--text)', lineHeight:1 }}
@@ -351,7 +354,7 @@ export default function Signup() {
         <div className={styles.logo}>
           <BrandLogo size={72} pulse />
           <h1 className={styles.brand}>LifeLink</h1>
-          <p className={styles.tagline}>Dynamic Real-Time Emergency Network</p>
+          <p className={styles.tagline}>{t('tagline')}</p>
         </div>
 
         {step === 'form'    && <SignupForm onSuccess={handleSignupSuccess} />}

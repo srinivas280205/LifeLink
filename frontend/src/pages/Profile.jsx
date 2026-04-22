@@ -4,6 +4,7 @@ import AppShell from '../components/AppShell';
 import styles from './Profile.module.css';
 import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 import EligibilityChecker from '../components/EligibilityChecker';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -17,6 +18,7 @@ const BLOOD_GROUPS = [
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { lang, toggle: toggleLang, t } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [form, setForm] = useState({
     fullName: '', gender: '', bloodGroup: '', country: 'India', state: '', district: '', isAvailable: true,
@@ -108,7 +110,7 @@ export default function Profile() {
       setProfile(p => ({ ...p, ...data.user }));
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch { setError('Failed to save. Check your connection.'); }
+    } catch { setError(t('failedSave')); }
     finally { setSaving(false); }
   };
 
@@ -128,7 +130,7 @@ export default function Profile() {
       setPwSaved(true);
       setPwForm({ current: '', next: '', confirm: '' });
       setTimeout(() => setPwSaved(false), 3000);
-    } catch { setPwError('Failed to change password.'); }
+    } catch { setPwError(t('failedSave')); }
     finally { setPwSaving(false); }
   };
 
@@ -226,9 +228,7 @@ export default function Profile() {
   };
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      'Are you sure? This permanently deletes all your data and cannot be undone.'
-    );
+    const confirmed = window.confirm(t('deleteConfirm'));
     if (!confirmed) return;
     setDeleting(true);
     try {
@@ -276,7 +276,7 @@ export default function Profile() {
           )}
           <div className={styles.badgeRow}>
             <span className={profile.isVerified ? styles.verifiedBadge : styles.unverifiedBadge}>
-              {profile.isVerified ? '✅ Verified' : '⏳ Unverified'}
+              {profile.isVerified ? t('verified') : t('notVerified')}
             </span>
           </div>
 
@@ -290,11 +290,11 @@ export default function Profile() {
                   style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8,
                     padding: '0.5rem 1.1rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}
                 >
-                  {reverifying ? '📡 Sending OTP…' : '📱 Verify My Phone'}
+                  {reverifying ? t('sendingOtpVerify') : t('verifyMyPhone')}
                 </button>
               ) : (
                 <form onSubmit={handleVerifyOtp} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>Enter the 6-digit OTP sent to {profile.phone}</p>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>{t('enterOtpFor')} {profile.phone}</p>
                   <div style={{ display: 'flex', gap: '0.35rem' }}>
                     {verifyOtp.map((d, i) => (
                       <input
@@ -320,11 +320,11 @@ export default function Profile() {
                     style={{ background: '#388e3c', color: '#fff', border: 'none', borderRadius: 8,
                       padding: '0.45rem 1.1rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}
                   >
-                    {verifyLoading ? 'Verifying…' : '✅ Verify'}
+                    {verifyLoading ? t('verifying2') : t('verifyBtn2')}
                   </button>
                   <button type="button" onClick={() => { setShowOtpInput(false); setVerifyOtp(['','','','','','']); setVerifyError(''); }}
                     style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                    Cancel
+                    {t('cancel')}
                   </button>
                 </form>
               )}
@@ -338,19 +338,19 @@ export default function Profile() {
           <div className={styles.statsGrid}>
             <div className={styles.statBox}>
               <span className={styles.statNum}>{myStats.responsesGiven}</span>
-              <span className={styles.statLabel}>🩸 Times Donated</span>
+              <span className={styles.statLabel}>{t('timesDonated')}</span>
             </div>
             <div className={styles.statBox}>
               <span className={styles.statNum}>{myStats.requestsPosted}</span>
-              <span className={styles.statLabel}>📡 Requests Posted</span>
+              <span className={styles.statLabel}>{t('requestsPosted')}</span>
             </div>
             <div className={styles.statBox}>
               <span className={styles.statNum}>{myStats.fulfilled}</span>
-              <span className={styles.statLabel}>✅ Needs Met</span>
+              <span className={styles.statLabel}>{t('needsMetStat')}</span>
             </div>
             <div className={styles.statBox}>
               <span className={styles.statNum}>{myStats.sos}</span>
-              <span className={styles.statLabel}>🆘 SOS Sent</span>
+              <span className={styles.statLabel}>{t('sosSent')}</span>
             </div>
           </div>
         )}
@@ -358,37 +358,37 @@ export default function Profile() {
         {/* ── Achievement badges ── */}
         {myStats && (
           <div className={styles.badgesSection}>
-            <h3 className={styles.badgesTitle}>🏅 Achievements</h3>
+            <h3 className={styles.badgesTitle}>{t('achievements')}</h3>
             <div className={styles.badgesGrid}>
               <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 1 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>🩸</span>
-                <span className={styles.achieveLabel}>First Drop</span>
-                <span className={styles.achieveSub}>Respond to 1 request</span>
+                <span className={styles.achieveLabel}>{t('achieveFirstDrop')}</span>
+                <span className={styles.achieveSub}>{t('achieveFirstSub')}</span>
               </div>
               <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 5 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>💪</span>
-                <span className={styles.achieveLabel}>Active Donor</span>
-                <span className={styles.achieveSub}>5 donations given</span>
+                <span className={styles.achieveLabel}>{t('achieveActiveDonor')}</span>
+                <span className={styles.achieveSub}>{t('achieveActiveSub')}</span>
               </div>
               <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 10 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>⭐</span>
-                <span className={styles.achieveLabel}>Hero</span>
-                <span className={styles.achieveSub}>10 donations given</span>
+                <span className={styles.achieveLabel}>{t('achieveHero')}</span>
+                <span className={styles.achieveSub}>{t('achieveHeroSub')}</span>
               </div>
               <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 20 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>🏆</span>
-                <span className={styles.achieveLabel}>Legend</span>
-                <span className={styles.achieveSub}>20 donations given</span>
+                <span className={styles.achieveLabel}>{t('achieveLegend')}</span>
+                <span className={styles.achieveSub}>{t('achieveLegendSub')}</span>
               </div>
               <div className={`${styles.achieveBadge} ${myStats.fulfilled >= 1 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>✅</span>
-                <span className={styles.achieveLabel}>Life Saver</span>
-                <span className={styles.achieveSub}>1 need fulfilled</span>
+                <span className={styles.achieveLabel}>{t('achieveLifeSaver')}</span>
+                <span className={styles.achieveSub}>{t('achieveLifeSub')}</span>
               </div>
               <div className={`${styles.achieveBadge} ${myStats.sos >= 1 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>🆘</span>
-                <span className={styles.achieveLabel}>SOS Veteran</span>
-                <span className={styles.achieveSub}>Sent an SOS alert</span>
+                <span className={styles.achieveLabel}>{t('achieveSos')}</span>
+                <span className={styles.achieveSub}>{t('achieveSosSub')}</span>
               </div>
             </div>
           </div>
@@ -397,14 +397,12 @@ export default function Profile() {
         {/* ── Availability toggle ── */}
         <div className={styles.availCard}>
           <div className={styles.availInfo}>
-            <p className={styles.availTitle}>Available to Help</p>
+            <p className={styles.availTitle}>{t('availableToHelp')}</p>
             <p className={styles.availSub}>
-              {form.isAvailable
-                ? '✅ You are visible to others and can receive blood requests'
-                : '🔴 You are hidden from the donor list'}
+              {form.isAvailable ? t('availableOn') : t('availableOff')}
             </p>
             <p className={styles.availHint}>
-              {togglingAvail ? '⏳ Saving…' : 'Saved instantly — no need to click Save Changes'}
+              {togglingAvail ? t('savingToggle') : t('savedInstantly')}
             </p>
           </div>
           <button
@@ -419,50 +417,50 @@ export default function Profile() {
 
         {/* ── Full editable profile form ── */}
         <form onSubmit={handleSave} className={styles.card}>
-          <h2 className={styles.cardTitle}>My Profile</h2>
+          <h2 className={styles.cardTitle}>{t('myProfile')}</h2>
 
           {/* Phone — read only */}
           <div className={styles.readonlyGroup}>
             <div className={styles.roRow}>
-              <span className={styles.roLabel}>Phone Number</span>
+              <span className={styles.roLabel}>{t('phoneNumber')}</span>
               <span className={styles.roValue}>📞 {profile.phone}</span>
-              <span className={styles.roHint}>Cannot be changed</span>
+              <span className={styles.roHint}>{t('phoneReadonly')}</span>
             </div>
           </div>
 
           <div className={styles.divider} />
 
           <div className={styles.field}>
-            <label>Full Name</label>
+            <label>{t('fullName')}</label>
             <input type="text" name="fullName" value={form.fullName}
-              onChange={handleChange} required placeholder="Your full name" />
+              onChange={handleChange} required placeholder={t('namePlaceholder')} />
           </div>
 
           <div className={styles.field}>
-            <label>Gender</label>
+            <label>{t('gender')}</label>
             <select name="gender" value={form.gender} onChange={handleChange}>
-              <option value="">Prefer not to say</option>
-              <option value="Male">Male</option>
-              <option value="Female">Female</option>
-              <option value="Other">Other</option>
+              <option value="">{t('preferNotSay')}</option>
+              <option value="Male">{t('male')}</option>
+              <option value="Female">{t('female')}</option>
+              <option value="Other">{t('other')}</option>
             </select>
           </div>
 
           <div className={styles.field}>
-            <label>Blood Group</label>
+            <label>{t('bloodGroup')}</label>
             <select name="bloodGroup" value={form.bloodGroup} onChange={handleChange}>
-              <option value="">Not set</option>
+              <option value="">{t('notSet')}</option>
               {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
             </select>
             {!form.bloodGroup && (
               <span className={styles.bloodGroupWarn}>
-                ⚠️ Set your blood group so others can find you for emergencies
+                {t('bloodGroupWarn')}
               </span>
             )}
           </div>
 
           <div className={styles.field}>
-            <label>Country</label>
+            <label>{t('country')}</label>
             <select name="country" value={form.country} onChange={handleChange}>
               {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -470,9 +468,9 @@ export default function Profile() {
 
           {form.country === 'India' && (
             <div className={styles.field}>
-              <label>State / UT</label>
+              <label>{t('state')}</label>
               <select name="state" value={form.state} onChange={handleChange}>
-                <option value="">Select state</option>
+                <option value="">{t('selectState')}</option>
                 {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
@@ -480,38 +478,38 @@ export default function Profile() {
 
           {districts.length > 0 && (
             <div className={styles.field}>
-              <label>District</label>
+              <label>{t('district')}</label>
               <select name="district" value={form.district} onChange={handleChange}>
-                <option value="">Select district</option>
+                <option value="">{t('selectDistrict')}</option>
                 {districts.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
           )}
 
           {error && <p className={styles.error}>{error}</p>}
-          {saved && <p className={styles.success}>✅ Profile saved successfully</p>}
+          {saved && <p className={styles.success}>{t('profileSaved')}</p>}
 
           <button type="submit" className={styles.saveBtn} disabled={saving}>
-            {saving ? 'Saving…' : '💾 Save Changes'}
+            {saving ? t('saving') : t('saveChanges')}
           </button>
 
           <div className={styles.cardFooter}>
-            <span>Member since {new Date(profile.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</span>
-            <span>{profile.isVerified ? '✅ Phone verified' : '⏳ Phone not verified'}</span>
+            <span>{t('memberSince')} {new Date(profile.createdAt).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</span>
+            <span>{profile.isVerified ? t('phoneVerified') : t('phoneNotVerified')}</span>
           </div>
         </form>
 
         {/* ── Shareable Donor Card ── */}
         {profile.bloodGroup && myStats && (
           <div className={styles.donorCardWrap}>
-            <h3 className={styles.cardTitle}>🪪 My Donor Card</h3>
+            <h3 className={styles.cardTitle}>{t('donorCard')}</h3>
             <div className={styles.donorCard} id="donor-card">
               <div className={styles.dcTop}>
                 <div className={styles.dcLogo}>
                   <span style={{ fontSize: '1.1rem' }}>❤️</span>
                   <span className={styles.dcBrand}>LifeLink</span>
                 </div>
-                <span className={styles.dcTag}>Blood Donor</span>
+                <span className={styles.dcTag}>{t('bloodDonor')}</span>
               </div>
               <div className={styles.dcBlood}>{profile.bloodGroup}</div>
               <div className={styles.dcName}>{profile.fullName}</div>
@@ -523,19 +521,19 @@ export default function Profile() {
               <div className={styles.dcStats}>
                 <div className={styles.dcStat}>
                   <span className={styles.dcStatNum}>{myStats.responsesGiven}</span>
-                  <span className={styles.dcStatLabel}>Donated</span>
+                  <span className={styles.dcStatLabel}>{t('donated')}</span>
                 </div>
                 <div className={styles.dcDivider} />
                 <div className={styles.dcStat}>
                   <span className={styles.dcStatNum}>{myStats.fulfilled}</span>
-                  <span className={styles.dcStatLabel}>Lives Saved</span>
+                  <span className={styles.dcStatLabel}>{t('livesSaved')}</span>
                 </div>
                 <div className={styles.dcDivider} />
                 <div className={styles.dcStat}>
                   <span className={styles.dcStatNum}>
                     {myStats.responsesGiven >= 20 ? '🏆' : myStats.responsesGiven >= 10 ? '⭐' : myStats.responsesGiven >= 5 ? '💪' : myStats.responsesGiven >= 1 ? '🩸' : '—'}
                   </span>
-                  <span className={styles.dcStatLabel}>Badge</span>
+                  <span className={styles.dcStatLabel}>{t('badge')}</span>
                 </div>
               </div>
               <div className={styles.dcFooter}>lifelink.app · Emergency Blood Network</div>
@@ -557,7 +555,7 @@ export default function Profile() {
                 }
               }}
             >
-              📤 Share My Donor Card
+              {t('shareCard')}
             </button>
           </div>
         )}
@@ -565,59 +563,59 @@ export default function Profile() {
         {/* ── Admin panel link (admins only) ── */}
         {profile.isAdmin && (
           <div className={styles.card} style={{ borderColor: '#1a237e44', background: 'linear-gradient(135deg, var(--card-bg), #1a237e08)' }}>
-            <h2 className={styles.cardTitle}>🛡️ Admin Panel</h2>
+            <h2 className={styles.cardTitle}>{t('adminPanel')}</h2>
             <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '0.9rem' }}>
-              Manage users, view all broadcasts, monitor platform activity.
+              {t('adminPanelDesc')}
             </p>
             <button className={styles.saveBtn} style={{ background: 'linear-gradient(135deg, #1a237e, #283593)' }}
               onClick={() => navigate('/admin')}>
-              Open Admin Dashboard →
+              {t('openAdminDash')}
             </button>
           </div>
         )}
 
         {/* ── Change Password ── */}
         <form onSubmit={handlePasswordChange} className={styles.card}>
-          <h2 className={styles.cardTitle}>🔒 Change Password</h2>
+          <h2 className={styles.cardTitle}>{t('changePassword')}</h2>
           <div className={styles.field}>
-            <label>Current Password</label>
-            <input type="password" placeholder="Enter current password"
+            <label>{t('currentPassword')}</label>
+            <input type="password" placeholder={t('currentPasswordPh')}
               value={pwForm.current} onChange={e => setPwForm(f => ({ ...f, current: e.target.value }))} required />
           </div>
           <div className={styles.field}>
-            <label>New Password</label>
-            <input type="password" placeholder="Minimum 6 characters"
+            <label>{t('newPasswordLabel')}</label>
+            <input type="password" placeholder={t('minPassword')}
               value={pwForm.next} onChange={e => setPwForm(f => ({ ...f, next: e.target.value }))} required minLength={6} />
           </div>
           <div className={styles.field}>
-            <label>Confirm New Password</label>
-            <input type="password" placeholder="Re-enter new password"
+            <label>{t('confirmNewPassword')}</label>
+            <input type="password" placeholder={t('reenterPassword')}
               value={pwForm.confirm} onChange={e => setPwForm(f => ({ ...f, confirm: e.target.value }))} required />
           </div>
           {pwError && <p className={styles.error}>{pwError}</p>}
-          {pwSaved && <p className={styles.success}>✅ Password changed successfully</p>}
+          {pwSaved && <p className={styles.success}>{t('passwordChanged')}</p>}
           <button type="submit" className={styles.saveBtn} disabled={pwSaving}>
-            {pwSaving ? 'Changing…' : '🔒 Change Password'}
+            {pwSaving ? t('changingPw') : t('changePasswordBtn')}
           </button>
         </form>
 
         {/* ── Eligibility check ── */}
         <div className={styles.card}>
-          <h2 className={styles.cardTitle}>🩺 Can I Donate Today?</h2>
+          <h2 className={styles.cardTitle}>{t('canIDonate')}</h2>
           <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '0.9rem', lineHeight: 1.5 }}>
-            Answer 10 quick questions to check your blood donation eligibility right now.
+            {t('canIDonateDesc')}
           </p>
           <button className={styles.gpsBtn} onClick={() => setShowEligibility(true)} type="button"
             style={{ background: 'linear-gradient(135deg,#1a237e,#283593)' }}>
-            🩺 Check My Eligibility
+            {t('checkEligibility')}
           </button>
         </div>
 
         {/* ── GPS location ── */}
         <div className={styles.card}>
-          <h2 className={styles.cardTitle}>📍 GPS Location</h2>
+          <h2 className={styles.cardTitle}>{t('gpsLocation')}</h2>
           <p className={styles.gpsNote}>
-            Share your precise coordinates to appear on the donor map and receive SOS alerts nearby.
+            {t('gpsNote')}
             {profile.location?.lat && (
               <span className={styles.gpsSet}>
                 {' '}✅ Set ({profile.location.lat.toFixed(4)}, {profile.location.lng.toFixed(4)})
@@ -625,15 +623,15 @@ export default function Profile() {
             )}
           </p>
           <button className={styles.gpsBtn} onClick={handleGeolocate} disabled={locating} type="button">
-            {locating ? '📡 Getting location…' : '📍 Share My Location'}
+            {locating ? t('gettingGps') : t('shareLocation')}
           </button>
         </div>
 
         {/* ── Delete Account ── */}
         <div className={styles.card} style={{ borderColor: '#d32f2f55', background: 'linear-gradient(135deg, var(--card-bg), #d32f2f08)' }}>
-          <h2 className={styles.cardTitle} style={{ color: '#d32f2f' }}>⚠️ Delete Account</h2>
+          <h2 className={styles.cardTitle} style={{ color: '#d32f2f' }}>{t('deleteAccount')}</h2>
           <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '0.9rem', lineHeight: 1.6 }}>
-            Permanently deletes your account, profile, and all associated data from LifeLink. This action cannot be undone.
+            {t('deleteAccountDesc')}
           </p>
           <button
             type="button"
@@ -643,7 +641,7 @@ export default function Profile() {
               padding: '0.6rem 1.4rem', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 700,
               opacity: deleting ? 0.7 : 1 }}
           >
-            {deleting ? 'Deleting…' : '🗑️ Delete My Account'}
+            {deleting ? t('deleting') : t('deleteBtn')}
           </button>
         </div>
 

@@ -3,6 +3,7 @@ import AppShell from '../components/AppShell';
 import styles from './DonorSearch.module.css';
 import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
 import { BLOOD_BANKS, BLOOD_BANK_STATES, filterBloodBanks } from '../data/bloodBanks';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -54,6 +55,7 @@ const TYPE_COLORS = {
 };
 
 export default function DonorSearch() {
+  const { t } = useLanguage();
   const [tab, setTab] = useState('donors');
 
   // ── Donors tab state
@@ -111,8 +113,8 @@ export default function DonorSearch() {
       <div className={styles.page}>
         <div className={styles.container}>
           <div className={styles.pageHeader}>
-            <h1 className={styles.pageTitle}>🔍 Find Help</h1>
-            <p className={styles.pageSubtitle}>Search blood donors or locate the nearest blood bank</p>
+            <h1 className={styles.pageTitle}>{t('findHelp')}</h1>
+            <p className={styles.pageSubtitle}>{t('findHelpSub')}</p>
           </div>
 
           {/* Tab toggle */}
@@ -121,13 +123,13 @@ export default function DonorSearch() {
               className={`${styles.tabBtn} ${tab === 'donors' ? styles.tabBtnActive : ''}`}
               onClick={() => setTab('donors')}
             >
-              🩸 Donors
+              {t('donors')}
             </button>
             <button
               className={`${styles.tabBtn} ${tab === 'banks' ? styles.tabBtnActive : ''}`}
               onClick={() => setTab('banks')}
             >
-              🏥 Blood Banks
+              {t('bloodBanks')}
             </button>
           </div>
 
@@ -136,23 +138,23 @@ export default function DonorSearch() {
             <>
               <div className={styles.filterBar}>
                 <div className={styles.filterField}>
-                  <label>Blood Group</label>
+                  <label>{t('bloodGroup')}</label>
                   <select value={filters.bloodGroup} onChange={e => handleFilterChange('bloodGroup', e.target.value)}>
-                    <option value="">All Groups</option>
+                    <option value="">{t('allGroups')}</option>
                     {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                   </select>
                 </div>
                 <div className={styles.filterField}>
-                  <label>State / UT</label>
+                  <label>{t('stateUT')}</label>
                   <select value={filters.state} onChange={e => handleFilterChange('state', e.target.value)}>
-                    <option value="">All States</option>
+                    <option value="">{t('allStates')}</option>
                     {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div className={styles.filterField}>
-                  <label>District</label>
+                  <label>{t('district')}</label>
                   <select value={filters.district} onChange={e => handleFilterChange('district', e.target.value)} disabled={!filters.state}>
-                    <option value="">{filters.state ? 'All Districts' : 'Select state first'}</option>
+                    <option value="">{filters.state ? t('allDistricts') : t('selectStateFirst')}</option>
                     {districts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
@@ -160,12 +162,12 @@ export default function DonorSearch() {
                   <label className={styles.compatToggle}>
                     <input type="checkbox" checked={filters.compatible}
                       onChange={e => handleFilterChange('compatible', e.target.checked)} />
-                    <span>Show compatible donors</span>
+                    <span>{t('showCompatible')}</span>
                   </label>
                 )}
                 <div className={styles.resultCount}>
                   {searched && !loading && (
-                    <span>{donors.length} donor{donors.length !== 1 ? 's' : ''} found</span>
+                    <span>{donors.length} {t('donors').replace('🩸 ', '')}</span>
                   )}
                 </div>
               </div>
@@ -173,13 +175,13 @@ export default function DonorSearch() {
               {loading ? (
                 <div className={styles.loadingRow}>
                   <div className={styles.spinner} />
-                  <span>Searching donors...</span>
+                  <span>{t('searchingDonors')}</span>
                 </div>
               ) : donors.length === 0 && searched ? (
                 <div className={styles.empty}>
                   <span className={styles.emptyIcon}>🩸</span>
-                  <p>No available donors found for these filters.</p>
-                  <p className={styles.emptySub}>Try changing district, state or blood group.</p>
+                  <p>{t('noDonorsFound')}</p>
+                  <p className={styles.emptySub}>{t('tryChangingFilters')}</p>
                 </div>
               ) : (
                 <div className={styles.grid}>
@@ -192,7 +194,7 @@ export default function DonorSearch() {
                           <p className={styles.donorCity}>
                             📍 {donor.district || donor.state
                               ? [donor.district, donor.state].filter(Boolean).join(', ')
-                              : 'Location not set'}
+                              : t('locationNotSet')}
                           </p>
                         </div>
                         <span className={styles.availBadge}>● Available</span>
@@ -209,7 +211,7 @@ export default function DonorSearch() {
                         )}
                       </div>
                       <div className={styles.compatRow}>
-                        <span className={styles.compatLabel}>Can donate to:</span>
+                        <span className={styles.compatLabel}>{t('canDonateTo2')}</span>
                         <div className={styles.compatPills}>
                           {(DONOR_CAN_GIVE_TO[donor.bloodGroup] || []).map(bg => (
                             <span key={bg} className={styles.pill}>{bg}</span>
@@ -228,38 +230,38 @@ export default function DonorSearch() {
             <>
               <div className={styles.filterBar}>
                 <div className={styles.filterField}>
-                  <label>State</label>
+                  <label>{t('stateUT')}</label>
                   <select value={bbState} onChange={e => { setBbState(e.target.value); setBbDistrict(''); }}>
-                    <option value="">All States</option>
+                    <option value="">{t('allStates')}</option>
                     {BLOOD_BANK_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div className={styles.filterField}>
-                  <label>District</label>
+                  <label>{t('district')}</label>
                   <select value={bbDistrict} onChange={e => setBbDistrict(e.target.value)} disabled={!bbState}>
-                    <option value="">{bbState ? 'All Districts' : 'Select state first'}</option>
+                    <option value="">{bbState ? t('allDistricts') : t('selectStateFirst')}</option>
                     {bbDistricts.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
                 <div className={styles.filterField}>
-                  <label>Type</label>
+                  <label>{t('bankType')}</label>
                   <select value={bbType} onChange={e => setBbType(e.target.value)}>
-                    <option value="">All Types</option>
-                    <option value="Government">Government</option>
-                    <option value="Red Cross">Red Cross</option>
-                    <option value="Hospital">Hospital</option>
+                    <option value="">{t('allTypes')}</option>
+                    <option value="Government">{t('government')}</option>
+                    <option value="Red Cross">{t('redCross')}</option>
+                    <option value="Hospital">{t('hospital')}</option>
                   </select>
                 </div>
                 <div className={styles.resultCount}>
-                  <span>{filteredBanks.length} blood bank{filteredBanks.length !== 1 ? 's' : ''}</span>
+                  <span>{filteredBanks.length} {t('bloodBanks').replace('🏥 ', '')}</span>
                 </div>
               </div>
 
               {filteredBanks.length === 0 ? (
                 <div className={styles.empty}>
                   <span className={styles.emptyIcon}>🏥</span>
-                  <p>No blood banks found for this area.</p>
-                  <p className={styles.emptySub}>Try a different state or district.</p>
+                  <p>{t('noBanksFound')}</p>
+                  <p className={styles.emptySub}>{t('tryDiffArea')}</p>
                 </div>
               ) : (
                 <div className={styles.bbGrid}>
@@ -307,7 +309,7 @@ export default function DonorSearch() {
               )}
 
               <p className={styles.bbDisclaimer}>
-                ℹ️ Contact numbers may change. Always call ahead to confirm availability before visiting.
+                {t('bankDisclaimer')}
               </p>
             </>
           )}

@@ -8,6 +8,7 @@ import Countdown from '../components/Countdown';
 import { SkeletonFeed } from '../components/Skeleton';
 import OnboardingModal from '../components/OnboardingModal';
 import { usePushSubscription } from '../hooks/usePushSubscription';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -17,13 +18,14 @@ const BLOOD_GROUPS = [
   'A1B+', 'A1B-', 'A2B+', 'A2B-',
   'Bombay (hh)', 'Oh+', 'Oh-',
 ];
-const URGENCY_LABELS = { critical: '🔴 Critical', urgent: '🟠 Urgent', normal: '🟡 Normal' };
 
 const token = () => localStorage.getItem('token');
 
 export default function Dashboard() {
   const navigate = useNavigate();
   usePushSubscription();
+  const { t } = useLanguage();
+  const URGENCY_LABELS = { critical: t('urgencyCritical'), urgent: t('urgencyUrgent'), normal: t('urgencyNormal') };
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
   const [broadcasts, setBroadcasts] = useState([]);
@@ -220,19 +222,19 @@ export default function Dashboard() {
     setSosCoords(null);
     setSosLocating(true);
     if (!navigator.geolocation) {
-      setSosError('Geolocation not supported on this device');
+      setSosError(t('geolocationUnsupported'));
       setSosLocating(false);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => { setSosCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setSosLocating(false); },
-      ()    => { setSosError('Location permission denied. Enable GPS and try again.'); setSosLocating(false); }
+      ()    => { setSosError(t('locationDenied')); setSosLocating(false); }
     );
   };
 
   const handleSOS = async (e) => {
     e.preventDefault();
-    if (!sosCoords) { setSosError('Location required — please allow GPS access'); return; }
+    if (!sosCoords) { setSosError(t('sosLocationRequired')); return; }
     setSosSending(true); setSosError('');
     try {
       const res = await fetch(`${API}/api/broadcasts/sos`, {
@@ -244,7 +246,7 @@ export default function Dashboard() {
       if (!res.ok) { setSosError(data.message); return; }
       setSosResult(data);
     } catch {
-      setSosError('Failed to send SOS. Check your connection.');
+      setSosError(t('sosFailed'));
     } finally {
       setSosSending(false);
     }
@@ -271,8 +273,8 @@ export default function Dashboard() {
           <span className={styles.alertIcon}>{newAlert._isSOS ? '🆘' : '🚨'}</span>
           <div>
             {newAlert._isSOS
-              ? <><strong>SOS ALERT: {newAlert.bloodGroup} blood needed urgently!</strong> {newAlert.hospital && `· ${newAlert.hospital}`} {newAlert._distanceKm && `· ${newAlert._distanceKm}km away`}</>
-              : <><strong>Emergency: {newAlert.bloodGroup} needed</strong> in {newAlert.district}{newAlert.state ? `, ${newAlert.state}` : ''}{newAlert.hospital && ` · ${newAlert.hospital}`}</>
+              ? <><strong>{t('sosAlert')} {newAlert.bloodGroup} {t('bloodNeededUrgent')}!</strong> {newAlert.hospital && `· ${newAlert.hospital}`} {newAlert._distanceKm && `· ${newAlert._distanceKm}km away`}</>
+              : <><strong>{t('emergency')}: {newAlert.bloodGroup} {t('bloodNeeded')}</strong> in {newAlert.district}{newAlert.state ? `, ${newAlert.state}` : ''}{newAlert.hospital && ` · ${newAlert.hospital}`}</>
             }
           </div>
           <button className={styles.alertClose} onClick={() => setNewAlert(null)}>✕</button>
@@ -285,12 +287,12 @@ export default function Dashboard() {
           <div className={styles.sosModal} onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <div className={styles.sosModalHeader}>
               <span className={styles.sosBadge} style={{ background: 'linear-gradient(135deg,#2e7d32,#1b5e20)' }}>
-                ✅ Mark as Fulfilled
+                {t('markAsFulfilled')}
               </span>
               <button className={styles.sosClose} onClick={() => setFulfillModal(null)}>✕</button>
             </div>
             <p className={styles.sosModalSub}>
-              Great news! Who came forward to help with the <strong>{fulfillModal.bloodGroup}</strong> blood request?
+              {t('whoHelped')} <strong>{fulfillModal.bloodGroup}</strong> {t('bloodRequestWord')}
             </p>
 
             {(fulfillModal.responses || []).length > 0 ? (
@@ -327,12 +329,12 @@ export default function Dashboard() {
                     checked={fulfillDonorId === 'other'}
                     onChange={() => setFulfillDonorId('other')}
                     style={{ accentColor: '#2e7d32' }} />
-                  <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>Someone else / not listed</span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>{t('someoneElse')}</span>
                 </label>
               </div>
             ) : (
               <p style={{ color: 'var(--muted)', fontSize: '0.85rem', marginBottom: '1rem', fontStyle: 'italic' }}>
-                No donors have responded yet — mark fulfilled anyway?
+                {t('noRespondersYet')}
               </p>
             )}
 
@@ -343,13 +345,13 @@ export default function Dashboard() {
                 disabled={(fulfillModal.responses || []).length > 0 && !fulfillDonorId}
                 onClick={() => { handleStatus(fulfillModal._id, 'fulfilled'); setFulfillModal(null); }}
               >
-                ✅ Confirm Fulfilled
+                {t('confirmFulfilled')}
               </button>
               <button
                 onClick={() => setFulfillModal(null)}
                 style={{ padding: '0.85rem 1.1rem', background: 'var(--card-bg)', border: '1.5px solid var(--border)', borderRadius: 12, cursor: 'pointer', color: 'var(--muted)', fontWeight: 600 }}
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -372,20 +374,20 @@ export default function Dashboard() {
                 📍 {[detailModal.hospital, detailModal.district, detailModal.state].filter(Boolean).join(' · ')}
               </p>
               <p style={{ margin: '0 0 0.3rem', fontSize: '0.88rem', color: 'var(--muted)' }}>
-                🩸 {detailModal.units} unit{detailModal.units !== 1 ? 's' : ''} needed
+                🩸 {`${detailModal.units} ${detailModal.units !== 1 ? t('unitsNeeded') : t('unitNeeded')}`}
               </p>
               {detailModal.message && (
                 <p style={{ margin: '0.4rem 0 0', fontSize: '0.85rem', color: 'var(--text)', fontStyle: 'italic' }}>"{detailModal.message}"</p>
               )}
               <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
-                Posted {new Date(detailModal.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                {detailModal.escalated && ' · 🔴 Escalated'}
+                {t('posted')} {new Date(detailModal.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                {detailModal.escalated && ` · ${t('escalated')}`}
               </p>
             </div>
 
             <div>
               <p style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--heading)', marginBottom: '0.6rem' }}>
-                Requester
+                {t('requester')}
               </p>
               <div style={{ background: 'var(--input-bg)', borderRadius: 10, padding: '0.75rem 1rem', marginBottom: '1rem' }}>
                 <p style={{ margin: 0, fontWeight: 700, color: 'var(--heading)' }}>{detailModal.requesterName}</p>
@@ -398,10 +400,10 @@ export default function Dashboard() {
 
             <div>
               <p style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--heading)', marginBottom: '0.6rem' }}>
-                Responders ({(detailModal.responses || []).length})
+                {t('responders')} ({(detailModal.responses || []).length})
               </p>
               {(detailModal.responses || []).length === 0 ? (
-                <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>No donors have responded yet.</p>
+                <p style={{ color: 'var(--muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>{t('noResponders')}</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '220px', overflowY: 'auto' }}>
                   {(detailModal.responses || []).map((r, i) => (
@@ -432,7 +434,7 @@ export default function Dashboard() {
                 style={{ marginTop: '1rem', background: 'linear-gradient(135deg,#d32f2f,#b71c1c)' }}
                 onClick={() => { setDetailModal(null); handleRespond(detailModal); }}
               >
-                🩸 I Can Help
+                {t('iCanHelp')}
               </button>
             )}
           </div>
@@ -447,7 +449,7 @@ export default function Dashboard() {
         onMouseLeave={cancelHold}
         onTouchStart={startHold}
         onTouchEnd={cancelHold}
-        title="Hold 3 seconds to send SOS"
+        title={t('holdToSos')}
         style={{ userSelect: 'none', WebkitUserSelect: 'none' }}
       >
         {/* Pulsing rings (hidden while holding) */}
@@ -492,7 +494,7 @@ export default function Dashboard() {
             background: 'var(--card-bg)', padding: '0.1rem 0.4rem', borderRadius: 6,
             border: '1px solid var(--border)',
           }}>
-            Hold… {Math.ceil(((100 - holdProgress) / 100) * 3)}s
+            {`${t('holdSecs')} ${Math.ceil(((100 - holdProgress) / 100) * 3)}s`}
           </span>
         )}
       </button>
@@ -505,57 +507,57 @@ export default function Dashboard() {
               /* Success screen */
               <div className={styles.sosSuccess}>
                 <div className={styles.sosSuccessIcon}>✅</div>
-                <h2 className={styles.sosSuccessTitle}>SOS Sent!</h2>
+                <h2 className={styles.sosSuccessTitle}>{t('sosSent')}</h2>
                 <p className={styles.sosSuccessMsg}>
-                  <strong>{sosResult.donorsNotified}</strong> donor{sosResult.donorsNotified !== 1 ? 's' : ''} within 50km notified instantly.
+                  <strong>{sosResult.donorsNotified}</strong> {t('donorsNotifiedMsg')}
                 </p>
-                <p className={styles.sosSuccessSub}>Your broadcast is live on the feed. Donors will contact you directly.</p>
-                <button className={styles.sosDoneBtn} onClick={() => setSosOpen(false)}>Done</button>
+                <p className={styles.sosSuccessSub}>{t('broadcastLive')}</p>
+                <button className={styles.sosDoneBtn} onClick={() => setSosOpen(false)}>{t('done')}</button>
               </div>
             ) : (
               <>
                 <div className={styles.sosModalHeader}>
-                  <span className={styles.sosBadge}>🆘 SOS Emergency</span>
+                  <span className={styles.sosBadge}>{t('sosEmergency')}</span>
                   <button className={styles.sosClose} onClick={() => setSosOpen(false)}>✕</button>
                 </div>
                 <p className={styles.sosModalSub}>
-                  Broadcasts to all compatible donors within <strong>50 km</strong> of your location instantly.
+                  {t('sosBroadcastInfo')}
                 </p>
 
-                {sosLocating && <p className={styles.sosLocating}>📡 Getting your location…</p>}
-                {sosCoords && <p className={styles.sosLocOk}>📍 Location detected ({sosCoords.lat.toFixed(3)}, {sosCoords.lng.toFixed(3)})</p>}
+                {sosLocating && <p className={styles.sosLocating}>{t('gettingLocation')}</p>}
+                {sosCoords && <p className={styles.sosLocOk}>{`${t('locationDetected')} (${sosCoords.lat.toFixed(3)}, ${sosCoords.lng.toFixed(3)})`}</p>}
 
                 <form onSubmit={handleSOS} className={styles.sosForm}>
                   <div className={styles.sosField}>
-                    <label>Blood Group Needed *</label>
+                    <label>{t('bloodGroupRequired')}</label>
                     <select value={sosForm.bloodGroup} onChange={e => setSosForm(f => ({...f, bloodGroup: e.target.value}))} required>
-                      <option value="">Select blood group</option>
+                      <option value="">{t('selectBloodGroup')}</option>
                       {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                     </select>
                   </div>
 
                   <div className={styles.sosField}>
-                    <label>Hospital / Location</label>
-                    <input type="text" placeholder="e.g. Apollo Hospital, Chennai"
+                    <label>{t('hospitalLocation')}</label>
+                    <input type="text" placeholder={t('hospitalSosPh')}
                       value={sosForm.hospital} onChange={e => setSosForm(f => ({...f, hospital: e.target.value}))} />
                   </div>
 
                   <div className={styles.sosField}>
-                    <label>Units Required</label>
+                    <label>{t('unitsRequired')}</label>
                     <input type="number" min={1} max={10} value={sosForm.units}
                       onChange={e => setSosForm(f => ({...f, units: Number(e.target.value)}))} />
                   </div>
 
                   <div className={styles.sosField}>
-                    <label>Message (optional)</label>
-                    <textarea rows={2} placeholder="Additional details…"
+                    <label>{t('messageOptional')}</label>
+                    <textarea rows={2} placeholder={t('additionalDetails')}
                       value={sosForm.message} onChange={e => setSosForm(f => ({...f, message: e.target.value}))} />
                   </div>
 
                   {sosError && <p className={styles.sosError}>{sosError}</p>}
 
                   <button type="submit" className={styles.sosSendBtn} disabled={sosSending || sosLocating || !sosCoords}>
-                    {sosSending ? '📡 Sending SOS…' : '🆘 Send Emergency SOS'}
+                    {sosSending ? t('sendingSos') : t('sendSosBtn')}
                   </button>
                 </form>
               </>
@@ -570,13 +572,13 @@ export default function Dashboard() {
           <div className={styles.sosModal} onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
             <div className={styles.sosModalHeader}>
               <span className={styles.sosBadge} style={{ background: 'linear-gradient(135deg,#d32f2f,#b71c1c)' }}>
-                🩸 Confirm Response
+                {t('confirmResponse')}
               </span>
               <button className={styles.sosClose} onClick={() => setRespondModal(null)}>✕</button>
             </div>
 
             <p className={styles.sosModalSub}>
-              You're about to offer help for this request. The requester will be able to see your contact details.
+              {t('confirmResponseSub')}
             </p>
 
             <div style={{ background: 'var(--input-bg)', borderRadius: 10, padding: '0.9rem 1rem', marginBottom: '1rem' }}>
@@ -586,7 +588,7 @@ export default function Dashboard() {
               </p>
               <p style={{ margin: '0.3rem 0 0', fontSize: '0.85rem', color: 'var(--muted)' }}>
                 📍 {[respondModal.district, respondModal.state].filter(Boolean).join(', ')}
-                {` · ${respondModal.units} unit${respondModal.units !== 1 ? 's' : ''}`}
+                {` · ${respondModal.units} ${respondModal.units !== 1 ? t('units') : t('units')}`}
               </p>
               <p style={{ margin: '0.6rem 0 0', fontSize: '0.9rem', color: 'var(--text)' }}>
                 👤 <strong>{respondModal.requesterName}</strong>
@@ -605,13 +607,13 @@ export default function Dashboard() {
                 className={styles.sosSendBtn}
                 style={{ flex: 1 }}
               >
-                ✅ Confirm — I'll Help
+                {t('confirmHelp')}
               </button>
               <button
                 onClick={() => setRespondModal(null)}
                 style={{ flex: '0 0 auto', padding: '0.85rem 1.1rem', background: 'var(--card-bg)', border: '1.5px solid var(--border)', borderRadius: 12, cursor: 'pointer', color: 'var(--muted)', fontWeight: 600 }}
               >
-                Cancel
+                {t('cancel')}
               </button>
             </div>
           </div>
@@ -624,11 +626,11 @@ export default function Dashboard() {
           {/* Blood group info — shown if user has set their blood group */}
           {user.bloodGroup && (
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>🩸 Your Blood Group</h2>
+              <h2 className={styles.cardTitle}>{t('yourBloodGroup')}</h2>
               <div className={styles.bloodBadge}>{user.bloodGroup}</div>
-              <p className={styles.donorNote}>Requests matching your blood group will be highlighted. You can respond to any request below.</p>
+              <p className={styles.donorNote}>{t('donorNote')}</p>
               <div className={styles.compatInfo}>
-                <p className={styles.compatLabel}>You can donate to:</p>
+                <p className={styles.compatLabel}>{t('canDonateTo')}</p>
                 <div className={styles.compatPills}>
                   {['A+','A-','B+','B-','AB+','AB-','O+','O-']
                     .filter(bg => isCompatible(bg, user.bloodGroup))
@@ -640,80 +642,80 @@ export default function Dashboard() {
 
           {/* Emergency request form — everyone can post */}
           <div className={styles.card}>
-            <h2 className={styles.cardTitle}>🚨 Send Emergency Request</h2>
+            <h2 className={styles.cardTitle}>{t('sendEmergency')}</h2>
             <form onSubmit={handleSend} className={styles.form}>
               <div className={styles.field}>
-                <label>Blood Group Needed</label>
+                <label>{t('bloodGroupNeeded')}</label>
                 <select value={form.bloodGroup} onChange={e => setForm({ ...form, bloodGroup: e.target.value })} required>
-                  <option value="">Select blood group</option>
+                  <option value="">{t('selectBloodGroup')}</option>
                   {BLOOD_GROUPS.map(bg => <option key={bg} value={bg}>{bg}</option>)}
                 </select>
               </div>
               <div className={styles.fieldRow}>
                 <div className={styles.field}>
-                  <label>Units</label>
+                  <label>{t('units')}</label>
                   <input type="number" min={1} max={10} value={form.units}
                     onChange={e => setForm({ ...form, units: parseInt(e.target.value) })} />
                 </div>
                 <div className={styles.field}>
-                  <label>Urgency</label>
+                  <label>{t('urgency')}</label>
                   <select value={form.urgency} onChange={e => setForm({ ...form, urgency: e.target.value })}>
-                    <option value="critical">🔴 Critical</option>
-                    <option value="urgent">🟠 Urgent</option>
-                    <option value="normal">🟡 Normal</option>
+                    <option value="critical">{t('urgencyCritical')}</option>
+                    <option value="urgent">{t('urgencyUrgent')}</option>
+                    <option value="normal">{t('urgencyNormal')}</option>
                   </select>
                 </div>
               </div>
               <div className={styles.field}>
-                <label>State / UT</label>
+                <label>{t('stateUT')}</label>
                 <select value={form.state}
                   onChange={e => setForm({ ...form, state: e.target.value, district: '' })} required>
-                  <option value="">Select state</option>
+                  <option value="">{t('selectState')}</option>
                   {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div className={styles.field}>
-                <label>District</label>
+                <label>{t('district')}</label>
                 <select value={form.district}
                   onChange={e => setForm({ ...form, district: e.target.value })} required>
-                  <option value="">Select district</option>
+                  <option value="">{t('selectDistrict')}</option>
                   {(DISTRICTS_BY_STATE[form.state] || []).map(d =>
                     <option key={d} value={d}>{d}</option>
                   )}
                 </select>
               </div>
               <div className={styles.field}>
-                <label>Hospital (optional)</label>
-                <input type="text" placeholder="Hospital name" value={form.hospital}
+                <label>{t('hospitalOptional')}</label>
+                <input type="text" placeholder={t('hospitalPh')} value={form.hospital}
                   onChange={e => setForm({ ...form, hospital: e.target.value })} />
               </div>
               <div className={styles.field}>
-                <label>Message (optional)</label>
-                <textarea placeholder="Any additional info..." value={form.message}
+                <label>{t('messageOptional')}</label>
+                <textarea placeholder={t('messagePh')} value={form.message}
                   onChange={e => setForm({ ...form, message: e.target.value })}
                   maxLength={300} rows={3} />
               </div>
               {sendError && <p className={styles.error}>{sendError}</p>}
               <button type="submit" className={styles.sendBtn} disabled={sending}>
-                {sending ? 'Sending...' : '📡 Broadcast Request'}
+                {sending ? t('sending') : t('broadcastBtn')}
               </button>
             </form>
           </div>
 
           {/* Stats */}
           <div className={styles.card}>
-            <h3 className={styles.cardTitle}>📊 Live Stats</h3>
+            <h3 className={styles.cardTitle}>{t('liveStats')}</h3>
             <div className={styles.statsList}>
               <div className={styles.statRow}>
-                <span>Active Requests</span>
+                <span>{t('activeRequests')}</span>
                 <strong className={styles.statNum}>{activeBroadcasts.length}</strong>
               </div>
               <div className={styles.statRow}>
-                <span>Total Broadcasts</span>
+                <span>{t('totalBroadcasts')}</span>
                 <strong>{broadcasts.length}</strong>
               </div>
               <div className={styles.statRow}>
-                <span>Needs Met</span>
+                <span>{t('needsMet')}</span>
                 <strong className={styles.fulfilled}>{broadcasts.filter(b => b.status === 'fulfilled').length}</strong>
               </div>
             </div>
@@ -724,12 +726,12 @@ export default function Dashboard() {
         <main className={styles.feed}>
           <div className={styles.feedHeader}>
             <h2 className={styles.feedTitle}>
-              Live Feed
+              {t('feedTitle')}
               {activeBroadcasts.length > 0 && (
                 <span className={styles.feedBadge}>{activeBroadcasts.length}</span>
               )}
             </h2>
-            <button className={styles.refreshBtn} onClick={loadBroadcasts}>↻ Refresh</button>
+            <button className={styles.refreshBtn} onClick={loadBroadcasts}>{t('refresh')}</button>
           </div>
 
           {/* Feed filters — blood group chips */}
@@ -737,12 +739,12 @@ export default function Dashboard() {
             <button
               className={`${styles.filterChip} ${!feedFilter.bloodGroup && !feedFilter.matchOnly ? styles.filterChipActive : ''}`}
               onClick={() => setFeedFilter({ bloodGroup: '', matchOnly: false })}
-            >All</button>
+            >{t('all')}</button>
             {user.bloodGroup && (
               <button
                 className={`${styles.filterChip} ${feedFilter.matchOnly ? styles.filterChipMatch : ''}`}
                 onClick={() => setFeedFilter(f => ({ bloodGroup: '', matchOnly: !f.matchOnly }))}
-              >⚡ My Matches</button>
+              >{t('myMatches')}</button>
             )}
             {BLOOD_GROUPS.map(bg => (
               <button
@@ -758,8 +760,8 @@ export default function Dashboard() {
           ) : activeBroadcasts.length === 0 ? (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>📡</span>
-              <p>No active emergency requests right now.</p>
-              <p className={styles.emptySmall}>New requests will appear here instantly.</p>
+              <p>{t('noActiveRequests')}</p>
+              <p className={styles.emptySmall}>{t('newRequestsSoon')}</p>
             </div>
           ) : (
             <div className={styles.cards}>
@@ -776,7 +778,7 @@ export default function Dashboard() {
                         <span className={styles.urgencyBadge} data-urgency={b.urgency}>
                           {URGENCY_LABELS[b.urgency]}
                         </span>
-                        <span className={styles.bcUnits}>{b.units} unit{b.units > 1 ? 's' : ''}</span>
+                        <span className={styles.bcUnits}>{b.units} {t('units')}</span>
                       </div>
                     </div>
 
@@ -789,23 +791,23 @@ export default function Dashboard() {
                     <div className={styles.bcFooter}>
                       <span className={styles.bcTime}>{new Date(b.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
                       {b.expiresAt && <Countdown expiresAt={b.expiresAt} />}
-                      <span className={styles.bcResponses}>{(b.responses || []).length} response{(b.responses || []).length !== 1 ? 's' : ''}</span>
+                      <span className={styles.bcResponses}>{(b.responses || []).length} {t('responses_plural')}</span>
                       <div className={styles.bcActions} onClick={e => e.stopPropagation()}>
                         {!isOwner && !hasResponded && (
                           <button className={styles.respondBtn} onClick={() => handleRespond(b)}>
-                            🩸 I Can Help
+                            {t('iCanHelp')}
                           </button>
                         )}
                         {!isOwner && hasResponded && (
-                          <span className={styles.respondedTag}>✅ Responded</span>
+                          <span className={styles.respondedTag}>{t('responded')}</span>
                         )}
                         {isOwner && (
                           <>
                             <button className={styles.fulfillBtn} onClick={() => { setFulfillModal(b); setFulfillDonorId(''); }}>
-                              ✅ Need Met
+                              {t('markFulfilled')}
                             </button>
                             <button className={styles.cancelBtn} onClick={() => handleStatus(b._id, 'cancelled')}>
-                              ✕ Cancel
+                              {t('cancelRequest')}
                             </button>
                           </>
                         )}
