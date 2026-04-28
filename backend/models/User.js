@@ -45,6 +45,12 @@ const userSchema = new mongoose.Schema(
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
     },
+    notifPrefs: {
+      bloodRequests:  { type: Boolean, default: true },
+      donorResponded: { type: Boolean, default: true },
+      announcements:  { type: Boolean, default: true },
+      adminMessages:  { type: Boolean, default: true },
+    },
   },
   { timestamps: true }
 );

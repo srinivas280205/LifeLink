@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import API_BASE from './config/api.js';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import SplashScreen from './components/SplashScreen';
@@ -23,6 +24,37 @@ import PageFade from './components/PageFade';
 import ForgotPassword from './pages/ForgotPassword';
 import Terms from './pages/Terms';
 import Privacy from './pages/Privacy';
+
+// Silently refresh the JWT if it expires within 24 hours
+function useTokenRefresh() {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      // Decode payload (base64 middle segment) — no verification needed client-side
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiresIn = (payload.exp * 1000) - Date.now(); // ms until expiry
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+      if (expiresIn > ONE_DAY) return; // plenty of time, skip
+      // Token expires in < 24h — refresh silently
+      fetch(`${API_BASE}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.token) {
+            localStorage.setItem('token', data.token);
+            if (data.user) {
+              const stored = JSON.parse(localStorage.getItem('user') || '{}');
+              localStorage.setItem('user', JSON.stringify({ ...stored, ...data.user }));
+            }
+          }
+        })
+        .catch(() => { /* silent — never block the app */ });
+    } catch { /* malformed token — ignore */ }
+  }, []);
+}
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -71,6 +103,7 @@ function SplashGate({ children }) {
 }
 
 export default function App() {
+  useTokenRefresh();
   return (
     <ErrorBoundary>
     <ThemeProvider>

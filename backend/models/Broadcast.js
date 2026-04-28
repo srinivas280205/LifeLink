@@ -11,7 +11,10 @@ const broadcastSchema = new mongoose.Schema(
     requesterPhone: { type: String, required: true },
     bloodGroup: {
       type: String,
-      enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'],
+      enum: ['A+','A-','B+','B-','AB+','AB-','O+','O-',
+             'A1+','A1-','A2+','A2-',
+             'A1B+','A1B-','A2B+','A2B-',
+             'Bombay (hh)','Oh+','Oh-',''],
       required: true,
     },
     units:    { type: Number, default: 1, min: 1, max: 10 },
@@ -46,6 +49,12 @@ const broadcastSchema = new mongoose.Schema(
         respondedAt: { type: Date, default: Date.now },
       },
     ],
+    rating: {
+      stars:   { type: Number, min: 1, max: 5, default: null },
+      note:    { type: String, trim: true, maxlength: 200, default: '' },
+      ratedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+      ratedAt: { type: Date, default: null },
+    },
   },
   { timestamps: true }
 );

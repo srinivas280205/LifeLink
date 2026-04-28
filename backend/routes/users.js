@@ -148,4 +148,22 @@ router.delete('/me', auth, async (req, res) => {
   }
 });
 
+// PATCH /api/users/notif-prefs — update notification preferences
+router.patch('/notif-prefs', auth, async (req, res) => {
+  try {
+    const { bloodRequests, donorResponded, announcements, adminMessages } = req.body;
+    const prefs = {};
+    if (bloodRequests  !== undefined) prefs['notifPrefs.bloodRequests']  = bloodRequests;
+    if (donorResponded !== undefined) prefs['notifPrefs.donorResponded'] = donorResponded;
+    if (announcements  !== undefined) prefs['notifPrefs.announcements']  = announcements;
+    if (adminMessages  !== undefined) prefs['notifPrefs.adminMessages']  = adminMessages;
+    const user = await User.findByIdAndUpdate(
+      req.user.userId, { $set: prefs }, { new: true }
+    ).select('notifPrefs');
+    res.json({ message: 'Preferences updated', notifPrefs: user.notifPrefs });
+  } catch {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

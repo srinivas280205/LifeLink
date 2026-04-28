@@ -337,4 +337,35 @@ router.get('/myresponses', auth, async (req, res) => {
   }
 });
 
+// POST /api/broadcasts/:id/rate — requester rates the donor after fulfillment
+router.post('/:id/rate', auth, async (req, res) => {
+  try {
+    const { stars, note } = req.body;
+    if (!stars || stars < 1 || stars > 5) {
+      return res.status(400).json({ message: 'Stars must be between 1 and 5' });
+    }
+    const broadcast = await Broadcast.findById(req.params.id);
+    if (!broadcast) return res.status(404).json({ message: 'Broadcast not found' });
+    if (broadcast.status !== 'fulfilled') {
+      return res.status(400).json({ message: 'Can only rate fulfilled requests' });
+    }
+    if (broadcast.requestedBy.toString() !== req.user.userId) {
+      return res.status(403).json({ message: 'Only the requester can rate' });
+    }
+    if (broadcast.rating && broadcast.rating.stars) {
+      return res.status(400).json({ message: 'Already rated' });
+    }
+    broadcast.rating = {
+      stars,
+      note: note || '',
+      ratedBy: req.user.userId,
+      ratedAt: new Date(),
+    };
+    await broadcast.save();
+    res.json({ message: 'Rating submitted', rating: broadcast.rating });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;

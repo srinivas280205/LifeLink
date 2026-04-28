@@ -48,6 +48,12 @@ export default function Profile() {
   // Delete account state
   const [deleting, setDeleting] = useState(false);
 
+  const [notifPrefs, setNotifPrefs] = useState({
+    bloodRequests: true, donorResponded: true, announcements: true, adminMessages: true,
+  });
+  const [prefsSaving, setPrefsSaving] = useState(false);
+  const [prefsSaved, setPrefsSaved] = useState(false);
+
   useEffect(() => {
     const hdrs = { Authorization: `Bearer ${token()}` };
     Promise.all([
@@ -58,6 +64,7 @@ export default function Profile() {
       .then(([data, stats]) => {
         setProfile(data);
         setMyStats(stats);
+        if (data.notifPrefs) setNotifPrefs(data.notifPrefs);
         setForm({
           fullName:    data.fullName    || '',
           gender:      data.gender      || '',
@@ -225,6 +232,22 @@ export default function Profile() {
       setVerifyOtp(['', '', '', '', '', '']);
     } catch { setVerifyError('Verification failed. Try again.'); }
     setVerifyLoading(false);
+  };
+
+  const handleNotifPrefs = async (key, value) => {
+    const updated = { ...notifPrefs, [key]: value };
+    setNotifPrefs(updated);
+    setPrefsSaving(true);
+    try {
+      await fetch(`${API}/api/users/notif-prefs`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify({ [key]: value }),
+      });
+      setPrefsSaved(true);
+      setTimeout(() => setPrefsSaved(false), 2000);
+    } catch { /* revert */ setNotifPrefs(prev => ({ ...prev, [key]: !value })); }
+    setPrefsSaving(false);
   };
 
   const handleDeleteAccount = async () => {
@@ -625,6 +648,54 @@ export default function Profile() {
           <button className={styles.gpsBtn} onClick={handleGeolocate} disabled={locating} type="button">
             {locating ? t('gettingGps') : t('shareLocation')}
           </button>
+        </div>
+
+        {/* ── Notification Preferences ── */}
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>🔔 Notification Preferences</h2>
+          <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '1rem', lineHeight: 1.5 }}>
+            Choose which notifications you want to receive. Changes are saved instantly.
+          </p>
+          {[
+            { key: 'bloodRequests',  icon: '🩸', label: 'Blood Requests',   desc: 'Alert when a matching blood request is broadcast near you' },
+            { key: 'donorResponded', icon: '✅', label: 'Donor Responses',  desc: 'Alert when a donor responds to your request' },
+            { key: 'announcements',  icon: '📢', label: 'Announcements',    desc: 'Platform-wide announcements from LifeLink' },
+            { key: 'adminMessages',  icon: '✉️', label: 'Admin Messages',   desc: 'Direct messages from the admin team' },
+          ].map(({ key, icon, label, desc }) => (
+            <div key={key} style={{
+              display: 'flex', alignItems: 'center', gap: '0.85rem',
+              padding: '0.75rem 0', borderBottom: '1px solid var(--border)',
+            }}>
+              <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{icon}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: 0, fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)' }}>{label}</p>
+                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--muted)' }}>{desc}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleNotifPrefs(key, !notifPrefs[key])}
+                disabled={prefsSaving}
+                style={{
+                  width: 46, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer',
+                  background: notifPrefs[key] ? '#d32f2f' : 'var(--border)',
+                  position: 'relative', transition: 'background 0.2s', flexShrink: 0,
+                }}
+              >
+                <span style={{
+                  position: 'absolute', top: 3,
+                  left: notifPrefs[key] ? 23 : 3,
+                  width: 20, height: 20, borderRadius: '50%',
+                  background: '#fff', transition: 'left 0.2s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                }} />
+              </button>
+            </div>
+          ))}
+          {prefsSaved && (
+            <p style={{ color: '#2e7d32', fontSize: '0.82rem', marginTop: '0.6rem', fontWeight: 600 }}>
+              ✅ Preferences saved
+            </p>
+          )}
         </div>
 
         {/* ── Delete Account ── */}
