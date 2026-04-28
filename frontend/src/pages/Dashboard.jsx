@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import AppShell from '../components/AppShell';
 import styles from './Dashboard.module.css';
-import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
+import { INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
 import Countdown from '../components/Countdown';
 import { SkeletonFeed } from '../components/Skeleton';
 import OnboardingModal from '../components/OnboardingModal';
@@ -24,7 +24,7 @@ const token = () => localStorage.getItem('token');
 export default function Dashboard() {
   const navigate = useNavigate();
   usePushSubscription();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const URGENCY_LABELS = { critical: t('urgencyCritical'), urgent: t('urgencyUrgent'), normal: t('urgencyNormal') };
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
@@ -671,7 +671,7 @@ export default function Dashboard() {
                 <select value={form.state}
                   onChange={e => setForm({ ...form, state: e.target.value, district: '' })} required>
                   <option value="">{t('selectState')}</option>
-                  {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                  {INDIA_STATES.map(s => <option key={s} value={s}>{stateLabel(s, lang)}</option>)}
                 </select>
               </div>
               <div className={styles.field}>
@@ -680,7 +680,7 @@ export default function Dashboard() {
                   onChange={e => setForm({ ...form, district: e.target.value })} required>
                   <option value="">{t('selectDistrict')}</option>
                   {(DISTRICTS_BY_STATE[form.state] || []).map(d =>
-                    <option key={d} value={d}>{d}</option>
+                    <option key={d} value={d}>{districtLabel(d, lang)}</option>
                   )}
                 </select>
               </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import AppShell from '../components/AppShell';
 import styles from './DonorSearch.module.css';
-import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
+import { INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
 import { BLOOD_BANKS, BLOOD_BANK_STATES, filterBloodBanks } from '../data/bloodBanks';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -55,7 +55,7 @@ const TYPE_COLORS = {
 };
 
 export default function DonorSearch() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [tab, setTab] = useState('donors');
 
   // ── Donors tab state
@@ -148,14 +148,14 @@ export default function DonorSearch() {
                   <label>{t('stateUT')}</label>
                   <select value={filters.state} onChange={e => handleFilterChange('state', e.target.value)}>
                     <option value="">{t('allStates')}</option>
-                    {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                    {INDIA_STATES.map(s => <option key={s} value={s}>{stateLabel(s, lang)}</option>)}
                   </select>
                 </div>
                 <div className={styles.filterField}>
                   <label>{t('district')}</label>
                   <select value={filters.district} onChange={e => handleFilterChange('district', e.target.value)} disabled={!filters.state}>
                     <option value="">{filters.state ? t('allDistricts') : t('selectStateFirst')}</option>
-                    {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                    {districts.map(d => <option key={d} value={d}>{districtLabel(d, lang)}</option>)}
                   </select>
                 </div>
                 {filters.bloodGroup && (

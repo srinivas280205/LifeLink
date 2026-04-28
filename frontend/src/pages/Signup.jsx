@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Auth.module.css';
-import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
+import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -18,7 +18,7 @@ const BLOOD_GROUPS = [
 
 // ── Step 1: Registration form ─────────────────────────────────────────────────
 function SignupForm({ onSuccess }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [phone, setPhone] = useState({ countryCode: '+91', number: '' });
   const [form, setForm] = useState({
     fullName: '', password: '',
@@ -122,7 +122,7 @@ function SignupForm({ onSuccess }) {
             <label htmlFor="state">{t('stateUT')}</label>
             <select id="state" name="state" value={form.state} onChange={handleChange}>
               <option value="">{t('selectState')}</option>
-              {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+              {INDIA_STATES.map(s => <option key={s} value={s}>{stateLabel(s, lang)}</option>)}
             </select>
           </div>
         )}
@@ -132,7 +132,7 @@ function SignupForm({ onSuccess }) {
             <label htmlFor="district">{t('district')}</label>
             <select id="district" name="district" value={form.district} onChange={handleChange}>
               <option value="">{t('selectDistrict')}</option>
-              {districts.map(d => <option key={d} value={d}>{d}</option>)}
+              {districts.map(d => <option key={d} value={d}>{districtLabel(d, lang)}</option>)}
             </select>
           </div>
         )}

@@ -339,3 +339,106 @@ export const DISTRICT_COORDS = {
   'Jodhpur':         [26.2389, 73.0243],
   'Udaipur':         [24.5854, 73.7125],
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tamil names for Indian States & Union Territories
+// Value = English name in DB, display label in Tamil mode uses this map
+// ─────────────────────────────────────────────────────────────────────────────
+export const INDIA_STATES_TA = {
+  // States
+  'Andhra Pradesh':        'ஆந்திர பிரதேசம்',
+  'Arunachal Pradesh':     'அருணாச்சல பிரதேசம்',
+  'Assam':                 'அசாம்',
+  'Bihar':                 'பிகார்',
+  'Chhattisgarh':          'சத்தீஸ்கர்',
+  'Goa':                   'கோவா',
+  'Gujarat':               'குஜராத்',
+  'Haryana':               'ஹரியாணா',
+  'Himachal Pradesh':      'இமாசல பிரதேசம்',
+  'Jharkhand':             'ஜார்க்கண்ட்',
+  'Karnataka':             'கர்நாடகா',
+  'Kerala':                'கேரளா',
+  'Madhya Pradesh':        'மத்திய பிரதேசம்',
+  'Maharashtra':           'மகாராஷ்டிரா',
+  'Manipur':               'மணிப்பூர்',
+  'Meghalaya':             'மேகாலயா',
+  'Mizoram':               'மிசோரம்',
+  'Nagaland':              'நாகாலாந்து',
+  'Odisha':                'ஒடிசா',
+  'Punjab':                'பஞ்சாப்',
+  'Rajasthan':             'ராஜஸ்தான்',
+  'Sikkim':                'சிக்கிம்',
+  'Tamil Nadu':            'தமிழ்நாடு',
+  'Telangana':             'தெலங்கானா',
+  'Tripura':               'திரிபுரா',
+  'Uttar Pradesh':         'உத்தர பிரதேசம்',
+  'Uttarakhand':           'உத்தராகண்ட்',
+  'West Bengal':           'மேற்கு வங்கம்',
+  // Union Territories
+  'Andaman & Nicobar Islands':                    'அந்தமான் & நிக்கோபார் தீவுகள்',
+  'Chandigarh':                                   'சண்டிகர்',
+  'Dadra & Nagar Haveli and Daman & Diu':         'தாத்ரா & நகர் ஹவேலி மற்றும் டாமன் & டையூ',
+  'Delhi':                                        'டெல்லி',
+  'Jammu & Kashmir':                              'ஜம்மு & காஷ்மீர்',
+  'Ladakh':                                       'லடாக்',
+  'Lakshadweep':                                  'லட்சத்தீவு',
+  'Puducherry':                                   'புதுச்சேரி',
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tamil names for Tamil Nadu districts (all 38)
+// ─────────────────────────────────────────────────────────────────────────────
+export const TN_DISTRICTS_TA = {
+  'Ariyalur':         'அரியலூர்',
+  'Chengalpattu':     'செங்கல்பட்டு',
+  'Chennai':          'சென்னை',
+  'Coimbatore':       'கோயம்புத்தூர்',
+  'Cuddalore':        'கடலூர்',
+  'Dharmapuri':       'தர்மபுரி',
+  'Dindigul':         'திண்டுக்கல்',
+  'Erode':            'ஈரோடு',
+  'Kallakurichi':     'கள்ளக்குறிச்சி',
+  'Kanchipuram':      'காஞ்சிபுரம்',
+  'Kanyakumari':      'கன்னியாகுமரி',
+  'Karur':            'கரூர்',
+  'Krishnagiri':      'கிருஷ்ணகிரி',
+  'Madurai':          'மதுரை',
+  'Mayiladuthurai':   'மயிலாடுதுறை',
+  'Nagapattinam':     'நாகப்பட்டினம்',
+  'Namakkal':         'நாமக்கல்',
+  'Nilgiris':         'நீலகிரி',
+  'Perambalur':       'பெரம்பலூர்',
+  'Pudukkottai':      'புதுக்கோட்டை',
+  'Ramanathapuram':   'ராமநாதபுரம்',
+  'Ranipet':          'ராணிப்பேட்டை',
+  'Salem':            'சேலம்',
+  'Sivaganga':        'சிவகங்கை',
+  'Tenkasi':          'தென்காசி',
+  'Thanjavur':        'தஞ்சாவூர்',
+  'Theni':            'தேனி',
+  'Thoothukudi':      'தூத்துக்குடி',
+  'Tiruchirappalli':  'திருச்சிராப்பள்ளி',
+  'Tirunelveli':      'திருநெல்வேலி',
+  'Tirupathur':       'திருப்பத்தூர்',
+  'Tiruppur':         'திருப்பூர்',
+  'Tiruvallur':       'திருவள்ளூர்',
+  'Tiruvannamalai':   'திருவண்ணாமலை',
+  'Tiruvarur':        'திருவாரூர்',
+  'Vellore':          'வேலூர்',
+  'Villupuram':       'விழுப்புரம்',
+  'Virudhunagar':     'விருதுநகர்',
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper functions — use these in all dropdowns
+// value stays English (DB-compatible), only the displayed label changes
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Display label for a state in the current language */
+export const stateLabel = (name, lang) =>
+  lang === 'ta' ? (INDIA_STATES_TA[name] || name) : name;
+
+/** Display label for a district in the current language.
+ *  Currently translates Tamil Nadu districts; others fall back to English. */
+export const districtLabel = (name, lang) =>
+  lang === 'ta' ? (TN_DISTRICTS_TA[name] || name) : name;

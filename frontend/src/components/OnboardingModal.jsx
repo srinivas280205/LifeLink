@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './OnboardingModal.module.css';
-import { INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
+import { INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
 import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
@@ -10,7 +10,7 @@ const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
 export default function OnboardingModal({ onDone }) {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const [step, setStep] = useState(1); // 1=welcome, 2=blood group, 3=location
   const [bloodGroup, setBloodGroup] = useState('');
   const [state, setState] = useState('');
@@ -90,7 +90,7 @@ export default function OnboardingModal({ onDone }) {
               <label>{t('state')}</label>
               <select value={state} onChange={e => { setState(e.target.value); setDistrict(''); }}>
                 <option value="">{t('onboardSelectState')}</option>
-                {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                {INDIA_STATES.map(s => <option key={s} value={s}>{stateLabel(s, lang)}</option>)}
               </select>
             </div>
             {state && (
@@ -98,7 +98,7 @@ export default function OnboardingModal({ onDone }) {
                 <label>{t('district')}</label>
                 <select value={district} onChange={e => setDistrict(e.target.value)}>
                   <option value="">{t('onboardSelectDist')}</option>
-                  {(DISTRICTS_BY_STATE[state] || []).map(d => <option key={d} value={d}>{d}</option>)}
+                  {(DISTRICTS_BY_STATE[state] || []).map(d => <option key={d} value={d}>{districtLabel(d, lang)}</option>)}
                 </select>
               </div>
             )}

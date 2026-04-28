@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './Profile.module.css';
-import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE } from '../data/locationData';
+import { COUNTRIES, INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
 import EligibilityChecker from '../components/EligibilityChecker';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -471,7 +471,7 @@ export default function Profile() {
               <label>{t('state')}</label>
               <select name="state" value={form.state} onChange={handleChange}>
                 <option value="">{t('selectState')}</option>
-                {INDIA_STATES.map(s => <option key={s} value={s}>{s}</option>)}
+                {INDIA_STATES.map(s => <option key={s} value={s}>{stateLabel(s, lang)}</option>)}
               </select>
             </div>
           )}
@@ -481,7 +481,7 @@ export default function Profile() {
               <label>{t('district')}</label>
               <select name="district" value={form.district} onChange={handleChange}>
                 <option value="">{t('selectDistrict')}</option>
-                {districts.map(d => <option key={d} value={d}>{d}</option>)}
+                {districts.map(d => <option key={d} value={d}>{districtLabel(d, lang)}</option>)}
               </select>
             </div>
           )}
