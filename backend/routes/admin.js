@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Broadcast = require('../models/Broadcast');
 const Notification = require('../models/Notification');
+const { sendPushToUser } = require('./push');
 
 const router = express.Router();
 
@@ -232,18 +233,14 @@ router.delete('/broadcasts/:id', adminAuth, async (req, res) => {
   }
 });
 
-// POST /api/admin/announce — send notification to all users
+// POST /api/admin/announce — send notification to all users who have announcements pref on
 router.post('/announce', adminAuth, async (req, res) => {
   try {
     const { title, body } = req.body;
     if (!title || !body) return res.status(400).json({ message: 'Title and body required' });
-    const allUsers = await User.find({}).select('_id').lean();
-    const notifs = allUsers.map(u => ({
-      userId: u._id,
-      type: 'announcement',
-      title,
-      body,
-    }));
+    // Only send to users who haven't opted out of announcements
+    const allUsers = await User.find({ 'notifPrefs.announcements': { $ne: false } }).select('_id').lean();
+    const notifs = allUsers.map(u => ({ userId: u._id, type: 'announcement', title, body }));
     await Notification.insertMany(notifs);
     const io = req.app.get('io');
     if (io) {
@@ -254,6 +251,15 @@ router.post('/announce', adminAuth, async (req, res) => {
         });
       });
     }
+    // Send device push to all opted-in users (non-blocking)
+    allUsers.forEach(u => {
+      sendPushToUser(u._id, {
+        title, body,
+        icon: '/logo.svg', badge: '/logo.svg',
+        tag: `announcement-${Date.now()}`,
+        data: { url: '/notifications' },
+      }).catch(() => {});
+    });
     res.json({ message: `Announcement sent to ${allUsers.length} users` });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -265,15 +271,11 @@ router.post('/users/:id/message', adminAuth, async (req, res) => {
   try {
     const { title, body } = req.body;
     if (!title || !body) return res.status(400).json({ message: 'Title and body are required' });
-    const target = await User.findById(req.params.id).select('_id fullName');
+    const target = await User.findById(req.params.id).select('_id fullName notifPrefs');
     if (!target) return res.status(404).json({ message: 'User not found' });
 
-    const notif = await Notification.create({
-      userId: target._id,
-      type: 'admin_dm',
-      title,
-      body,
-    });
+    // Always save admin DMs — they're important; only skip device push if opted out
+    const notif = await Notification.create({ userId: target._id, type: 'admin_dm', title, body });
 
     const io = req.app.get('io');
     if (io) {
@@ -281,6 +283,16 @@ router.post('/users/:id/message', adminAuth, async (req, res) => {
         userId: target._id.toString(),
         notification: { ...notif.toObject() },
       });
+    }
+
+    // Send device push only if user has adminMessages pref enabled
+    if (target.notifPrefs?.adminMessages !== false) {
+      sendPushToUser(target._id, {
+        title, body,
+        icon: '/logo.svg', badge: '/logo.svg',
+        tag: `admin-dm-${notif._id}`,
+        data: { url: '/notifications' },
+      }).catch(() => {});
     }
 
     res.json({ message: `Message sent to ${target.fullName}` });

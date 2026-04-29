@@ -3,33 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './History.module.css';
 import API_BASE from '../config/api.js';
+import { useLanguage } from '../context/LanguageContext';
 
 const API = API_BASE;
 const token = () => localStorage.getItem('token');
 
 async function repostBroadcast(b) {
-  const token = localStorage.getItem('token');
+  const tok = localStorage.getItem('token');
   return fetch(`${API}/api/broadcasts`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tok}` },
     body: JSON.stringify({
       bloodGroup: b.bloodGroup, units: b.units, state: b.state,
       district: b.district, hospital: b.hospital, message: b.message, urgency: b.urgency,
     }),
   });
 }
-const STATUS_LABELS  = { active: '🟢 Active', fulfilled: '✅ Need Met', cancelled: '⛔ Cancelled' };
-const URGENCY_LABELS = { critical: '🔴 Critical', urgent: '🟠 Urgent', normal: '🟡 Normal' };
 
 function RateModal({ broadcast, onClose, onRated }) {
-  const [stars, setStars] = useState(0);
-  const [hovered, setHovered] = useState(0);
-  const [note, setNote] = useState('');
+  const { t } = useLanguage();
+  const [stars, setStars]       = useState(0);
+  const [hovered, setHovered]   = useState(0);
+  const [note, setNote]         = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]       = useState('');
 
   const submit = async () => {
-    if (!stars) { setError('Please select a star rating'); return; }
+    if (!stars) { setError(t('rateErrStars')); return; }
     setSubmitting(true); setError('');
     try {
       const res = await fetch(`${API}/api/broadcasts/${broadcast._id}/rate`, {
@@ -41,9 +41,16 @@ function RateModal({ broadcast, onClose, onRated }) {
       if (!res.ok) { setError(data.message); setSubmitting(false); return; }
       onRated(broadcast._id, { stars, note, ratedAt: new Date() });
       onClose();
-    } catch { setError('Failed to submit. Try again.'); }
+    } catch { setError(t('rateFailed')); }
     setSubmitting(false);
   };
+
+  const qualityLabel =
+    stars === 1 ? t('ratePoor')    :
+    stars === 2 ? t('rateFair')    :
+    stars === 3 ? t('rateGood')    :
+    stars === 4 ? t('rateGreat')   :
+    stars === 5 ? t('rateExcellent') : '';
 
   return (
     <div style={{
@@ -55,19 +62,17 @@ function RateModal({ broadcast, onClose, onRated }) {
         borderRadius: 16, padding: '1.6rem', width: '100%', maxWidth: 420,
         boxShadow: '0 16px 48px rgba(0,0,0,0.35)',
       }} onClick={e => e.stopPropagation()}>
+
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
-          <h3 style={{ margin: 0, color: 'var(--text)', fontSize: '1.05rem' }}>⭐ Rate Your Donor</h3>
+          <h3 style={{ margin: 0, color: 'var(--text)', fontSize: '1.05rem' }}>{t('rateTitle')}</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.3rem', cursor: 'pointer', color: 'var(--muted)' }}>✕</button>
         </div>
-        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1.2rem' }}>
-          How was your experience? Your rating helps recognize great donors.
-        </p>
+        <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: '1.2rem' }}>{t('rateDesc')}</p>
 
         {/* Star picker */}
         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1rem' }}>
           {[1,2,3,4,5].map(n => (
-            <span
-              key={n}
+            <span key={n}
               onClick={() => setStars(n)}
               onMouseEnter={() => setHovered(n)}
               onMouseLeave={() => setHovered(0)}
@@ -80,12 +85,12 @@ function RateModal({ broadcast, onClose, onRated }) {
           ))}
         </div>
         <p style={{ textAlign: 'center', fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '1rem', minHeight: 18 }}>
-          {stars === 1 ? 'Poor' : stars === 2 ? 'Fair' : stars === 3 ? 'Good' : stars === 4 ? 'Great' : stars === 5 ? 'Excellent!' : ''}
+          {qualityLabel}
         </p>
 
         <textarea
           rows={3}
-          placeholder="Leave a short note (optional)…"
+          placeholder={t('rateNotePh')}
           value={note}
           onChange={e => setNote(e.target.value)}
           maxLength={200}
@@ -96,7 +101,9 @@ function RateModal({ broadcast, onClose, onRated }) {
             boxSizing: 'border-box', fontFamily: 'inherit', marginBottom: '0.3rem',
           }}
         />
-        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', marginBottom: '0.8rem' }}>{note.length}/200</p>
+        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'right', marginBottom: '0.8rem' }}>
+          {note.length}/200
+        </p>
 
         {error && <p style={{ color: '#d32f2f', fontSize: '0.85rem', marginBottom: '0.6rem' }}>{error}</p>}
 
@@ -105,12 +112,12 @@ function RateModal({ broadcast, onClose, onRated }) {
             flex: '0 0 auto', padding: '0.6rem 1rem', borderRadius: 8,
             border: '1.5px solid var(--border)', background: 'none',
             color: 'var(--muted)', cursor: 'pointer', fontWeight: 600,
-          }}>Cancel</button>
+          }}>{t('cancel')}</button>
           <button onClick={submit} disabled={submitting || !stars} style={{
             flex: 1, padding: '0.6rem 1rem', borderRadius: 8, border: 'none',
             background: stars ? '#d32f2f' : '#aaa', color: '#fff',
             cursor: stars ? 'pointer' : 'default', fontWeight: 700, fontSize: '0.9rem',
-          }}>{submitting ? 'Submitting…' : '⭐ Submit Rating'}</button>
+          }}>{submitting ? t('submitting') : t('submitRating')}</button>
         </div>
       </div>
     </div>
@@ -118,8 +125,20 @@ function RateModal({ broadcast, onClose, onRated }) {
 }
 
 function BroadcastCard({ b, showResponders, onRepost, onRate }) {
+  const { t } = useLanguage();
   const [reposting, setReposting] = useState(false);
   const [reposted, setReposted]   = useState(false);
+
+  const STATUS_LABELS  = {
+    active:    t('statusActive'),
+    fulfilled: t('statusFulfilled'),
+    cancelled: t('statusCancelled'),
+  };
+  const URGENCY_LABELS = {
+    critical: t('urgencyCritical'),
+    urgent:   t('urgencyUrgent'),
+    normal:   t('urgencyNormal'),
+  };
 
   const handleRepost = async () => {
     setReposting(true);
@@ -148,11 +167,9 @@ function BroadcastCard({ b, showResponders, onRepost, onRate }) {
       {/* Requester info — shown on My Responses tab */}
       {!showResponders && (
         <p className={styles.cardMeta}>
-          👤 Requester: <strong>{b.requesterName}</strong>
+          👤 {t('requesterLabel')} <strong>{b.requesterName}</strong>
           {' · '}
-          <a href={`tel:${b.requesterPhone}`} className={styles.callLink}>
-            📞 {b.requesterPhone}
-          </a>
+          <a href={`tel:${b.requesterPhone}`} className={styles.callLink}>📞 {b.requesterPhone}</a>
         </p>
       )}
 
@@ -160,7 +177,7 @@ function BroadcastCard({ b, showResponders, onRepost, onRate }) {
       {showResponders && (b.responses || []).length > 0 && (
         <div className={styles.respondersSection}>
           <p className={styles.respondersTitle}>
-            {b.responses.length} Donor{b.responses.length !== 1 ? 's' : ''} Responded
+            {b.responses.length} {b.responses.length !== 1 ? t('donorsRespondedCount') : t('donorRespondedCount')}
           </p>
           {b.responses.map((r, i) => (
             <div key={i} className={styles.responderRow}>
@@ -173,7 +190,7 @@ function BroadcastCard({ b, showResponders, onRepost, onRate }) {
       )}
 
       {showResponders && (b.responses || []).length === 0 && (
-        <p className={styles.noResponders}>No donors have responded yet.</p>
+        <p className={styles.noResponders}>{t('noRespondersHistory')}</p>
       )}
 
       <div className={styles.cardFooter}>
@@ -185,9 +202,9 @@ function BroadcastCard({ b, showResponders, onRepost, onRate }) {
         </p>
         {showResponders && b.status !== 'active' && (
           reposted
-            ? <span className={styles.repostedTag}>✅ Reposted!</span>
+            ? <span className={styles.repostedTag}>{t('repostedTag')}</span>
             : <button className={styles.repostBtn} onClick={handleRepost} disabled={reposting}>
-                {reposting ? '...' : '🔄 Repost'}
+                {reposting ? '...' : t('repost')}
               </button>
         )}
         {showResponders && b.status === 'fulfilled' && !b.rating?.stars && (b.responses || []).length > 0 && (
@@ -196,7 +213,7 @@ function BroadcastCard({ b, showResponders, onRepost, onRate }) {
             style={{ background: 'linear-gradient(135deg,#f57f17,#e65100)', color: '#fff', border: 'none' }}
             onClick={() => onRate(b)}
           >
-            ⭐ Rate Donor
+            {t('rateDonor')}
           </button>
         )}
         {showResponders && b.rating?.stars && (
@@ -215,11 +232,12 @@ function BroadcastCard({ b, showResponders, onRepost, onRate }) {
 
 export default function History() {
   const navigate = useNavigate();
-  const [tab, setTab]         = useState('requests');
+  const { t } = useLanguage();
+  const [tab, setTab]           = useState('requests');
   const [requests, setRequests]   = useState([]);
   const [responses, setResponses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [rateModal, setRateModal] = useState(null); // broadcast object
+  const [loading, setLoading]   = useState(true);
+  const [rateModal, setRateModal] = useState(null);
 
   const load = useCallback(async () => {
     if (!token()) { navigate('/login'); return; }
@@ -245,7 +263,7 @@ export default function History() {
     <AppShell connected={true}>
       <div className={styles.page}>
         <div className={styles.inner}>
-          <h1 className={styles.heading}>📋 My History</h1>
+          <h1 className={styles.heading}>{t('myHistory')}</h1>
 
           {/* Tabs */}
           <div className={styles.tabs}>
@@ -253,22 +271,20 @@ export default function History() {
               className={`${styles.tabBtn} ${tab === 'requests' ? styles.tabActive : ''}`}
               onClick={() => setTab('requests')}
             >
-              📡 My Requests
+              {t('myRequests')}
               {requests.length > 0 && <span className={styles.tabCount}>{requests.length}</span>}
             </button>
             <button
               className={`${styles.tabBtn} ${tab === 'responses' ? styles.tabActive : ''}`}
               onClick={() => setTab('responses')}
             >
-              🩸 My Responses
+              {t('myResponses')}
               {responses.length > 0 && <span className={styles.tabCount}>{responses.length}</span>}
             </button>
           </div>
 
           <p className={styles.sub}>
-            {tab === 'requests'
-              ? 'Blood requests you have posted and who responded'
-              : 'Requests you have offered to help with'}
+            {tab === 'requests' ? t('requestsTabSub') : t('responsesTabSub')}
           </p>
 
           {loading && (
@@ -278,17 +294,21 @@ export default function History() {
           {!loading && items.length === 0 && (
             <div className={styles.empty}>
               <span className={styles.emptyIcon}>{tab === 'requests' ? '📡' : '🩸'}</span>
-              <p>{tab === 'requests'
-                ? 'No requests yet. Use the dashboard to request blood.'
-                : "You haven't responded to any requests yet."}</p>
+              <p>{tab === 'requests' ? t('noRequestsYet') : t('noResponsesYet')}</p>
             </div>
           )}
 
           {!loading && items.map((b) => (
-            <BroadcastCard key={b._id} b={b} showResponders={showResponders} onRepost={load} onRate={setRateModal} />
+            <BroadcastCard
+              key={b._id} b={b}
+              showResponders={showResponders}
+              onRepost={load}
+              onRate={setRateModal}
+            />
           ))}
         </div>
       </div>
+
       {rateModal && (
         <RateModal
           broadcast={rateModal}

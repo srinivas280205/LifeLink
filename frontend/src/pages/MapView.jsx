@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import AppShell from '../components/AppShell';
 import styles from './MapView.module.css';
 import { BLOOD_BANKS } from '../data/bloodBanks';
+import { useLanguage } from '../context/LanguageContext';
 
 import API_BASE from '../config/api.js';
 const API = API_BASE;
@@ -263,6 +264,7 @@ export default function MapView() {
     });
   }, [layer, mapReady]);
 
+  const { t } = useLanguage();
   const donorCount = donors.length;
   const broadcastCount = broadcasts.length;
 
@@ -272,10 +274,10 @@ export default function MapView() {
       {/* Layer toggle */}
       <div className={styles.layerBar}>
         {[
-          { key: 'all',      label: '🗺️ All' },
-          { key: 'donors',   label: `🩸 Donors (${donorCount})` },
-          { key: 'requests', label: `🚨 Requests (${broadcastCount})` },
-          { key: 'banks',    label: `🏥 Blood Banks (${BLOOD_BANKS.length})` },
+          { key: 'all',      label: t('mapAll') },
+          { key: 'donors',   label: `${t('mapDonors')} (${donorCount})` },
+          { key: 'requests', label: `${t('mapRequests')} (${broadcastCount})` },
+          { key: 'banks',    label: `${t('mapBanks')} (${BLOOD_BANKS.length})` },
         ].map(({ key, label }) => (
           <button
             key={key}

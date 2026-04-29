@@ -69,12 +69,13 @@ router.post('/', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('new_broadcast', broadcast);
 
-    // Notify all available compatible users who have a blood group set
+    // Notify all available compatible users who have bloodRequests pref enabled
     const compatibleGroups = COMPATIBLE_DONORS[bloodGroup] || [];
     const potentialDonors = await User.find({
       _id: { $ne: user._id },
       isAvailable: true,
       bloodGroup: { $in: compatibleGroups },
+      'notifPrefs.bloodRequests': { $ne: false },
     }).select('_id');
 
     if (potentialDonors.length > 0) {
@@ -174,7 +175,7 @@ router.post('/sos', auth, async (req, res) => {
     const io = req.app.get('io');
     if (io) io.emit('new_broadcast', broadcast);
 
-    // Find all available compatible users with GPS location, within radius
+    // Find all available compatible users with GPS location, within radius, bloodRequests pref on
     const compatibleGroups = COMPATIBLE_DONORS[bloodGroup] || [];
     const allNearby = await User.find({
       _id: { $ne: user._id },
@@ -182,6 +183,7 @@ router.post('/sos', auth, async (req, res) => {
       bloodGroup: { $in: compatibleGroups },
       'location.lat': { $ne: null },
       'location.lng': { $ne: null },
+      'notifPrefs.bloodRequests': { $ne: false },
     }).select('_id fullName location');
 
     const nearbyDonors = allNearby.filter((d) => {
@@ -268,25 +270,40 @@ router.post('/:id/respond', auth, async (req, res) => {
       donor: { name: user.fullName, phone: user.phone, bloodGroup: user.bloodGroup },
     });
 
-    const notif = await Notification.create({
-      userId: broadcast.requestedBy,
-      type: 'donor_responded',
-      title: `✅ Someone offered to help your ${broadcast.bloodGroup} request`,
-      body: `${user.fullName}${user.bloodGroup ? ` (${user.bloodGroup})` : ''} has agreed to donate in ${broadcast.district}.`,
-      broadcastId: broadcast._id,
-    });
-    if (io) {
-      io.emit('new_notification', {
-        userId: broadcast.requestedBy.toString(),
-        notification: {
-          type: 'donor_responded',
-          title: notif.title,
-          body:  notif.body,
-          broadcastId: broadcast._id,
-          createdAt: notif.createdAt,
-          read: false,
-        },
+    // Notify requester only if they have donorResponded pref enabled
+    const requester = await User.findById(broadcast.requestedBy).select('notifPrefs');
+    if (requester?.notifPrefs?.donorResponded !== false) {
+      const notifTitle = `✅ Someone offered to help your ${broadcast.bloodGroup} request`;
+      const notifBody  = `${user.fullName}${user.bloodGroup ? ` (${user.bloodGroup})` : ''} has agreed to donate in ${broadcast.district}.`;
+      const notif = await Notification.create({
+        userId: broadcast.requestedBy,
+        type: 'donor_responded',
+        title: notifTitle,
+        body:  notifBody,
+        broadcastId: broadcast._id,
       });
+      // Send device push notification
+      sendPushToUser(broadcast.requestedBy, {
+        title: notifTitle,
+        body:  notifBody,
+        icon: '/logo.svg',
+        badge: '/logo.svg',
+        tag: `donor-responded-${broadcast._id}`,
+        data: { url: '/history' },
+      }).catch(() => {});
+      if (io) {
+        io.emit('new_notification', {
+          userId: broadcast.requestedBy.toString(),
+          notification: {
+            type: 'donor_responded',
+            title: notif.title,
+            body:  notif.body,
+            broadcastId: broadcast._id,
+            createdAt: notif.createdAt,
+            read: false,
+          },
+        });
+      }
     }
 
     res.json({ message: 'Response sent successfully' });
