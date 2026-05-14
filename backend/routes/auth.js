@@ -53,10 +53,24 @@ async function sendSMS(phone, otp) {
 // ── POST /api/auth/signup ─────────────────────────────────────────────────────
 router.post('/signup', async (req, res) => {
   try {
-    const { fullName, phone, password, gender, bloodGroup, country, state, district } = req.body;
+    const { fullName, phone, password, gender, bloodGroup, country, state, district, dob, email } = req.body;
 
     if (!fullName || !phone || !password) {
       return res.status(400).json({ message: 'Name, phone and password are required' });
+    }
+
+    // Age validation: must be 18–65 if DOB provided
+    if (dob) {
+      const birthDate = new Date(dob);
+      if (isNaN(birthDate.getTime())) {
+        return res.status(400).json({ message: 'Invalid date of birth' });
+      }
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+      if (age < 18) return res.status(400).json({ message: 'You must be at least 18 years old to register as a blood donor.' });
+      if (age > 65) return res.status(400).json({ message: 'Blood donor registration is available for people up to 65 years of age.' });
     }
 
     const existing = await User.findOne({ phone });
@@ -75,6 +89,8 @@ router.post('/signup', async (req, res) => {
       country:    country   || 'India',
       state:      state     || '',
       district:   district  || '',
+      dob:        dob       || null,
+      email:      email     || '',
     });
 
     // First user ever → automatically becomes admin
@@ -233,9 +249,33 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    // Check login lockout
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      const remainingMin = Math.ceil((user.lockUntil - Date.now()) / 60000);
+      return res.status(423).json({
+        message: `Account temporarily locked due to too many failed attempts. Try again in ${remainingMin} minute(s).`,
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid phone number or password' });
+      const attempts = (user.loginAttempts || 0) + 1;
+      const update = { loginAttempts: attempts };
+      if (attempts >= 5) {
+        update.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // lock 15 min
+        update.loginAttempts = 0;
+      }
+      await User.findByIdAndUpdate(user._id, update);
+      const left = Math.max(0, 5 - attempts);
+      const msg = attempts >= 5
+        ? 'Too many failed attempts. Account locked for 15 minutes.'
+        : `Invalid phone or password. ${left} attempt(s) remaining before lockout.`;
+      return res.status(401).json({ message: msg });
+    }
+
+    // Successful login — reset lockout state
+    if (user.loginAttempts > 0 || user.lockUntil) {
+      await User.findByIdAndUpdate(user._id, { loginAttempts: 0, lockUntil: null });
     }
 
     const token = jwt.sign(
@@ -248,16 +288,19 @@ router.post('/login', async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id:          user._id,
-        fullName:    user.fullName,
-        phone:       user.phone,
-        bloodGroup:  user.bloodGroup,
-        isVerified:  user.isVerified,
-        country:     user.country,
-        state:       user.state,
-        district:    user.district,
-        isAvailable: user.isAvailable,
-        isAdmin:     user.isAdmin,
+        id:            user._id,
+        fullName:      user.fullName,
+        phone:         user.phone,
+        bloodGroup:    user.bloodGroup,
+        isVerified:    user.isVerified,
+        country:       user.country,
+        state:         user.state,
+        district:      user.district,
+        isAvailable:   user.isAvailable,
+        isAdmin:       user.isAdmin,
+        emailVerified: user.emailVerified,
+        docStatus:     user.docStatus,
+        donationCount: user.donationCount,
       },
     });
   } catch (err) {

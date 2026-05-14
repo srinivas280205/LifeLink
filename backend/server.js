@@ -26,6 +26,7 @@ const adminRoutes = require('./routes/admin');
 const leaderboardRoutes = require('./routes/leaderboard');
 const eventRoutes       = require('./routes/events');
 const { router: pushRoutes } = require('./routes/push');
+const verifyRoutes = require('./routes/verify');
 const { startEscalationJob } = require('./jobs/escalation');
 
 const app = express();
@@ -39,7 +40,7 @@ app.set('io', io);
 app.set('trust proxy', 1); // Required for Render.com — fixes rate-limit X-Forwarded-For error
 app.use(helmet({ contentSecurityPolicy: false })); // CSP disabled — SPA handles it
 app.use(cors());
-app.use(express.json({ limit: '50kb' }));   // reject oversized payloads
+app.use(express.json({ limit: '10mb' }));   // 10mb to allow base64 doc uploads
 app.use(mongoSanitize());                   // strip $ and . from user input (NoSQL injection)
 
 // ── Rate limiting ────────────────────────────────────────────────────────────
@@ -68,6 +69,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/events',     eventRoutes);
 app.use('/api/push',       pushRoutes);
+app.use('/api/verify',     verifyRoutes);
 app.get('/', (req, res) => res.json({ message: 'LifeLink API is running' }));
 
 // Socket.io connection

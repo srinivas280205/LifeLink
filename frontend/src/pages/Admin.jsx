@@ -101,8 +101,16 @@ export default function Admin() {
   const [annSending, setAnnSending] = useState(false);
   const [annResult, setAnnResult]   = useState('');
 
+  // Pending document reviews
+  const [pendingDocs, setPendingDocs] = useState([]);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [docViewImg, setDocViewImg]   = useState(null); // base64 data URI to preview
+  const [rejectModal, setRejectModal] = useState(null); // { userId, name }
+  const [rejectReason, setRejectReason] = useState('');
+  const [docActionSaving, setDocActionSaving] = useState(false);
+
   // Track which tabs have already loaded — prevents re-fetch on every tab switch
-  const loadedRef = useRef({ overview: false, users: false, broadcasts: false, events: false });
+  const loadedRef = useRef({ overview: false, users: false, broadcasts: false, events: false, documents: false });
 
   useEffect(() => {
     if (!token()) { navigate('/login'); return; }
@@ -163,6 +171,20 @@ export default function Admin() {
     setBcLoading(false);
   }, [bcStatus, bcBG]);
 
+  const fetchPendingDocs = useCallback(async (force = false) => {
+    if (!force && loadedRef.current.documents) return;
+    setDocsLoading(true);
+    try {
+      const res = await fetch(`${API}/api/admin/pending-docs`, { headers: { Authorization: `Bearer ${token()}` } });
+      if (res.ok) {
+        const d = await res.json();
+        setPendingDocs(d.users || []);
+        loadedRef.current.documents = true;
+      }
+    } catch { /* ignore */ }
+    setDocsLoading(false);
+  }, []);
+
   const fetchEvents = useCallback(async (page = 1, force = false) => {
     if (!force && loadedRef.current.events && page === 1) return;
     setEvLoading(true);
@@ -179,9 +201,10 @@ export default function Admin() {
 
   // Load overview on mount; load other tabs only when first visited
   useEffect(() => { fetchStats(); }, [fetchStats]);
-  useEffect(() => { if (tab === 'users')      fetchUsers(1); },      [tab, fetchUsers]);
-  useEffect(() => { if (tab === 'broadcasts') fetchBroadcasts(1); }, [tab, fetchBroadcasts]);
-  useEffect(() => { if (tab === 'events')     fetchEvents(1); },     [tab, fetchEvents]);
+  useEffect(() => { if (tab === 'users')      fetchUsers(1); },       [tab, fetchUsers]);
+  useEffect(() => { if (tab === 'broadcasts') fetchBroadcasts(1); },  [tab, fetchBroadcasts]);
+  useEffect(() => { if (tab === 'events')     fetchEvents(1); },      [tab, fetchEvents]);
+  useEffect(() => { if (tab === 'documents')  fetchPendingDocs(); },  [tab, fetchPendingDocs]);
 
   /* ── Actions ──────────────────────────────────────────────────────── */
   const deleteUser = async (id, name) => {
@@ -312,6 +335,32 @@ export default function Admin() {
       if (res.ok) { setAnnTitle(''); setAnnBody(''); }
     } catch { setAnnResult('❌ Network error'); }
     setAnnSending(false);
+  };
+
+  const approveDoc = async (userId) => {
+    setDocActionSaving(true);
+    await fetch(`${API}/api/admin/users/${userId}/approve-doc`, {
+      method: 'POST', headers: { Authorization: `Bearer ${token()}` },
+    });
+    loadedRef.current.documents = false;
+    fetchPendingDocs(true);
+    setDocActionSaving(false);
+  };
+
+  const openRejectModal = (u) => { setRejectModal({ userId: u._id, name: u.fullName }); setRejectReason(''); };
+
+  const confirmRejectDoc = async () => {
+    if (!rejectModal) return;
+    setDocActionSaving(true);
+    await fetch(`${API}/api/admin/users/${rejectModal.userId}/reject-doc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+      body: JSON.stringify({ reason: rejectReason }),
+    });
+    setRejectModal(null);
+    loadedRef.current.documents = false;
+    fetchPendingDocs(true);
+    setDocActionSaving(false);
   };
 
   const handleLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('user'); navigate('/'); };
@@ -558,6 +607,7 @@ export default function Admin() {
           { key: 'broadcasts', label: '📡 Broadcasts' },
           { key: 'events',     label: '🗓️ Events'     },
           { key: 'announce',   label: '📣 Announce'   },
+          { key: 'documents',  label: `📄 Documents${pendingDocs.length > 0 ? ` (${pendingDocs.length})` : ''}` },
         ].map(t => (
           <button key={t.key}
             className={`${styles.tab} ${tab === t.key ? styles.tabActive : ''}`}
@@ -1076,6 +1126,159 @@ export default function Admin() {
                 <li>Push notifications also fire if users subscribed</li>
               </ul>
             </div>
+          </div>
+        )}
+
+        {/* ══ DOCUMENTS ══ */}
+        {tab === 'documents' && (
+          <div>
+            {/* Reject reason modal */}
+            {rejectModal && (
+              <div style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+                zIndex: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+              }}>
+                <div style={{
+                  background: 'var(--card-bg)', border: '1px solid var(--border)',
+                  borderRadius: 16, padding: '1.6rem', width: '100%', maxWidth: 400,
+                  boxShadow: '0 16px 48px rgba(0,0,0,0.35)',
+                }}>
+                  <h3 style={{ margin: '0 0 0.5rem', color: '#b71c1c' }}>❌ Reject Document</h3>
+                  <p style={{ margin: '0 0 1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
+                    Rejecting doc for <strong>{rejectModal.name}</strong>. They will be notified and can re-upload.
+                  </p>
+                  <label style={{ display: 'block', marginBottom: '0.4rem', fontSize: '0.85rem', fontWeight: 600 }}>
+                    Reason (required)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Document is blurry, blood group not visible..."
+                    value={rejectReason}
+                    onChange={e => setRejectReason(e.target.value)}
+                    style={{
+                      width: '100%', padding: '0.65rem 0.85rem', borderRadius: 8,
+                      border: '1.5px solid var(--border)', background: 'var(--input-bg)',
+                      color: 'var(--text)', fontSize: '0.9rem', boxSizing: 'border-box', marginBottom: '1rem',
+                    }}
+                  />
+                  <div style={{ display: 'flex', gap: '0.6rem' }}>
+                    <button onClick={confirmRejectDoc} disabled={docActionSaving || !rejectReason.trim()}
+                      style={{ flex: 1, padding: '0.75rem', background: '#b71c1c', color: '#fff',
+                        border: 'none', borderRadius: 8, fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
+                      {docActionSaving ? 'Rejecting…' : '❌ Confirm Reject'}
+                    </button>
+                    <button onClick={() => setRejectModal(null)}
+                      style={{ flex: '0 0 auto', padding: '0.75rem 1rem', background: 'var(--card-bg)',
+                        border: '1.5px solid var(--border)', borderRadius: 8, cursor: 'pointer',
+                        color: 'var(--muted)', fontWeight: 600 }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Doc image preview modal */}
+            {docViewImg && (
+              <div style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+                zIndex: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+              }} onClick={() => setDocViewImg(null)}>
+                <div style={{ maxWidth: '90vw', maxHeight: '85vh', position: 'relative' }} onClick={e => e.stopPropagation()}>
+                  <button onClick={() => setDocViewImg(null)} style={{
+                    position: 'absolute', top: -16, right: -16, background: '#fff', border: 'none',
+                    borderRadius: '50%', width: 32, height: 32, cursor: 'pointer',
+                    fontSize: '1.1rem', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>✕</button>
+                  {docViewImg.startsWith('data:application/pdf') ? (
+                    <iframe src={docViewImg} title="Document preview"
+                      style={{ width: '80vw', height: '75vh', border: 'none', borderRadius: 8 }} />
+                  ) : (
+                    <img src={docViewImg} alt="Blood group document"
+                      style={{ maxWidth: '88vw', maxHeight: '80vh', borderRadius: 8, objectFit: 'contain' }} />
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className={styles.sectionHeader}>
+              <div>
+                <h2 className={styles.sectionTitle}>📄 Pending Document Reviews</h2>
+                <p className={styles.sectionSub}>
+                  {docsLoading ? 'Loading…'
+                    : pendingDocs.length === 0
+                      ? 'No documents pending review ✅'
+                      : `${pendingDocs.length} document(s) awaiting your review`}
+                </p>
+              </div>
+              <button className={styles.exportBtn} onClick={() => fetchPendingDocs(true)} style={{ width: 'auto' }}>
+                ↻ Refresh
+              </button>
+            </div>
+
+            {docsLoading ? (
+              <div className={styles.loading}><div className={styles.spinner} /></div>
+            ) : pendingDocs.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--muted)' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>✅</div>
+                <p>All caught up! No documents to review.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {pendingDocs.map((u) => (
+                  <div key={u._id} style={{
+                    background: 'var(--card-bg)', border: '1px solid var(--border)',
+                    borderRadius: 12, padding: '1.1rem',
+                    display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center',
+                  }}>
+                    {/* User info */}
+                    <div style={{ flex: '1 1 200px' }}>
+                      <p style={{ margin: 0, fontWeight: 700, color: 'var(--text)', fontSize: '0.95rem' }}>
+                        {u.fullName}
+                        {u.bloodGroup && (
+                          <span style={{ marginLeft: 8, background: '#d32f2f', color: '#fff',
+                            borderRadius: 6, padding: '0.1rem 0.5rem', fontSize: '0.78rem', fontWeight: 800 }}>
+                            {u.bloodGroup}
+                          </span>
+                        )}
+                      </p>
+                      <p style={{ margin: '0.2rem 0 0', fontSize: '0.83rem', color: 'var(--muted)' }}>
+                        📞 {u.phone} · 📍 {[u.district, u.state].filter(Boolean).join(', ') || 'Unknown'}
+                      </p>
+                      <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+                        📎 {u.bloodGroupDocName || 'Unnamed file'} · Submitted {timeAgo(u.createdAt)}
+                      </p>
+                    </div>
+
+                    {/* Buttons */}
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      {u.bloodGroupDoc && (
+                        <button
+                          onClick={() => setDocViewImg(u.bloodGroupDoc)}
+                          style={{ padding: '0.5rem 0.85rem', borderRadius: 8,
+                            border: '1.5px solid #90caf9', background: '#e3f2fd', color: '#1565c0',
+                            cursor: 'pointer', fontWeight: 700, fontSize: '0.84rem' }}
+                        >🔍 View Doc</button>
+                      )}
+                      <button
+                        onClick={() => approveDoc(u._id)}
+                        disabled={docActionSaving}
+                        style={{ padding: '0.5rem 0.85rem', borderRadius: 8,
+                          border: '1.5px solid #a5d6a7', background: '#e8f5e9', color: '#2e7d32',
+                          cursor: 'pointer', fontWeight: 700, fontSize: '0.84rem' }}
+                      >✅ Approve</button>
+                      <button
+                        onClick={() => openRejectModal(u)}
+                        disabled={docActionSaving}
+                        style={{ padding: '0.5rem 0.85rem', borderRadius: 8,
+                          border: '1.5px solid #ef9a9a', background: '#fce4ec', color: '#b71c1c',
+                          cursor: 'pointer', fontWeight: 700, fontSize: '0.84rem' }}
+                      >❌ Reject</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

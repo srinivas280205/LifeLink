@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './Profile.module.css';
@@ -54,6 +54,32 @@ export default function Profile() {
   const [prefsSaving, setPrefsSaving] = useState(false);
   const [prefsSaved, setPrefsSaved] = useState(false);
 
+  // Trust / verification state
+  const [trustStatus, setTrustStatus] = useState(null);
+  const [emailInput, setEmailInput]   = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailMsg, setEmailMsg]       = useState('');
+  const [docUploading, setDocUploading] = useState(false);
+  const [docMsg, setDocMsg]           = useState('');
+  const docInputRef = useRef(null);
+
+  // Check URL params for email verification callback
+  const [emailVerifyParam] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('emailVerified');
+    }
+    return null;
+  });
+
+  const fetchTrustStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${API}/api/verify/status`, {
+        headers: { Authorization: `Bearer ${token()}` },
+      });
+      if (res.ok) setTrustStatus(await res.json());
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     const hdrs = { Authorization: `Bearer ${token()}` };
     Promise.all([
@@ -65,6 +91,7 @@ export default function Profile() {
         setProfile(data);
         setMyStats(stats);
         if (data.notifPrefs) setNotifPrefs(data.notifPrefs);
+        if (data.email) setEmailInput(data.email);
         setForm({
           fullName:    data.fullName    || '',
           gender:      data.gender      || '',
@@ -76,7 +103,8 @@ export default function Profile() {
         });
       })
       .catch(() => navigate('/login'));
-  }, [navigate]);
+    fetchTrustStatus();
+  }, [navigate, fetchTrustStatus]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -250,6 +278,44 @@ export default function Profile() {
     setPrefsSaving(false);
   };
 
+  const handleSendVerifyEmail = async () => {
+    if (!emailInput.trim()) return;
+    setEmailSending(true); setEmailMsg('');
+    try {
+      const res = await fetch(`${API}/api/verify/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
+        body: JSON.stringify({ email: emailInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setEmailMsg(`❌ ${data.message}`); return; }
+      setEmailMsg(data.devMode ? t('emailDevMsg') : t('emailSentMsg'));
+      fetchTrustStatus();
+    } catch { setEmailMsg('❌ Failed to send. Check your connection.'); }
+    setEmailSending(false);
+  };
+
+  const handleDocUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setDocUploading(true); setDocMsg('');
+    try {
+      const formData = new FormData();
+      formData.append('doc', file);
+      const res = await fetch(`${API}/api/verify/upload-doc`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token()}` },
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) { setDocMsg(`❌ ${data.message}`); return; }
+      setDocMsg(t('docUploaded'));
+      fetchTrustStatus();
+    } catch { setDocMsg('❌ Upload failed. Check your connection.'); }
+    setDocUploading(false);
+    if (docInputRef.current) docInputRef.current.value = '';
+  };
+
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(t('deleteConfirm'));
     if (!confirmed) return;
@@ -355,6 +421,97 @@ export default function Profile() {
             </div>
           )}
         </div>
+
+        {/* ── Email verified callback notification ── */}
+        {emailVerifyParam === 'success' && (
+          <div style={{ background: '#e8f5e9', border: '1px solid #a5d6a7', borderRadius: 10,
+            padding: '0.75rem 1rem', marginBottom: '0.75rem', color: '#2e7d32', fontWeight: 600, fontSize: '0.9rem' }}>
+            {t('emailVerifiedSuccess')}
+          </div>
+        )}
+        {emailVerifyParam === 'error' && (
+          <div style={{ background: '#fce4ec', border: '1px solid #ef9a9a', borderRadius: 10,
+            padding: '0.75rem 1rem', marginBottom: '0.75rem', color: '#b71c1c', fontWeight: 600, fontSize: '0.9rem' }}>
+            {t('emailVerifiedError')}
+          </div>
+        )}
+
+        {/* ── Trust Score Widget ── */}
+        {trustStatus && (() => {
+          const { trustScore, trustLevel } = trustStatus;
+          const STEPS = [
+            { score: 1, icon: '🔵', labelKey: 'trustStep1', done: trustStatus.isVerified },
+            { score: 2, icon: '🔵', labelKey: 'trustStep2', done: trustStatus.emailVerified },
+            { score: 3, icon: '🟡', labelKey: 'trustStep3', done: ['pending','approved'].includes(trustStatus.docStatus) },
+            { score: 4, icon: '🟢', labelKey: 'trustStep4', done: trustStatus.docStatus === 'approved' },
+            { score: 5, icon: '🏆', labelKey: 'trustStep5', done: (trustStatus.donationCount || 0) >= 10 },
+          ];
+          const LEVEL_LABELS = {
+            new:          t('trustNew'),
+            phone:        t('trustPhone'),
+            email:        t('trustEmail'),
+            doc_pending:  t('trustDocPending'),
+            doc_approved: t('trustDocApproved'),
+            trusted:      t('trustTrusted'),
+          };
+          const LEVEL_COLORS = {
+            new: '#9e9e9e', phone: '#1976d2', email: '#1976d2',
+            doc_pending: '#f57f17', doc_approved: '#388e3c', trusted: '#d32f2f',
+          };
+          return (
+            <div style={{
+              background: 'var(--card-bg)', border: '1px solid var(--border)',
+              borderRadius: 14, padding: '1.2rem', marginBottom: '1rem',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--text)' }}>
+                  {t('trustScore')}
+                </h3>
+                <span style={{
+                  background: LEVEL_COLORS[trustLevel] + '22',
+                  color: LEVEL_COLORS[trustLevel],
+                  border: `1px solid ${LEVEL_COLORS[trustLevel]}55`,
+                  borderRadius: 20, padding: '0.2rem 0.65rem',
+                  fontSize: '0.8rem', fontWeight: 700,
+                }}>
+                  {LEVEL_LABELS[trustLevel] || t('trustNew')}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{ height: 8, background: 'var(--border)', borderRadius: 4, marginBottom: '1rem', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%', borderRadius: 4,
+                  width: `${(trustScore / 5) * 100}%`,
+                  background: `linear-gradient(90deg, #1976d2, ${LEVEL_COLORS[trustLevel]})`,
+                  transition: 'width 0.6s ease',
+                }} />
+              </div>
+
+              {/* Steps */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                {STEPS.map((step) => (
+                  <div key={step.score} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.85rem' }}>
+                    <span style={{ fontSize: '1rem', opacity: step.done ? 1 : 0.35 }}>
+                      {step.done ? '✅' : '⬜'}
+                    </span>
+                    <span style={{ color: step.done ? 'var(--text)' : 'var(--muted)', fontWeight: step.done ? 600 : 400 }}>
+                      {t(step.labelKey)}
+                    </span>
+                    {step.done && (
+                      <span style={{ marginLeft: 'auto', color: '#388e3c', fontSize: '0.75rem', fontWeight: 700 }}>
+                        {t('trustComplete')}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p style={{ margin: '0.75rem 0 0', fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                {t('trustScoreDesc')}
+              </p>
+            </div>
+          );
+        })()}
 
         {/* ── Personal impact stats ── */}
         {myStats && (
@@ -695,6 +852,110 @@ export default function Profile() {
             <p style={{ color: '#2e7d32', fontSize: '0.82rem', marginTop: '0.6rem', fontWeight: 600 }}>
               ✅ Preferences saved
             </p>
+          )}
+        </div>
+
+        {/* ── Email Verification ── */}
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t('verifyEmail')}</h2>
+          <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '0.9rem', lineHeight: 1.5 }}>
+            {t('verifyEmailDesc')}
+          </p>
+          {trustStatus?.emailVerified ? (
+            <p style={{ color: '#388e3c', fontWeight: 700, fontSize: '0.9rem' }}>
+              {t('emailAlreadyVerified')} {trustStatus.email && `(${trustStatus.email})`}
+            </p>
+          ) : (
+            <>
+              <div className={styles.field}>
+                <label>{t('emailAddress')}</label>
+                <input
+                  type="email"
+                  placeholder={t('emailPh')}
+                  value={emailInput}
+                  onChange={e => setEmailInput(e.target.value)}
+                  style={{ marginBottom: 0 }}
+                />
+              </div>
+              {emailMsg && (
+                <p style={{
+                  color: emailMsg.startsWith('✅') ? '#2e7d32' : emailMsg.startsWith('⚠️') ? '#f57f17' : '#d32f2f',
+                  fontSize: '0.84rem', marginTop: '0.5rem', fontWeight: 600,
+                }}>{emailMsg}</p>
+              )}
+              <button
+                type="button"
+                disabled={emailSending || !emailInput.trim()}
+                onClick={handleSendVerifyEmail}
+                className={styles.gpsBtn}
+                style={{ marginTop: '0.75rem' }}
+              >
+                {emailSending ? t('sendingVerifyLink') : t('sendVerifyLink')}
+              </button>
+              <p style={{ fontSize: '0.76rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
+                {t('emailUnverified')} — {t('trustStep2')}
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* ── Blood Group Document Upload ── */}
+        <div className={styles.card}>
+          <h2 className={styles.cardTitle}>{t('uploadDoc')}</h2>
+          <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '0.9rem', lineHeight: 1.5 }}>
+            {t('uploadDocDesc')}
+          </p>
+
+          {trustStatus?.docStatus === 'approved' ? (
+            <p style={{ color: '#388e3c', fontWeight: 700, fontSize: '0.9rem' }}>
+              {t('docApproved')}
+            </p>
+          ) : trustStatus?.docStatus === 'pending' ? (
+            <p style={{ color: '#f57f17', fontWeight: 700, fontSize: '0.9rem' }}>
+              {t('docPending')} — {t('uploadDocDesc').split('.')[1]?.trim() || 'Admin will review within 24 hours.'}
+            </p>
+          ) : trustStatus?.docStatus === 'rejected' ? (
+            <>
+              <p style={{ color: '#d32f2f', fontWeight: 700, fontSize: '0.9rem' }}>
+                {t('docRejected')}
+              </p>
+              {trustStatus.docRejectedReason && (
+                <p style={{ fontSize: '0.84rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+                  {t('docRejectedReason')} {trustStatus.docRejectedReason}
+                </p>
+              )}
+              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+                {t('docDisclaimer')}
+              </p>
+              <input type="file" ref={docInputRef} accept="image/*,.pdf"
+                onChange={handleDocUpload} style={{ display: 'none' }} />
+              <button type="button" disabled={docUploading} onClick={() => docInputRef.current?.click()}
+                className={styles.gpsBtn} style={{ background: 'linear-gradient(135deg,#d32f2f,#b71c1c)' }}>
+                {docUploading ? t('uploadingDoc') : t('docReupload')}
+              </button>
+            </>
+          ) : (
+            <>
+              <p style={{ fontSize: '0.78rem', color: '#e65100', marginBottom: '0.6rem',
+                background: '#fff3e0', padding: '0.5rem 0.75rem', borderRadius: 8, lineHeight: 1.5 }}>
+                {t('docDisclaimer')}
+              </p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginBottom: '0.75rem' }}>
+                {t('docAccepts')}
+              </p>
+              {docMsg && (
+                <p style={{
+                  color: docMsg.startsWith('✅') ? '#2e7d32' : '#d32f2f',
+                  fontSize: '0.84rem', marginBottom: '0.5rem', fontWeight: 600,
+                }}>{docMsg}</p>
+              )}
+              <input type="file" ref={docInputRef} accept="image/*,.pdf"
+                onChange={handleDocUpload} style={{ display: 'none' }} />
+              <button type="button" disabled={docUploading} onClick={() => docInputRef.current?.click()}
+                className={styles.gpsBtn}>
+                {docUploading ? t('uploadingDoc') : t('uploadDocBtn')}
+              </button>
+            </>
           )}
         </div>
 

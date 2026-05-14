@@ -24,6 +24,8 @@ function SignupForm({ onSuccess }) {
     fullName: '', password: '',
     gender: '',
     bloodGroup: '',
+    dob: '',
+    email: '',
     country: 'India', state: '', district: '',
   });
   const [error, setError]     = useState('');
@@ -42,9 +44,28 @@ function SignupForm({ onSuccess }) {
   const districts = (form.country === 'India' && form.state)
     ? (DISTRICTS_BY_STATE[form.state] || []) : [];
 
+  // Client-side age validation
+  const validateAge = (dob) => {
+    if (!dob) return null;
+    const birth = new Date(dob);
+    if (isNaN(birth.getTime())) return t('ageError18');
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    if (age < 18) return t('ageError18');
+    if (age > 65) return t('ageError65');
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true); setError('');
+    // Validate age before sending
+    if (form.dob) {
+      const ageErr = validateAge(form.dob);
+      if (ageErr) { setError(ageErr); setLoading(false); return; }
+    }
     const apiPhone = toApiPhone(phone); // e.g. "+919344763919"
     try {
       const res = await fetch(`${API}/api/auth/signup`, {
@@ -76,6 +97,27 @@ function SignupForm({ onSuccess }) {
           <label htmlFor="fullName">{t('fullName')}</label>
           <input id="fullName" name="fullName" type="text" placeholder={t('namePlaceholder')}
             value={form.fullName} onChange={handleChange} required autoComplete="name" />
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="dob">
+            {t('dobLabel')} <span className={styles.optionalTag}>{t('bloodOptional')}</span>
+          </label>
+          <input id="dob" name="dob" type="date"
+            value={form.dob} onChange={handleChange}
+            max={new Date(Date.now() - 18 * 365.25 * 24 * 3600 * 1000).toISOString().slice(0, 10)}
+          />
+          {form.dob && validateAge(form.dob) && (
+            <span style={{ color: '#d32f2f', fontSize: '0.8rem' }}>{validateAge(form.dob)}</span>
+          )}
+        </div>
+
+        <div className={styles.field}>
+          <label htmlFor="email">
+            {t('emailAddress')} <span className={styles.optionalTag}>{t('bloodOptional')}</span>
+          </label>
+          <input id="email" name="email" type="email" placeholder={t('emailPh')}
+            value={form.email} onChange={handleChange} autoComplete="email" />
         </div>
 
         <div className={styles.field}>

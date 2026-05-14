@@ -51,6 +51,30 @@ const userSchema = new mongoose.Schema(
       announcements:  { type: Boolean, default: true },
       adminMessages:  { type: Boolean, default: true },
     },
+
+    // ── Date of birth & age gating ──────────────────────────────────────────
+    dob: { type: Date, default: null },
+
+    // ── Email verification ───────────────────────────────────────────────────
+    email:              { type: String, trim: true, lowercase: true, default: '' },
+    emailVerified:      { type: Boolean, default: false },
+    emailVerifyToken:   { type: String, default: null },
+    emailVerifyExpires: { type: Date,   default: null },
+
+    // ── Login lockout ────────────────────────────────────────────────────────
+    loginAttempts: { type: Number, default: 0 },
+    lockUntil:     { type: Date,   default: null },
+
+    // ── Blood group document verification ───────────────────────────────────
+    bloodGroupDoc:       { type: String, default: null },   // base64 data URI
+    bloodGroupDocName:   { type: String, default: null },   // original filename
+    bloodGroupDocType:   { type: String, default: null },   // MIME type
+    docStatus: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none',
+    },
+    docRejectedReason: { type: String, default: '' },
   },
   { timestamps: true }
 );

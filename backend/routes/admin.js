@@ -438,4 +438,89 @@ router.get('/stats/trends', adminAuth, async (req, res) => {
   }
 });
 
+// ── GET /api/admin/pending-docs — list users with documents awaiting review ───
+router.get('/pending-docs', adminAuth, async (req, res) => {
+  try {
+    const users = await User.find({ docStatus: 'pending' })
+      .select('fullName phone bloodGroup district state docStatus bloodGroupDocName bloodGroupDocType bloodGroupDoc createdAt')
+      .sort({ createdAt: -1 });
+    res.json({ count: users.length, users });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ── POST /api/admin/users/:id/approve-doc — approve a submitted document ─────
+router.post('/users/:id/approve-doc', adminAuth, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { docStatus: 'approved', docRejectedReason: '' },
+      { new: true }
+    ).select('fullName phone bloodGroup docStatus');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Notify the user
+    const Notification = require('../models/Notification');
+    await Notification.create({
+      userId:  user._id,
+      type:    'announcement',
+      title:   '✅ Blood Group Verified!',
+      body:    'Your blood group document has been reviewed and approved. Your trust score has been upgraded.',
+    });
+    const { sendPushToUser } = require('./push');
+    sendPushToUser(user._id, {
+      title: '✅ Blood Group Verified!',
+      body:  'Your document was approved. Trust score upgraded.',
+      icon:  '/logo.svg', badge: '/logo.svg',
+      tag:   `doc-approved-${user._id}`,
+      data:  { url: '/profile' },
+    }).catch(() => {});
+
+    res.json({ message: `Document approved for ${user.fullName}`, user });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// ── POST /api/admin/users/:id/reject-doc — reject a submitted document ───────
+router.post('/users/:id/reject-doc', adminAuth, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      {
+        docStatus:         'rejected',
+        docRejectedReason: reason || 'Document was unclear or did not match blood group',
+        bloodGroupDoc:     null, // clear the doc so they can re-upload
+        bloodGroupDocName: null,
+        bloodGroupDocType: null,
+      },
+      { new: true }
+    ).select('fullName phone bloodGroup docStatus');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Notify the user
+    const Notification = require('../models/Notification');
+    await Notification.create({
+      userId: user._id,
+      type:   'announcement',
+      title:  '❌ Document Review Failed',
+      body:   `Your document was not accepted. Reason: ${reason || 'Did not match the blood group'}. Please re-upload a clearer document.`,
+    });
+    const { sendPushToUser } = require('./push');
+    sendPushToUser(user._id, {
+      title: '❌ Document Review Failed',
+      body:  'Your blood group document was rejected. Please re-upload.',
+      icon:  '/logo.svg', badge: '/logo.svg',
+      tag:   `doc-rejected-${user._id}`,
+      data:  { url: '/profile' },
+    }).catch(() => {});
+
+    res.json({ message: `Document rejected for ${user.fullName}`, user });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
