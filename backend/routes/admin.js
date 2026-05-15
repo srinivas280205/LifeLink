@@ -438,6 +438,28 @@ router.get('/stats/trends', adminAuth, async (req, res) => {
   }
 });
 
+// ── GET /api/admin/otp/:phone — view live OTP for a phone (testing only) ─────
+// Only works when FAST2SMS_API_KEY is not set (dev/testing mode)
+router.get('/otp/:phone', adminAuth, async (req, res) => {
+  if (process.env.FAST2SMS_API_KEY) {
+    return res.status(403).json({ message: 'OTP viewer disabled — real SMS is active' });
+  }
+  try {
+    const OTP = require('../models/OTP');
+    const record = await OTP.findOne({ phone: req.params.phone });
+    if (!record) return res.status(404).json({ message: 'No active OTP for this phone. Ask the user to resend.' });
+    const expiresIn = Math.max(0, Math.ceil((record.expiresAt - Date.now()) / 1000));
+    res.json({
+      phone: req.params.phone,
+      otp: record.otp,
+      expiresIn: `${expiresIn} seconds`,
+      attempts: record.attempts,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // ── GET /api/admin/pending-docs — list users with documents awaiting review ───
 router.get('/pending-docs', adminAuth, async (req, res) => {
   try {
