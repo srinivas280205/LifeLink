@@ -41,6 +41,9 @@ export default function Dashboard() {
     !user.bloodGroup && !localStorage.getItem('onboarding_dismissed')
   );
   const [respondModal, setRespondModal]       = useState(null);
+  const [eligibilityModal, setEligibilityModal] = useState(null); // broadcast to respond after check
+  const [eligAnswers, setEligAnswers]         = useState({});
+  const [eligSubmitted, setEligSubmitted]     = useState(false);
   const [detailModal, setDetailModal]         = useState(null);
   const [fulfillModal, setFulfillModal]       = useState(null); // broadcast object
   const [fulfillDonorId, setFulfillDonorId]   = useState('');    // selected donor
@@ -165,8 +168,31 @@ export default function Dashboard() {
     }
   };
 
-  // Donor respond — open confirmation modal
-  const handleRespond = (broadcast) => setRespondModal(broadcast);
+  // Eligibility questions before responding
+  const ELIG_QUESTIONS = [
+    { id: 'noAlcohol',  q: lang === 'ta' ? 'கடந்த 48 மணி நேரத்தில் மது அருந்தவில்லையா?' : 'Have you NOT consumed alcohol in the last 48 hours?', mustBeYes: true },
+    { id: 'healthy',    q: lang === 'ta' ? 'நீங்கள் இன்று ஆரோக்கியமாக உணர்கிறீர்களா?' : 'Are you feeling healthy and well today?', mustBeYes: true },
+    { id: 'lastDonate', q: lang === 'ta' ? 'கடந்த 56 நாட்களில் இரத்தம் தானம் செய்யவில்லையா?' : 'Has it been at least 56 days since your last blood donation?', mustBeYes: true },
+    { id: 'noMeds',     q: lang === 'ta' ? 'நீரிழிவு மருந்து அல்லது இரத்தத்தை மெலிக்கும் மருந்துகள் உட்கொள்ளவில்லையா?' : 'Are you NOT on blood thinners or antibiotics?', mustBeYes: true },
+    { id: 'noFever',    q: lang === 'ta' ? 'கடந்த 7 நாட்களில் காய்ச்சல் இல்லையா?' : 'Have you been fever-free for the last 7 days?', mustBeYes: true },
+    { id: 'declare',    q: lang === 'ta' ? 'நான் சுதந்திரமாக, பணம் எதுவும் பெறாமல் இரத்தம் தானம் செய்கிறேன் என்று உறுதி செய்கிறேன்.' : 'I confirm I am donating voluntarily — no payment involved.', mustBeYes: true },
+  ];
+
+  const openEligibility = (broadcast) => {
+    if (!user.isVerified) {
+      alert(lang === 'ta' ? 'முதலில் உங்கள் தொலைபேசியை சரிபார்க்கவும்.' : 'Please verify your phone number first before responding.');
+      return;
+    }
+    setEligAnswers({});
+    setEligSubmitted(false);
+    setEligibilityModal(broadcast);
+  };
+
+  const eligPassed = ELIG_QUESTIONS.every(q => eligAnswers[q.id] === true);
+  const eligAllAnswered = ELIG_QUESTIONS.every(q => eligAnswers[q.id] !== undefined);
+
+  // Donor respond — open confirmation modal (after eligibility)
+  const handleRespond = (broadcast) => openEligibility(broadcast);
 
   const confirmRespond = async () => {
     if (!respondModal) return;
@@ -560,6 +586,118 @@ export default function Dashboard() {
                     {sosSending ? t('sendingSos') : t('sendSosBtn')}
                   </button>
                 </form>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Eligibility Check Modal (before responding) ── */}
+      {eligibilityModal && (
+        <div className={styles.sosOverlay} onClick={() => setEligibilityModal(null)}>
+          <div className={styles.sosModal} onClick={e => e.stopPropagation()} style={{ maxWidth: 440 }}>
+            <div className={styles.sosModalHeader}>
+              <span className={styles.sosBadge} style={{ background: 'linear-gradient(135deg,#1a237e,#283593)' }}>
+                🩺 {lang === 'ta' ? 'தகுதி சரிபார்ப்பு' : 'Donor Eligibility Check'}
+              </span>
+              <button className={styles.sosClose} onClick={() => setEligibilityModal(null)}>✕</button>
+            </div>
+
+            <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '0 0 1rem', lineHeight: 1.5 }}>
+              {lang === 'ta'
+                ? 'இரத்தம் தானம் செய்வதற்கு முன் நேர்மையாக பதிலளிக்கவும். இது உங்கள் மற்றும் பெறுநரின் பாதுகாப்பிற்காக.'
+                : 'Answer honestly before offering to donate. This protects both you and the recipient.'}
+            </p>
+
+            {!eligSubmitted ? (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.1rem' }}>
+                  {ELIG_QUESTIONS.map((q, i) => (
+                    <div key={q.id} style={{
+                      background: 'var(--input-bg)', borderRadius: 10, padding: '0.75rem 0.9rem',
+                      border: eligAnswers[q.id] === false ? '1.5px solid #d32f2f' : '1px solid var(--border)',
+                    }}>
+                      <p style={{ margin: '0 0 0.6rem', fontSize: '0.87rem', color: 'var(--text)', fontWeight: 500, lineHeight: 1.5 }}>
+                        {i + 1}. {q.q}
+                      </p>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => setEligAnswers(a => ({ ...a, [q.id]: true }))} style={{
+                          flex: 1, padding: '0.45rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem',
+                          background: eligAnswers[q.id] === true ? '#e8f5e9' : 'var(--card-bg)',
+                          color: eligAnswers[q.id] === true ? '#2e7d32' : 'var(--muted)',
+                          outline: eligAnswers[q.id] === true ? '2px solid #4caf50' : '1px solid var(--border)',
+                        }}>✅ {lang === 'ta' ? 'ஆம்' : 'Yes'}</button>
+                        <button onClick={() => setEligAnswers(a => ({ ...a, [q.id]: false }))} style={{
+                          flex: 1, padding: '0.45rem', borderRadius: 8, border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem',
+                          background: eligAnswers[q.id] === false ? '#fce4ec' : 'var(--card-bg)',
+                          color: eligAnswers[q.id] === false ? '#b71c1c' : 'var(--muted)',
+                          outline: eligAnswers[q.id] === false ? '2px solid #d32f2f' : '1px solid var(--border)',
+                        }}>❌ {lang === 'ta' ? 'இல்லை' : 'No'}</button>
+                      </div>
+                      {eligAnswers[q.id] === false && (
+                        <p style={{ margin: '0.4rem 0 0', fontSize: '0.78rem', color: '#d32f2f', fontWeight: 600 }}>
+                          ⚠️ {lang === 'ta' ? 'இந்த நிலையில் தானம் செய்ய முடியாது.' : 'You are not eligible to donate under this condition.'}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  disabled={!eligAllAnswered}
+                  onClick={() => setEligSubmitted(true)}
+                  style={{
+                    width: '100%', padding: '0.8rem', borderRadius: 10, border: 'none',
+                    background: eligAllAnswered ? 'linear-gradient(135deg,#d32f2f,#b71c1c)' : 'var(--border)',
+                    color: eligAllAnswered ? '#fff' : 'var(--muted)',
+                    fontWeight: 700, fontSize: '0.95rem', cursor: eligAllAnswered ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  {lang === 'ta' ? 'சமர்ப்பி →' : 'Submit & Continue →'}
+                </button>
+              </>
+            ) : eligPassed ? (
+              <>
+                <div style={{ textAlign: 'center', padding: '1rem 0', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>✅</div>
+                  <p style={{ fontWeight: 800, color: '#2e7d32', fontSize: '1.05rem', margin: 0 }}>
+                    {lang === 'ta' ? 'நீங்கள் தகுதியானவர்!' : 'You are eligible to donate!'}
+                  </p>
+                  <p style={{ color: 'var(--muted)', fontSize: '0.84rem', marginTop: '0.4rem' }}>
+                    {lang === 'ta' ? 'தொடர்ந்து உதவி செய்யுங்கள்.' : 'Proceed to confirm your response.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setEligibilityModal(null); setRespondModal(eligibilityModal); }}
+                  style={{
+                    width: '100%', padding: '0.85rem', borderRadius: 10, border: 'none',
+                    background: 'linear-gradient(135deg,#d32f2f,#b71c1c)',
+                    color: '#fff', fontWeight: 800, fontSize: '1rem', cursor: 'pointer',
+                  }}
+                >
+                  🩸 {lang === 'ta' ? 'உதவ உறுதிப்படுத்து' : 'Confirm — I Will Help'}
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={{ textAlign: 'center', padding: '1rem 0', marginBottom: '1rem' }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>⚠️</div>
+                  <p style={{ fontWeight: 800, color: '#d32f2f', fontSize: '1.05rem', margin: 0 }}>
+                    {lang === 'ta' ? 'இப்போது தான தகுதி இல்லை' : 'Not Eligible Right Now'}
+                  </p>
+                  <p style={{ color: 'var(--muted)', fontSize: '0.84rem', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                    {lang === 'ta'
+                      ? 'உங்கள் ஒன்று அல்லது அதிகமான பதில்கள் தான தகுதிக்கான அளவுகோல்களை பூர்த்தி செய்யவில்லை. மற்றொரு தகுதியான தானியை பரிந்துரைக்கவும்.'
+                      : 'One or more of your answers indicate you may not be safe to donate right now. Please ask another eligible donor to help.'}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setEligibilityModal(null)}
+                  style={{
+                    width: '100%', padding: '0.75rem', borderRadius: 10, border: '1.5px solid var(--border)',
+                    background: 'var(--card-bg)', color: 'var(--text)', fontWeight: 700, cursor: 'pointer',
+                  }}
+                >{lang === 'ta' ? 'மூடு' : 'Close'}</button>
               </>
             )}
           </div>

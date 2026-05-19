@@ -28,6 +28,7 @@ function SignupForm({ onSuccess }) {
     email: '',
     country: 'India', state: '', district: '',
   });
+  const [showPw, setShowPw]   = useState(false);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -138,8 +139,18 @@ function SignupForm({ onSuccess }) {
 
         <div className={styles.field}>
           <label htmlFor="password">{t('password')}</label>
-          <input id="password" name="password" type="password" placeholder={t('minPassword')}
-            value={form.password} onChange={handleChange} required minLength={6} autoComplete="new-password" />
+          <div style={{ position: 'relative' }}>
+            <input id="password" name="password" type={showPw ? 'text' : 'password'}
+              placeholder={t('minPassword')} value={form.password} onChange={handleChange}
+              required minLength={6} autoComplete="new-password" style={{ paddingRight: '2.8rem' }} />
+            <button type="button" onClick={() => setShowPw(v => !v)}
+              aria-label={showPw ? 'Hide password' : 'Show password'}
+              style={{
+                position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem',
+                color: 'var(--muted)', padding: 0, lineHeight: 1,
+              }}>{showPw ? '🙈' : '👁️'}</button>
+          </div>
         </div>
 
         <div className={styles.field}>

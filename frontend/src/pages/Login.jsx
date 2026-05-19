@@ -15,6 +15,7 @@ export default function Login() {
 
   const [phone, setPhone] = useState({ countryCode: '+91', number: '' });
   const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -93,16 +94,29 @@ export default function Login() {
           {/* Password */}
           <div className={styles.field}>
             <label htmlFor="password">{t('password')}</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              placeholder={t('passwordPlaceholder')}
-              value={password}
-              onChange={e => { setPassword(e.target.value); setError(''); }}
-              required
-              autoComplete="current-password"
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                id="password"
+                name="password"
+                type={showPw ? 'text' : 'password'}
+                placeholder={t('passwordPlaceholder')}
+                value={password}
+                onChange={e => { setPassword(e.target.value); setError(''); }}
+                required
+                autoComplete="current-password"
+                style={{ paddingRight: '2.8rem' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(v => !v)}
+                aria-label={showPw ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem',
+                  color: 'var(--muted)', padding: 0, lineHeight: 1,
+                }}
+              >{showPw ? '🙈' : '👁️'}</button>
+            </div>
           </div>
 
           <p style={{ textAlign: 'right', fontSize: '0.82rem', marginTop: '-0.5rem', marginBottom: '0.5rem' }}>
