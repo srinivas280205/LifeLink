@@ -71,6 +71,7 @@ app.use('/api/events',     eventRoutes);
 app.use('/api/push',       pushRoutes);
 app.use('/api/verify',     verifyRoutes);
 app.get('/', (req, res) => res.json({ message: 'LifeLink API is running' }));
+app.get('/ping', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 // Socket.io connection
 io.on('connection', (socket) => {

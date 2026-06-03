@@ -1,0 +1,21 @@
+name: Keep Alive — Ping Render Backend
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'   # every 10 minutes, 24/7
+  workflow_dispatch:           # allow manual trigger too
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping LifeLink Backend
+        run: |
+          echo "Pinging LifeLink backend..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://lifelink-safp.onrender.com/api/stats)
+          echo "Response status: $STATUS"
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Backend is awake and running"
+          else
+            echo "⏳ Backend is waking up (status: $STATUS)"
+          fi
