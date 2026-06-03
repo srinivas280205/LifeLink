@@ -39,9 +39,7 @@
 .brandLogo { width: 30px; height: 30px; object-fit: contain; }
 .brandName {
   font-size: 1.18rem; font-weight: 900; letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #ff5252 0%, #ff1744 60%, #ff6b6b 100%);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #ffffff;
 }
 
 .headerMeta { display: flex; align-items: center; gap: 0.35rem; flex: 1; margin-left: 0.25rem; }
