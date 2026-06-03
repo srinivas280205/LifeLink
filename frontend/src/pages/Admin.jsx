@@ -118,7 +118,7 @@ export default function Admin() {
   }, [navigate, user.isAdmin]);
 
   /* ── Fetchers ─────────────────────────────────────────────────────── */
-  const fetchStats = useCallback(async (force = false) => {
+  const fetchStats = useCallback(async (force = false, attempt = 1) => {
     if (!force && loadedRef.current.overview) return; // already loaded
     setStatsLoading(true);
     try {
@@ -133,8 +133,15 @@ export default function Admin() {
       fetch(`${API}/api/admin/stats/trends`, { headers: { Authorization: `Bearer ${token()}` } })
         .then(r => r.ok ? r.json() : null).then(d => { if (d) setTrends(d); }).catch(() => {});
       loadedRef.current.overview = true;
-    } catch { /* ignore */ }
-    setStatsLoading(false);
+      setStatsLoading(false);
+    } catch {
+      // Backend may be waking up (Render cold start) — auto retry up to 4 times
+      if (attempt < 4) {
+        setTimeout(() => fetchStats(true, attempt + 1), 8000); // retry every 8 sec
+      } else {
+        setStatsLoading(false);
+      }
+    }
   }, []);
 
   const fetchUsers = useCallback(async (page = 1, force = false) => {
@@ -833,7 +840,25 @@ export default function Admin() {
                 )}
               </div>
             </>
-          ) : <p className={styles.empty}>Failed to load stats. Is the backend running?</p>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--muted)' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⏳</div>
+              <p style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.5rem' }}>
+                Backend is waking up...
+              </p>
+              <p style={{ fontSize: '0.85rem', marginBottom: '1.5rem' }}>
+                Render free tier takes ~30 seconds to start. Auto-retrying...
+              </p>
+              <button
+                onClick={() => { loadedRef.current.overview = false; fetchStats(true); }}
+                style={{
+                  padding: '0.6rem 1.5rem', borderRadius: 8, border: '1.5px solid #d32f2f',
+                  background: 'transparent', color: '#d32f2f', fontWeight: 700, cursor: 'pointer'
+                }}>
+                🔄 Retry Now
+              </button>
+            </div>
+          )
         )}
 
         {/* ══ USERS ══ */}
