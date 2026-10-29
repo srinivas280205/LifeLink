@@ -263,7 +263,7 @@ const en = {
   // ── Profile — achievements ────────────────────────────────────────────────
   achievements:       '🏅 Achievements',
   achieveFirstDrop:   'First Drop',
-  achieveFirstSub:    'Respond to 1 request',
+  achieveFirstSub:    'Complete 1 donation',
   achieveActiveDonor: 'Active Donor',
   achieveActiveSub:   '5 donations given',
   achieveHero:        'Hero',
@@ -271,7 +271,7 @@ const en = {
   achieveLegend:      'Legend',
   achieveLegendSub:   '20 donations given',
   achieveLifeSaver:   'Life Saver',
-  achieveLifeSub:     '1 need fulfilled',
+  achieveLifeSub:     '1 completed donation',
   achieveSos:         'SOS Veteran',
   achieveSosSub:      'Sent an SOS alert',
 

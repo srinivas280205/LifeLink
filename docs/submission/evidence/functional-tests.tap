@@ -1,0 +1,118 @@
+TAP version 13
+# Subtest: location validation accepts zero and rejects stale, imprecise or forged fixes
+ok 1 - location validation accepts zero and rejects stale, imprecise or forged fixes
+  ---
+  duration_ms: 2237.414
+  type: 'test'
+  ...
+# Subtest: empty nearby pools expand immediately; hospital is the centre
+ok 2 - empty nearby pools expand immediately; hospital is the centre
+  ---
+  duration_ms: 123.1809
+  type: 'test'
+  ...
+# Subtest: parallel evaluations create one invitation and one durable notification per donor
+ok 3 - parallel evaluations create one invitation and one durable notification per donor
+  ---
+  duration_ms: 302.8003
+  type: 'test'
+  ...
+# Subtest: only fresh, available, compatible, unbanned, opted-in donors are invited
+ok 4 - only fresh, available, compatible, unbanned, opted-in donors are invited
+  ---
+  duration_ms: 116.7938
+  type: 'test'
+  ...
+# Subtest: willing is not completed; selection pauses, withdrawal resumes without repeat alerts
+ok 5 - willing is not completed; selection pauses, withdrawal resumes without repeat alerts
+  ---
+  duration_ms: 221.4492
+  type: 'test'
+  ...
+# Subtest: withdrawal preserves a requester manual pause
+ok 6 - withdrawal preserves a requester manual pause
+  ---
+  duration_ms: 126.2968
+  type: 'test'
+  ...
+# Subtest: two requesters cannot concurrently select the same donor
+ok 7 - two requesters cannot concurrently select the same donor
+  ---
+  duration_ms: 176.3355
+  type: 'test'
+  ...
+# Subtest: daily donor cap survives concurrent requests
+ok 8 - daily donor cap survives concurrent requests
+  ---
+  duration_ms: 118.5322
+  type: 'test'
+  ...
+# Subtest: a willing donor selected elsewhere does not stall this search
+ok 9 - a willing donor selected elsewhere does not stall this search
+  ---
+  duration_ms: 133.595
+  type: 'test'
+  ...
+# Subtest: expiry releases commitments even while paused; cancellation does too
+ok 10 - expiry releases commitments even while paused; cancellation does too
+  ---
+  duration_ms: 248.7488
+  type: 'test'
+  ...
+# Subtest: participant views hide contacts until selection and never reveal donor GPS
+ok 11 - participant views hide contacts until selection and never reveal donor GPS
+  ---
+  duration_ms: 168.5886
+  type: 'test'
+  ...
+# Subtest: late offers are accepted, but completion accepts only explicitly selected donors
+ok 12 - late offers are accepted, but completion accepts only explicitly selected donors
+  ---
+  duration_ms: 162.7006
+  type: 'test'
+  ...
+# Subtest: persistent stage, policy and notification delivery survive worker recreation
+ok 13 - persistent stage, policy and notification delivery survive worker recreation
+  ---
+  duration_ms: 154.1146
+  type: 'test'
+  ...
+# Subtest: request cooldown and action ownership are enforced
+ok 14 - request cooldown and action ownership are enforced
+  ---
+  duration_ms: 65.4158
+  type: 'test'
+  ...
+# Subtest: HTTP endpoints reject reset tokens and prevent legacy routes bypassing coordination
+ok 15 - HTTP endpoints reject reset tokens and prevent legacy routes bypassing coordination
+  ---
+  duration_ms: 9962.589
+  type: 'test'
+  ...
+# Subtest: valid session binds the authenticated identity
+ok 16 - valid session binds the authenticated identity
+  ---
+  duration_ms: 5.3882
+  type: 'test'
+  ...
+# Subtest: rejects missing, expired, reset, banned and deleted sessions
+ok 17 - rejects missing, expired, reset, banned and deleted sessions
+  ---
+  duration_ms: 1.6671
+  type: 'test'
+  ...
+# Subtest: feed serialization removes contacts and GPS without changing the source
+ok 18 - feed serialization removes contacts and GPS without changing the source
+  ---
+  duration_ms: 0.2171
+  type: 'test'
+  ...
+1..18
+# tests 18
+# suites 0
+# pass 18
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 15416.5426

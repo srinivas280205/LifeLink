@@ -107,7 +107,7 @@ export default function MapView() {
     fetchData();
 
     // Real-time updates
-    const socket = io({ transports: ['websocket'] });
+    const socket = io(API || undefined, { transports: ['websocket'], auth: callback => callback({ token: localStorage.getItem('token') }) });
     socket.on('donor_updated', () => fetchData());
     socket.on('new_broadcast', (b) => setBroadcasts(prev => [b, ...prev]));
     socket.on('broadcast_updated', ({ broadcastId, status }) => {

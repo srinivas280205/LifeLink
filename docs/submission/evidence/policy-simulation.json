@@ -1,0 +1,134 @@
+{
+  "kind": "Controlled discrete-event simulation; not field measurements or a reconstruction of the base paper ML model",
+  "scenarios": [
+    "Dense city",
+    "Sparse region",
+    "Low availability",
+    "No responses",
+    "Withdrawal",
+    "Critical"
+  ],
+  "trialsPerScenarioPerPolicy": 1000,
+  "deadlineSeconds": 1800,
+  "targetDonors": 2,
+  "eligibility": "Synthetic usable flag; identical candidate records for both policies. No concurrent requests or daily-cap competition.",
+  "response": "30% willingness (0% in no-response scenario); response delay uniform 30\u2013480 s after invitation; requester selects after 15 s.",
+  "baseline": "One initial invitation to every usable candidate within 50 km; no later invitations. This is an explicitly defined initial-alert proxy, not the base paper implementation or ML ranking.",
+  "adaptive": "Normal radii 5/10/20/50 km, wait 300 s, batch 10; critical starts 20 km, wait 45 s, batch 50. Empty stages skip; selected target pauses; selected withdrawal restarts stages; no repeat invitation.",
+  "withdrawal": "In the withdrawal scenario, each candidate independently has 50% probability of becoming unavailable at absolute t=480 s; same schedule for both policies.",
+  "metric": "Target success means at least two selected, non-withdrawn donors at the 1800-s deadline. Alerts mean unique invitations per trial.",
+  "summary": [
+    {
+      "scenario": "Dense city",
+      "policy": "Initial-alert baseline",
+      "trials": 1000,
+      "successPercent": 100,
+      "meanAlerts": 74.852,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Dense city",
+      "policy": "LifeLink rules",
+      "trials": 1000,
+      "successPercent": 100,
+      "meanAlerts": 14.73,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Sparse region",
+      "policy": "Initial-alert baseline",
+      "trials": 1000,
+      "successPercent": 99.1,
+      "meanAlerts": 18.76,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Sparse region",
+      "policy": "LifeLink rules",
+      "trials": 1000,
+      "successPercent": 99.1,
+      "meanAlerts": 13.517,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Low availability",
+      "policy": "Initial-alert baseline",
+      "trials": 1000,
+      "successPercent": 89.3,
+      "meanAlerts": 12.108,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Low availability",
+      "policy": "LifeLink rules",
+      "trials": 1000,
+      "successPercent": 89.3,
+      "meanAlerts": 9.25,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "No responses",
+      "policy": "Initial-alert baseline",
+      "trials": 1000,
+      "successPercent": 0,
+      "meanAlerts": 75.087,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "No responses",
+      "policy": "LifeLink rules",
+      "trials": 1000,
+      "successPercent": 0,
+      "meanAlerts": 57.576,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Withdrawal",
+      "policy": "Initial-alert baseline",
+      "trials": 1000,
+      "successPercent": 100,
+      "meanAlerts": 74.97,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Withdrawal",
+      "policy": "LifeLink rules",
+      "trials": 1000,
+      "successPercent": 100,
+      "meanAlerts": 17.588,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Critical",
+      "policy": "Initial-alert baseline",
+      "trials": 1000,
+      "successPercent": 100,
+      "meanAlerts": 75.044,
+      "duplicateAlerts": 0
+    },
+    {
+      "scenario": "Critical",
+      "policy": "LifeLink rules",
+      "trials": 1000,
+      "successPercent": 100,
+      "meanAlerts": 72.876,
+      "duplicateAlerts": 0
+    }
+  ],
+  "aggregate": [
+    {
+      "policy": "Initial-alert baseline",
+      "trials": 6000,
+      "successPercent": 81.39999999999999,
+      "meanAlerts": 55.136833333333335,
+      "duplicateAlerts": 0
+    },
+    {
+      "policy": "LifeLink rules",
+      "trials": 6000,
+      "successPercent": 81.39999999999999,
+      "meanAlerts": 30.922833333333333,
+      "duplicateAlerts": 0
+    }
+  ]
+}

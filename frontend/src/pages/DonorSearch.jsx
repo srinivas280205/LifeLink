@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import styles from './DonorSearch.module.css';
 import { INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
@@ -56,7 +57,8 @@ const TYPE_COLORS = {
 
 export default function DonorSearch() {
   const { lang, t } = useLanguage();
-  const [tab, setTab] = useState('donors');
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(() => searchParams.get('tab') === 'banks' ? 'banks' : 'donors');
 
   // ── Donors tab state
   const [donors, setDonors] = useState([]);

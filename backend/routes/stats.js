@@ -4,6 +4,18 @@ const Broadcast = require('../models/Broadcast');
 
 const router = express.Router();
 
+router.get('/activity', async (req, res) => {
+  try {
+    const [completedRequests, completedDonations, activeRequests, availableDonors] = await Promise.all([
+      Broadcast.countDocuments({coordinationVersion:1,status:'fulfilled'}),
+      require('../models/DonorOutreach').countDocuments({state:'completed'}),
+      Broadcast.countDocuments({coordinationVersion:1,status:'active',coordinationDeadline:{$gt:new Date()}}),
+      User.countDocuments({isAvailable:true,isBanned:{$ne:true},bloodGroup:{$nin:['',null]}})
+    ]);
+    res.set('Cache-Control','no-store').json({completedRequests,completedDonations,activeRequests,availableDonors,demo:req.app.get('demoMode') === true});
+  } catch {res.status(503).json({message:'Activity unavailable'});}
+});
+
 // GET /api/stats — public stats for landing page
 router.get('/', async (req, res) => {
   try {

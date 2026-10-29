@@ -1,17 +1,18 @@
+import BackNavigation from './components/BackNavigation';
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import API_BASE from './config/api.js';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import SplashScreen from './components/SplashScreen';
-import Landing from './pages/Landing';
+import Landing from './pages/Welcome';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/EssentialHome';
 import MapView from './pages/MapView';
-import Profile from './pages/Profile';
-import DonorSearch from './pages/DonorSearch';
-import History from './pages/History';
+import Profile from './pages/EssentialProfile';
+import DonorSearch from './pages/EssentialBanks';
+import History from './pages/EssentialHome';
 import Admin from './pages/Admin';
 import Leaderboard from './pages/Leaderboard';
 import Notifications from './pages/Notifications';
@@ -71,7 +72,7 @@ function AnimatedRoutes() {
   return (
     <PageFade key={location.pathname}>
       <Routes>
-        <Route path="/"          element={<PublicRoute><Landing /></PublicRoute>} />
+        <Route path="/"          element={<Landing />} />
         <Route path="/login"     element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup"    element={<PublicRoute><Signup /></PublicRoute>} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -108,13 +109,14 @@ export default function App() {
     <ErrorBoundary>
     <ThemeProvider>
     <LanguageProvider>
-      <InstallPrompt />
       <OfflineBanner />
       <SplashGate>
         <BrowserRouter>
+          <BackNavigation />
           <AnimatedRoutes />
         </BrowserRouter>
       </SplashGate>
+      <InstallPrompt />
     </LanguageProvider>
     </ThemeProvider>
     </ErrorBoundary>

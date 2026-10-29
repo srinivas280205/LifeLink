@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import AppShell from '../components/AppShell';
+import CoordinationPanel from '../components/coordination/CoordinationPanel';
 import styles from './Dashboard.module.css';
 import { INDIA_STATES, DISTRICTS_BY_STATE, stateLabel, districtLabel } from '../data/locationData';
 import Countdown from '../components/Countdown';
@@ -84,7 +85,7 @@ export default function Dashboard() {
   useEffect(() => {
     loadBroadcasts();
 
-    const socket = io({ transports: ['websocket'] });
+    const socket = io(API || undefined, { transports: ['websocket'], auth: callback => callback({ token: localStorage.getItem('token') }) });
     socketRef.current = socket;
 
     socket.on('connect', () => setConnected(true));
@@ -758,6 +759,7 @@ export default function Dashboard() {
         </div>
       )}
 
+      <CoordinationPanel />
       <div className={styles.layout}>
         {/* LEFT: Request form + blood group info */}
         <aside className={styles.sidebar}>

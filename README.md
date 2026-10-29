@@ -11,7 +11,9 @@
 
 ## What is LifeLink?
 
-LifeLink instantly connects people who need blood with available donors nearby. When someone posts an emergency blood request, all compatible donors in the area are notified in real-time via the app, push notifications, and WebSocket broadcasts — no delays, no middlemen.
+LifeLink is a MERN prototype for blood donor requests. Legacy broadcasts create in-app notifications for compatible available donors; the standard route does not restrict recipients by district. SOS uses stored coordinates for proximity filtering. Browser push requires configured VAPID keys, permission and a valid subscription. Socket updates require an authenticated connection; neither push nor sockets guarantee delivery or a donor response.
+
+Phase 1 donor coordination is an opt-in prototype with Dashboard/History screens, disabled by default while release checks continue. Enable `COORDINATION_ENABLED=true` on a local test backend to try it. It adds hospital-centred search stages, donor response tracking and withdrawal recovery. See [local screen guide](docs/COORDINATION_UI.md), [backend API, algorithm and limitations](docs/COORDINATION_BACKEND.md) and [implementation progress](PHASE1_PROGRESS.md).
 
 ---
 
@@ -19,22 +21,22 @@ LifeLink instantly connects people who need blood with available donors nearby. 
 
 ### For Donors
 - 🩸 **Real-Time Feed** — live stream of blood requests matching your blood group
-- 📡 **Instant Notifications** — push alerts the moment someone near you needs your blood type
+- 📡 **Notifications** — saved in-app alerts, private socket updates and optional browser push
 - 🗺️ **Donor Map** — see active requests and nearby donors on an interactive Leaflet map
-- 🏆 **Leaderboard** — ranked by donation count with achievement badges
+- 🏆 **Leaderboard** — rankings based on requester-confirmed completed donations
 - 📋 **History** — track all responses and rate the donor experience
 - 🩺 **Eligibility Checker** — 10-question assessment to check if you can donate today
 - 📍 **GPS Location** — share precise coordinates for SOS proximity matching
 
 ### For Requesters
-- 🚨 **Emergency Broadcast** — instantly notify all compatible donors in your district
+- 🚨 **Emergency Broadcast** — alert compatible available donors (legacy standard broadcasts are not district-limited)
 - 🆘 **SOS Mode** — GPS-based alert to all donors within 50 km
 - ⭐ **Rate Donors** — leave star rating + note after a fulfilled request
 - 🩸 **Blood Drive Events** — create and join local donation camps
 
 ### Platform
 - 🌙 **Dark / Light Theme**
-- 🇮🇳 **Tamil / English** — full bilingual UI with semantically correct Tamil (not transliterations)
+- 🇮🇳 **Tamil / English** — existing screens are bilingual; new Phase 1 coordination controls currently use English
 - 📲 **PWA** — installable, works offline
 - 🔔 **Notification Preferences** — per-type control (blood requests, donor responded, announcements, admin messages)
 - 🛡️ **Admin Panel** — user management, broadcast monitoring, announcements, direct messages, CSV export, 14-day trend charts
@@ -46,10 +48,10 @@ LifeLink instantly connects people who need blood with available donors nearby. 
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18 + Vite, CSS Modules |
+| Frontend | React 19 + Vite 8, CSS Modules |
 | Backend | Node.js + Express + Socket.io |
 | Database | MongoDB Atlas (Mongoose) |
-| Auth | JWT (7-day + silent refresh) + OTP via Fast2SMS |
+| Auth | JWT + silent refresh; SMS OTP delivery is not implemented for this project phase |
 | Maps | Leaflet.js + OpenStreetMap |
 | Push | Web Push API (VAPID) |
 | Hosting | Vercel (frontend) + Render (backend) |
@@ -198,7 +200,7 @@ curl -X POST https://your-backend.onrender.com/api/admin/promote \
 | Rate limits | Auth: 20 req/15min · API: 200 req/15min |
 | Headers | Helmet middleware |
 | Injection | mongoSanitize on all inputs |
-| Payload | 50 KB max JSON body |
+| Payload | 10 MB max JSON body |
 | Banned users | Blocked at every login check |
 
 ---
@@ -231,7 +233,7 @@ curl -X POST https://your-backend.onrender.com/api/admin/promote \
 
 - Install to home screen on Android & iOS
 - Offline shell cached via service worker
-- Real-time device push notifications (even when app closed)
+- Optional browser push notifications (subject to permission, subscription and platform support)
 
 ---
 
@@ -239,8 +241,8 @@ curl -X POST https://your-backend.onrender.com/api/admin/promote \
 
 | Badge | Unlock |
 |---|---|
-| 🩸 First Drop | Respond to 1 request |
-| ✅ Life Saver | Have a request fulfilled |
+| 🩸 First Drop | Complete 1 donation |
+| ✅ Life Saver | Complete 1 donation |
 | 🌟 Active Donor | 5 donations |
 | 🦸 Hero | 10 donations |
 | 🏆 Legend | 20 donations |

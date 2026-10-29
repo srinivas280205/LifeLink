@@ -29,6 +29,22 @@ const broadcastSchema = new mongoose.Schema(
     },
     isSOS:       { type: Boolean, default: false },
     escalated:   { type: Boolean, default: false },
+    // Legacy records remain outside the new coordinator until explicitly enabled.
+    coordinationVersion: { type: Number, default: 0 },
+    coordinationRevision: { type: Number, default: 0 },
+    coordinationPolicy: mongoose.Schema.Types.Mixed,
+    hospitalLocation: {
+      lat: { type: Number, min: -90, max: 90 },
+      lng: { type: Number, min: -180, max: 180 },
+    },
+    candidateTarget: { type: Number, min: 1 },
+    searchStatus: { type: String, enum: ['idle', 'searching', 'paused_manual', 'paused_target', 'exhausted', 'stopped'], default: 'idle' },
+    searchStage: { type: Number, default: 0, min: 0 },
+    radiusKm: { type: Number, min: 0, max: 50 },
+    nextEvaluationAt: Date,
+    coordinationDeadline: Date,
+    workerLockUntil: Date,
+    workerLockOwner: String,
     sosLocation: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
@@ -36,7 +52,7 @@ const broadcastSchema = new mongoose.Schema(
     sosRadius:   { type: Number, default: 50 }, // km
     status: {
       type: String,
-      enum: ['active', 'fulfilled', 'cancelled'],
+      enum: ['active', 'fulfilled', 'cancelled', 'expired'],
       default: 'active',
     },
     expiresAt: { type: Date, default: null }, // set by pre-save hook
@@ -58,6 +74,9 @@ const broadcastSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+broadcastSchema.index({ coordinationVersion: 1, status: 1, nextEvaluationAt: 1 });
+broadcastSchema.index({ coordinationVersion: 1, status: 1, coordinationDeadline: 1 });
 
 // Auto-set expiresAt based on urgency on first save
 const EXPIRY_HOURS = { critical: 6, urgent: 24, normal: 48 };

@@ -10,7 +10,8 @@ const vapidMailto = (() => {
   return m.startsWith('mailto:') ? m : `mailto:${m}`;
 })();
 
-webpush.setVapidDetails(
+const pushEnabled = !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
+if (pushEnabled) webpush.setVapidDetails(
   vapidMailto,
   process.env.VAPID_PUBLIC_KEY,
   process.env.VAPID_PRIVATE_KEY,
@@ -42,7 +43,7 @@ router.post('/subscribe', auth, async (req, res) => {
     }
     await PushSub.findOneAndUpdate(
       { endpoint },
-      { user: req.user.id, endpoint, keys },
+      { user: req.user.userId, endpoint, keys },
       { upsert: true, new: true },
     );
     res.json({ ok: true });
@@ -55,7 +56,7 @@ router.post('/subscribe', auth, async (req, res) => {
 // POST /api/push/unsubscribe — remove subscription
 router.post('/unsubscribe', auth, async (req, res) => {
   try {
-    await PushSub.deleteOne({ endpoint: req.body.endpoint, user: req.user.id });
+    await PushSub.deleteOne({ endpoint: req.body.endpoint, user: req.user.userId });
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -64,6 +65,7 @@ router.post('/unsubscribe', auth, async (req, res) => {
 
 // ── Helper: send push to one user ──────────────────────────────────────────
 async function sendPushToUser(userId, payload) {
+  if (!pushEnabled) return [];
   const subs = await PushSub.find({ user: userId });
   const results = await Promise.allSettled(
     subs.map(sub =>
