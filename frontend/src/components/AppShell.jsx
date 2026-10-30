@@ -271,7 +271,7 @@ export default function AppShell({ children, connected, socket }) {
                     onClick={() => {
                       setNotifOpen(false);
                       if (n.type === 'admin_dm' || n.type === 'announcement') { navigate('/notifications'); }
-                      else { navigate('/dashboard'); }
+                      else { navigate(n.coordinationRequest && n.broadcastId ? `/dashboard?coordination=${encodeURIComponent(n.broadcastId)}` : '/dashboard'); }
                     }}
                   >
                     <div className={styles.notifIcon}>

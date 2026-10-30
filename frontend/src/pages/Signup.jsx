@@ -1,3 +1,4 @@
+import {authDestination} from '../config/authDestination';
 import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Auth.module.css';
@@ -377,7 +378,7 @@ export default function Signup() {
     localStorage.setItem('user', JSON.stringify(user));
     setSession(s => ({ ...s, token, user }));
     setStep('welcome');
-    setTimeout(() => navigate('/dashboard'), 2400);
+    setTimeout(() => navigate(authDestination(), {replace:true}), 2400);
   };
 
   return (

@@ -2,31 +2,25 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Broadcast = require('../models/Broadcast');
+const Outreach = require('../models/DonorOutreach');
 const User = require('../models/User');
 
 const router = express.Router();
 
-function auth(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'No token' });
-  try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
-  catch { res.status(401).json({ message: 'Invalid token' }); }
-}
+const auth = require('../middleware/memberAuth');
 
-// GET /api/leaderboard — top 20 donors by response count
+// GET /api/leaderboard — top 20 donors by confirmed completion count
 router.get('/', auth, async (req, res) => {
   try {
-    // Aggregate donors by number of responses given
-    const topDonors = await Broadcast.aggregate([
-      { $unwind: '$responses' },
+    // Count explicit completed outreach records, never willingness
+    const topDonors = await Outreach.aggregate([
+      { $match: { state: 'completed' } },
       { $group: {
-          _id: '$responses.donorId',
+          _id: '$donor',
           donationsGiven: { $sum: 1 },
-          bloodGroup:     { $first: '$responses.bloodGroup' },
-          donorName:      { $first: '$responses.donorName' },
         }
       },
-      { $sort: { donationsGiven: -1 } },
+      { $sort: { donationsGiven: -1, _id: 1 } },
       { $limit: 20 },
     ]);
 
@@ -54,7 +48,7 @@ router.get('/', auth, async (req, res) => {
     // Also return total platform stats
     const [totalDonors, totalResponses, fulfilledCount] = await Promise.all([
       User.countDocuments({ bloodGroup: { $nin: ['', null] }, isAvailable: true }),
-      Broadcast.aggregate([{ $project: { c: { $size: '$responses' } } }, { $group: { _id: null, t: { $sum: '$c' } } }]),
+      Outreach.countDocuments({ state: 'completed' }),
       Broadcast.countDocuments({ status: 'fulfilled' }),
     ]);
 
@@ -62,7 +56,7 @@ router.get('/', auth, async (req, res) => {
       leaderboard: result,
       stats: {
         totalDonors,
-        totalResponses: totalResponses[0]?.t || 0,
+        completedDonations: totalResponses,
         fulfilledCount,
       },
     });

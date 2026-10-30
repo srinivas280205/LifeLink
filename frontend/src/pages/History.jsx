@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
+import CoordinationPanel from '../components/coordination/CoordinationPanel';
 import styles from './History.module.css';
 import API_BASE from '../config/api.js';
 import { useLanguage } from '../context/LanguageContext';
@@ -261,6 +262,7 @@ export default function History() {
 
   return (
     <AppShell connected={true}>
+      <CoordinationPanel />
       <div className={styles.page}>
         <div className={styles.inner}>
           <h1 className={styles.heading}>{t('myHistory')}</h1>

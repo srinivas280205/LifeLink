@@ -1,7 +1,7 @@
 const express  = require('express');
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
-const axios    = require('axios');
+
 const User     = require('../models/User');
 const OTP      = require('../models/OTP');
 

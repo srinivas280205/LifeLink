@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lifelink-v2';
+const CACHE_NAME = 'lifelink-v3';
 const OFFLINE_URL = '/offline.html';
 
 // Assets to cache immediately on install
@@ -20,7 +20,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+      Promise.all(keys.filter((k) => k.startsWith('lifelink-') && k !== CACHE_NAME).map((k) => caches.delete(k)))
     )
   );
   self.clients.claim();
@@ -28,30 +28,19 @@ self.addEventListener('activate', (event) => {
 
 // ── Fetch: network-first, fall back to cache, then offline page ────────────
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET and API/socket requests
-  if (event.request.method !== 'GET') return;
-  if (event.request.url.includes('/api/') || event.request.url.includes('socket.io')) return;
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).catch(() => caches.match(OFFLINE_URL)));
+    return;
+  }
+  // Only public static files are cached; never APIs, demo login pages or personal data.
+  if (!url.pathname.startsWith('/assets/') && !url.pathname.startsWith('/icons/') && !['/manifest.json','/offline.html'].includes(url.pathname)) return;
+  event.respondWith(fetch(event.request).then(response => {
+    if (response.ok) { const copy = response.clone(); event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy))); }
+    return response;
+  }).catch(async () => (await caches.match(event.request)) || new Response('', {status:503})));
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Cache successful responses for HTML/JS/CSS
-        if (response && response.status === 200) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      })
-      .catch(async () => {
-        const cached = await caches.match(event.request);
-        if (cached) return cached;
-        // For navigation requests, show offline page
-        if (event.request.mode === 'navigate') {
-          return caches.match(OFFLINE_URL);
-        }
-        return new Response('Network error', { status: 408 });
-      })
-  );
 });
 
 // ── Push: show notification ────────────────────────────────────────────────
@@ -76,12 +65,13 @@ self.addEventListener('push', (event) => {
 // ── Notification click: open / focus tab ──────────────────────────────────
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const targetUrl = event.notification.data?.url || '/dashboard';
+  const proposed = new URL(event.notification.data?.url || '/dashboard', self.location.origin);
+  const targetUrl = proposed.origin === self.location.origin ? proposed.href : self.location.origin + '/dashboard';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
       const existing = windowClients.find(
-        (c) => new URL(c.url).pathname === targetUrl
+        (c) => c.url === targetUrl
       );
       if (existing) return existing.focus();
       return clients.openWindow(targetUrl);

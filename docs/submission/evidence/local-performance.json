@@ -1,0 +1,1132 @@
+{
+  "date": "2026-10-28T04:06:10.158Z",
+  "kind": "Local benchmark on synthetic data; not a policy simulation or field study",
+  "warmups": 5,
+  "trials": 30,
+  "donorCount": 100,
+  "concurrency": 1,
+  "invitationBatch": 10,
+  "environment": {
+    "platform": "win32",
+    "release": "10.0.26300",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "logicalCpus": 12,
+    "ramGiB": 15.7,
+    "node": "v24.22.1",
+    "mongoose": "8.23.0",
+    "mongoDB": "8.2.1",
+    "topology": "single-node temporary replica set on same host"
+  },
+  "scope": "Direct awaited service calls including MongoDB transactions. Excludes fixture setup, assertions, warm-up, HTTP transport, Socket.IO delivery, worker polling delay and human response time.",
+  "percentile": "P95 nearest-rank observation ceil(0.95*n); median average of middle two observations",
+  "summary": [
+    {
+      "operation": "Create request",
+      "n": 30,
+      "medianMs": 8.380749999999807,
+      "p95Ms": 12.449999999998909,
+      "minMs": 4.415399999999863,
+      "maxMs": 14.106100000000879
+    },
+    {
+      "operation": "Evaluate and invite",
+      "n": 30,
+      "medianMs": 61.205349999999726,
+      "p95Ms": 83.10629999999946,
+      "minMs": 27.969699999999648,
+      "maxMs": 89.57110000000011
+    },
+    {
+      "operation": "Record willingness",
+      "n": 30,
+      "medianMs": 10.165599999999813,
+      "p95Ms": 16.61999999999989,
+      "minMs": 4.771699999999328,
+      "maxMs": 39.65700000000106
+    },
+    {
+      "operation": "Select donor",
+      "n": 30,
+      "medianMs": 15.958199999999579,
+      "p95Ms": 21.773199999999633,
+      "minMs": 9.10280000000057,
+      "maxMs": 29.877200000000812
+    },
+    {
+      "operation": "Withdraw and resume",
+      "n": 30,
+      "medianMs": 11.169150000000172,
+      "p95Ms": 14.506800000000112,
+      "minMs": 5.328300000001036,
+      "maxMs": 15.289899999999761
+    },
+    {
+      "operation": "Complete request",
+      "n": 30,
+      "medianMs": 12.191750000000411,
+      "p95Ms": 15.505499999999302,
+      "minMs": 5.283499999999549,
+      "maxMs": 50.05450000000019
+    },
+    {
+      "operation": "Load progress",
+      "n": 30,
+      "medianMs": 6.911199999999553,
+      "p95Ms": 10.485800000000381,
+      "minMs": 2.8150000000005093,
+      "maxMs": 10.753399999999601
+    }
+  ],
+  "samples": [
+    {
+      "trial": 1,
+      "operation": "Create request",
+      "milliseconds": 8.30369999999948
+    },
+    {
+      "trial": 1,
+      "operation": "Evaluate and invite",
+      "milliseconds": 65.95849999999973
+    },
+    {
+      "trial": 1,
+      "operation": "Record willingness",
+      "milliseconds": 12.20849999999973
+    },
+    {
+      "trial": 1,
+      "operation": "Select donor",
+      "milliseconds": 19.421300000000883
+    },
+    {
+      "trial": 1,
+      "operation": "Withdraw and resume",
+      "milliseconds": 13.100800000000163
+    },
+    {
+      "trial": 1,
+      "operation": "Complete request",
+      "milliseconds": 12.097400000000562
+    },
+    {
+      "trial": 1,
+      "operation": "Load progress",
+      "milliseconds": 7.846300000000156
+    },
+    {
+      "trial": 2,
+      "operation": "Create request",
+      "milliseconds": 14.106100000000879
+    },
+    {
+      "trial": 2,
+      "operation": "Evaluate and invite",
+      "milliseconds": 67.58440000000064
+    },
+    {
+      "trial": 2,
+      "operation": "Record willingness",
+      "milliseconds": 12.234399999999368
+    },
+    {
+      "trial": 2,
+      "operation": "Select donor",
+      "milliseconds": 17.5617000000002
+    },
+    {
+      "trial": 2,
+      "operation": "Withdraw and resume",
+      "milliseconds": 12.733400000000074
+    },
+    {
+      "trial": 2,
+      "operation": "Complete request",
+      "milliseconds": 13.050900000000183
+    },
+    {
+      "trial": 2,
+      "operation": "Load progress",
+      "milliseconds": 7.244799999999486
+    },
+    {
+      "trial": 3,
+      "operation": "Create request",
+      "milliseconds": 6.506800000000112
+    },
+    {
+      "trial": 3,
+      "operation": "Evaluate and invite",
+      "milliseconds": 56.96780000000035
+    },
+    {
+      "trial": 3,
+      "operation": "Record willingness",
+      "milliseconds": 10.288900000000467
+    },
+    {
+      "trial": 3,
+      "operation": "Select donor",
+      "milliseconds": 20.81760000000031
+    },
+    {
+      "trial": 3,
+      "operation": "Withdraw and resume",
+      "milliseconds": 13.990499999999884
+    },
+    {
+      "trial": 3,
+      "operation": "Complete request",
+      "milliseconds": 13.193999999999505
+    },
+    {
+      "trial": 3,
+      "operation": "Load progress",
+      "milliseconds": 8.398799999999937
+    },
+    {
+      "trial": 4,
+      "operation": "Create request",
+      "milliseconds": 8.81840000000011
+    },
+    {
+      "trial": 4,
+      "operation": "Evaluate and invite",
+      "milliseconds": 66.16370000000006
+    },
+    {
+      "trial": 4,
+      "operation": "Record willingness",
+      "milliseconds": 10.169799999999668
+    },
+    {
+      "trial": 4,
+      "operation": "Select donor",
+      "milliseconds": 14.783300000000054
+    },
+    {
+      "trial": 4,
+      "operation": "Withdraw and resume",
+      "milliseconds": 12.696400000000722
+    },
+    {
+      "trial": 4,
+      "operation": "Complete request",
+      "milliseconds": 14.230099999999766
+    },
+    {
+      "trial": 4,
+      "operation": "Load progress",
+      "milliseconds": 8.485700000000179
+    },
+    {
+      "trial": 5,
+      "operation": "Create request",
+      "milliseconds": 7.677400000000489
+    },
+    {
+      "trial": 5,
+      "operation": "Evaluate and invite",
+      "milliseconds": 54.98620000000028
+    },
+    {
+      "trial": 5,
+      "operation": "Record willingness",
+      "milliseconds": 10.066499999999905
+    },
+    {
+      "trial": 5,
+      "operation": "Select donor",
+      "milliseconds": 15.535899999999856
+    },
+    {
+      "trial": 5,
+      "operation": "Withdraw and resume",
+      "milliseconds": 11.200900000000729
+    },
+    {
+      "trial": 5,
+      "operation": "Complete request",
+      "milliseconds": 13.641300000000228
+    },
+    {
+      "trial": 5,
+      "operation": "Load progress",
+      "milliseconds": 10.485800000000381
+    },
+    {
+      "trial": 6,
+      "operation": "Create request",
+      "milliseconds": 8.270499999999629
+    },
+    {
+      "trial": 6,
+      "operation": "Evaluate and invite",
+      "milliseconds": 60.901199999999335
+    },
+    {
+      "trial": 6,
+      "operation": "Record willingness",
+      "milliseconds": 10.161399999999958
+    },
+    {
+      "trial": 6,
+      "operation": "Select donor",
+      "milliseconds": 16.56129999999939
+    },
+    {
+      "trial": 6,
+      "operation": "Withdraw and resume",
+      "milliseconds": 11.118000000000393
+    },
+    {
+      "trial": 6,
+      "operation": "Complete request",
+      "milliseconds": 12.920100000000275
+    },
+    {
+      "trial": 6,
+      "operation": "Load progress",
+      "milliseconds": 8.059100000000399
+    },
+    {
+      "trial": 7,
+      "operation": "Create request",
+      "milliseconds": 8.503099999999904
+    },
+    {
+      "trial": 7,
+      "operation": "Evaluate and invite",
+      "milliseconds": 61.509500000000116
+    },
+    {
+      "trial": 7,
+      "operation": "Record willingness",
+      "milliseconds": 12.21690000000035
+    },
+    {
+      "trial": 7,
+      "operation": "Select donor",
+      "milliseconds": 17.990499999999884
+    },
+    {
+      "trial": 7,
+      "operation": "Withdraw and resume",
+      "milliseconds": 14.212800000000243
+    },
+    {
+      "trial": 7,
+      "operation": "Complete request",
+      "milliseconds": 11.753099999999904
+    },
+    {
+      "trial": 7,
+      "operation": "Load progress",
+      "milliseconds": 6.195300000000316
+    },
+    {
+      "trial": 8,
+      "operation": "Create request",
+      "milliseconds": 11.021699999999328
+    },
+    {
+      "trial": 8,
+      "operation": "Evaluate and invite",
+      "milliseconds": 75.65300000000025
+    },
+    {
+      "trial": 8,
+      "operation": "Record willingness",
+      "milliseconds": 11.227100000000064
+    },
+    {
+      "trial": 8,
+      "operation": "Select donor",
+      "milliseconds": 20.607200000000375
+    },
+    {
+      "trial": 8,
+      "operation": "Withdraw and resume",
+      "milliseconds": 12.823999999999614
+    },
+    {
+      "trial": 8,
+      "operation": "Complete request",
+      "milliseconds": 12.28610000000026
+    },
+    {
+      "trial": 8,
+      "operation": "Load progress",
+      "milliseconds": 6.746799999999894
+    },
+    {
+      "trial": 9,
+      "operation": "Create request",
+      "milliseconds": 10.847999999999956
+    },
+    {
+      "trial": 9,
+      "operation": "Evaluate and invite",
+      "milliseconds": 89.57110000000011
+    },
+    {
+      "trial": 9,
+      "operation": "Record willingness",
+      "milliseconds": 16.61999999999989
+    },
+    {
+      "trial": 9,
+      "operation": "Select donor",
+      "milliseconds": 29.877200000000812
+    },
+    {
+      "trial": 9,
+      "operation": "Withdraw and resume",
+      "milliseconds": 13.587000000000444
+    },
+    {
+      "trial": 9,
+      "operation": "Complete request",
+      "milliseconds": 15.505499999999302
+    },
+    {
+      "trial": 9,
+      "operation": "Load progress",
+      "milliseconds": 8.566499999999905
+    },
+    {
+      "trial": 10,
+      "operation": "Create request",
+      "milliseconds": 8.868100000000595
+    },
+    {
+      "trial": 10,
+      "operation": "Evaluate and invite",
+      "milliseconds": 69.47489999999925
+    },
+    {
+      "trial": 10,
+      "operation": "Record willingness",
+      "milliseconds": 11.702900000000227
+    },
+    {
+      "trial": 10,
+      "operation": "Select donor",
+      "milliseconds": 15.53610000000026
+    },
+    {
+      "trial": 10,
+      "operation": "Withdraw and resume",
+      "milliseconds": 12.209899999999834
+    },
+    {
+      "trial": 10,
+      "operation": "Complete request",
+      "milliseconds": 10.252299999999195
+    },
+    {
+      "trial": 10,
+      "operation": "Load progress",
+      "milliseconds": 5.365099999999984
+    },
+    {
+      "trial": 11,
+      "operation": "Create request",
+      "milliseconds": 9.800400000000081
+    },
+    {
+      "trial": 11,
+      "operation": "Evaluate and invite",
+      "milliseconds": 68.16789999999946
+    },
+    {
+      "trial": 11,
+      "operation": "Record willingness",
+      "milliseconds": 13.345999999999549
+    },
+    {
+      "trial": 11,
+      "operation": "Select donor",
+      "milliseconds": 21.43239999999969
+    },
+    {
+      "trial": 11,
+      "operation": "Withdraw and resume",
+      "milliseconds": 14.506800000000112
+    },
+    {
+      "trial": 11,
+      "operation": "Complete request",
+      "milliseconds": 11.475500000000466
+    },
+    {
+      "trial": 11,
+      "operation": "Load progress",
+      "milliseconds": 7.656500000000051
+    },
+    {
+      "trial": 12,
+      "operation": "Create request",
+      "milliseconds": 10.543100000000777
+    },
+    {
+      "trial": 12,
+      "operation": "Evaluate and invite",
+      "milliseconds": 66.59680000000026
+    },
+    {
+      "trial": 12,
+      "operation": "Record willingness",
+      "milliseconds": 11.503299999999399
+    },
+    {
+      "trial": 12,
+      "operation": "Select donor",
+      "milliseconds": 17.371299999999792
+    },
+    {
+      "trial": 12,
+      "operation": "Withdraw and resume",
+      "milliseconds": 13.055099999999584
+    },
+    {
+      "trial": 12,
+      "operation": "Complete request",
+      "milliseconds": 12.286799999999857
+    },
+    {
+      "trial": 12,
+      "operation": "Load progress",
+      "milliseconds": 7.755300000000716
+    },
+    {
+      "trial": 13,
+      "operation": "Create request",
+      "milliseconds": 11.947100000000319
+    },
+    {
+      "trial": 13,
+      "operation": "Evaluate and invite",
+      "milliseconds": 77.92439999999988
+    },
+    {
+      "trial": 13,
+      "operation": "Record willingness",
+      "milliseconds": 10.098300000000563
+    },
+    {
+      "trial": 13,
+      "operation": "Select donor",
+      "milliseconds": 18.96770000000015
+    },
+    {
+      "trial": 13,
+      "operation": "Withdraw and resume",
+      "milliseconds": 13.850199999999859
+    },
+    {
+      "trial": 13,
+      "operation": "Complete request",
+      "milliseconds": 14.371299999999792
+    },
+    {
+      "trial": 13,
+      "operation": "Load progress",
+      "milliseconds": 8.211699999999837
+    },
+    {
+      "trial": 14,
+      "operation": "Create request",
+      "milliseconds": 8.457800000000134
+    },
+    {
+      "trial": 14,
+      "operation": "Evaluate and invite",
+      "milliseconds": 76.65830000000005
+    },
+    {
+      "trial": 14,
+      "operation": "Record willingness",
+      "milliseconds": 11.233699999999772
+    },
+    {
+      "trial": 14,
+      "operation": "Select donor",
+      "milliseconds": 20.606700000000274
+    },
+    {
+      "trial": 14,
+      "operation": "Withdraw and resume",
+      "milliseconds": 14.15689999999995
+    },
+    {
+      "trial": 14,
+      "operation": "Complete request",
+      "milliseconds": 12.725400000000263
+    },
+    {
+      "trial": 14,
+      "operation": "Load progress",
+      "milliseconds": 6.349100000000362
+    },
+    {
+      "trial": 15,
+      "operation": "Create request",
+      "milliseconds": 10.489900000000489
+    },
+    {
+      "trial": 15,
+      "operation": "Evaluate and invite",
+      "milliseconds": 83.10629999999946
+    },
+    {
+      "trial": 15,
+      "operation": "Record willingness",
+      "milliseconds": 11.069899999999507
+    },
+    {
+      "trial": 15,
+      "operation": "Select donor",
+      "milliseconds": 21.773199999999633
+    },
+    {
+      "trial": 15,
+      "operation": "Withdraw and resume",
+      "milliseconds": 11.692700000000514
+    },
+    {
+      "trial": 15,
+      "operation": "Complete request",
+      "milliseconds": 12.654999999999745
+    },
+    {
+      "trial": 15,
+      "operation": "Load progress",
+      "milliseconds": 8.95089999999982
+    },
+    {
+      "trial": 16,
+      "operation": "Create request",
+      "milliseconds": 9.077500000000327
+    },
+    {
+      "trial": 16,
+      "operation": "Evaluate and invite",
+      "milliseconds": 68.65329999999994
+    },
+    {
+      "trial": 16,
+      "operation": "Record willingness",
+      "milliseconds": 10.765800000001036
+    },
+    {
+      "trial": 16,
+      "operation": "Select donor",
+      "milliseconds": 19.128099999999904
+    },
+    {
+      "trial": 16,
+      "operation": "Withdraw and resume",
+      "milliseconds": 15.289899999999761
+    },
+    {
+      "trial": 16,
+      "operation": "Complete request",
+      "milliseconds": 12.040600000000268
+    },
+    {
+      "trial": 16,
+      "operation": "Load progress",
+      "milliseconds": 6.642299999999523
+    },
+    {
+      "trial": 17,
+      "operation": "Create request",
+      "milliseconds": 7.8708000000005995
+    },
+    {
+      "trial": 17,
+      "operation": "Evaluate and invite",
+      "milliseconds": 59.250700000000506
+    },
+    {
+      "trial": 17,
+      "operation": "Record willingness",
+      "milliseconds": 10.572500000000218
+    },
+    {
+      "trial": 17,
+      "operation": "Select donor",
+      "milliseconds": 16.380299999998897
+    },
+    {
+      "trial": 17,
+      "operation": "Withdraw and resume",
+      "milliseconds": 11.137399999999616
+    },
+    {
+      "trial": 17,
+      "operation": "Complete request",
+      "milliseconds": 12.973400000000765
+    },
+    {
+      "trial": 17,
+      "operation": "Load progress",
+      "milliseconds": 6.847099999999045
+    },
+    {
+      "trial": 18,
+      "operation": "Create request",
+      "milliseconds": 7.357399999998961
+    },
+    {
+      "trial": 18,
+      "operation": "Evaluate and invite",
+      "milliseconds": 60.45080000000053
+    },
+    {
+      "trial": 18,
+      "operation": "Record willingness",
+      "milliseconds": 9.646600000000035
+    },
+    {
+      "trial": 18,
+      "operation": "Select donor",
+      "milliseconds": 16.39470000000074
+    },
+    {
+      "trial": 18,
+      "operation": "Withdraw and resume",
+      "milliseconds": 10.365999999999985
+    },
+    {
+      "trial": 18,
+      "operation": "Complete request",
+      "milliseconds": 14.96179999999913
+    },
+    {
+      "trial": 18,
+      "operation": "Load progress",
+      "milliseconds": 8.394000000000233
+    },
+    {
+      "trial": 19,
+      "operation": "Create request",
+      "milliseconds": 11.606700000000274
+    },
+    {
+      "trial": 19,
+      "operation": "Evaluate and invite",
+      "milliseconds": 74.48829999999907
+    },
+    {
+      "trial": 19,
+      "operation": "Record willingness",
+      "milliseconds": 7.836999999999534
+    },
+    {
+      "trial": 19,
+      "operation": "Select donor",
+      "milliseconds": 14.469300000000658
+    },
+    {
+      "trial": 19,
+      "operation": "Withdraw and resume",
+      "milliseconds": 10.59690000000046
+    },
+    {
+      "trial": 19,
+      "operation": "Complete request",
+      "milliseconds": 50.05450000000019
+    },
+    {
+      "trial": 19,
+      "operation": "Load progress",
+      "milliseconds": 10.753399999999601
+    },
+    {
+      "trial": 20,
+      "operation": "Create request",
+      "milliseconds": 10.873499999999694
+    },
+    {
+      "trial": 20,
+      "operation": "Evaluate and invite",
+      "milliseconds": 56.667099999998754
+    },
+    {
+      "trial": 20,
+      "operation": "Record willingness",
+      "milliseconds": 8.553299999999581
+    },
+    {
+      "trial": 20,
+      "operation": "Select donor",
+      "milliseconds": 11.097399999998743
+    },
+    {
+      "trial": 20,
+      "operation": "Withdraw and resume",
+      "milliseconds": 7.854499999999462
+    },
+    {
+      "trial": 20,
+      "operation": "Complete request",
+      "milliseconds": 8.083599999999933
+    },
+    {
+      "trial": 20,
+      "operation": "Load progress",
+      "milliseconds": 4.401899999998932
+    },
+    {
+      "trial": 21,
+      "operation": "Create request",
+      "milliseconds": 6.235000000000582
+    },
+    {
+      "trial": 21,
+      "operation": "Evaluate and invite",
+      "milliseconds": 35.15179999999964
+    },
+    {
+      "trial": 21,
+      "operation": "Record willingness",
+      "milliseconds": 5.690899999999601
+    },
+    {
+      "trial": 21,
+      "operation": "Select donor",
+      "milliseconds": 10.903699999998935
+    },
+    {
+      "trial": 21,
+      "operation": "Withdraw and resume",
+      "milliseconds": 7.850400000001173
+    },
+    {
+      "trial": 21,
+      "operation": "Complete request",
+      "milliseconds": 9.141700000000128
+    },
+    {
+      "trial": 21,
+      "operation": "Load progress",
+      "milliseconds": 6.975300000000061
+    },
+    {
+      "trial": 22,
+      "operation": "Create request",
+      "milliseconds": 12.449999999998909
+    },
+    {
+      "trial": 22,
+      "operation": "Evaluate and invite",
+      "milliseconds": 53.898699999999735
+    },
+    {
+      "trial": 22,
+      "operation": "Record willingness",
+      "milliseconds": 6.020800000000236
+    },
+    {
+      "trial": 22,
+      "operation": "Select donor",
+      "milliseconds": 9.940700000001016
+    },
+    {
+      "trial": 22,
+      "operation": "Withdraw and resume",
+      "milliseconds": 8.32380000000012
+    },
+    {
+      "trial": 22,
+      "operation": "Complete request",
+      "milliseconds": 7.369599999999991
+    },
+    {
+      "trial": 22,
+      "operation": "Load progress",
+      "milliseconds": 3.348200000000361
+    },
+    {
+      "trial": 23,
+      "operation": "Create request",
+      "milliseconds": 4.5781000000006316
+    },
+    {
+      "trial": 23,
+      "operation": "Evaluate and invite",
+      "milliseconds": 27.969699999999648
+    },
+    {
+      "trial": 23,
+      "operation": "Record willingness",
+      "milliseconds": 5.150700000000143
+    },
+    {
+      "trial": 23,
+      "operation": "Select donor",
+      "milliseconds": 9.128900000001522
+    },
+    {
+      "trial": 23,
+      "operation": "Withdraw and resume",
+      "milliseconds": 5.328300000001036
+    },
+    {
+      "trial": 23,
+      "operation": "Complete request",
+      "milliseconds": 5.283499999999549
+    },
+    {
+      "trial": 23,
+      "operation": "Load progress",
+      "milliseconds": 2.8150000000005093
+    },
+    {
+      "trial": 24,
+      "operation": "Create request",
+      "milliseconds": 5.659900000000562
+    },
+    {
+      "trial": 24,
+      "operation": "Evaluate and invite",
+      "milliseconds": 38.3119999999999
+    },
+    {
+      "trial": 24,
+      "operation": "Record willingness",
+      "milliseconds": 7.400400000000445
+    },
+    {
+      "trial": 24,
+      "operation": "Select donor",
+      "milliseconds": 9.10280000000057
+    },
+    {
+      "trial": 24,
+      "operation": "Withdraw and resume",
+      "milliseconds": 6.244099999999889
+    },
+    {
+      "trial": 24,
+      "operation": "Complete request",
+      "milliseconds": 6.04149999999936
+    },
+    {
+      "trial": 24,
+      "operation": "Load progress",
+      "milliseconds": 3.0996000000013737
+    },
+    {
+      "trial": 25,
+      "operation": "Create request",
+      "milliseconds": 4.415399999999863
+    },
+    {
+      "trial": 25,
+      "operation": "Evaluate and invite",
+      "milliseconds": 32.947799999999916
+    },
+    {
+      "trial": 25,
+      "operation": "Record willingness",
+      "milliseconds": 4.771699999999328
+    },
+    {
+      "trial": 25,
+      "operation": "Select donor",
+      "milliseconds": 9.645000000000437
+    },
+    {
+      "trial": 25,
+      "operation": "Withdraw and resume",
+      "milliseconds": 6.787700000000768
+    },
+    {
+      "trial": 25,
+      "operation": "Complete request",
+      "milliseconds": 6.979899999998452
+    },
+    {
+      "trial": 25,
+      "operation": "Load progress",
+      "milliseconds": 3.97439999999915
+    },
+    {
+      "trial": 26,
+      "operation": "Create request",
+      "milliseconds": 5.13760000000002
+    },
+    {
+      "trial": 26,
+      "operation": "Evaluate and invite",
+      "milliseconds": 74.92519999999968
+    },
+    {
+      "trial": 26,
+      "operation": "Record willingness",
+      "milliseconds": 7.707700000000841
+    },
+    {
+      "trial": 26,
+      "operation": "Select donor",
+      "milliseconds": 13.941999999999098
+    },
+    {
+      "trial": 26,
+      "operation": "Withdraw and resume",
+      "milliseconds": 8.899900000000343
+    },
+    {
+      "trial": 26,
+      "operation": "Complete request",
+      "milliseconds": 9.162900000001173
+    },
+    {
+      "trial": 26,
+      "operation": "Load progress",
+      "milliseconds": 3.610099999999875
+    },
+    {
+      "trial": 27,
+      "operation": "Create request",
+      "milliseconds": 6.094199999999546
+    },
+    {
+      "trial": 27,
+      "operation": "Evaluate and invite",
+      "milliseconds": 42.688499999998385
+    },
+    {
+      "trial": 27,
+      "operation": "Record willingness",
+      "milliseconds": 7.211900000000242
+    },
+    {
+      "trial": 27,
+      "operation": "Select donor",
+      "milliseconds": 10.953999999999724
+    },
+    {
+      "trial": 27,
+      "operation": "Withdraw and resume",
+      "milliseconds": 6.147899999999936
+    },
+    {
+      "trial": 27,
+      "operation": "Complete request",
+      "milliseconds": 5.473399999998946
+    },
+    {
+      "trial": 27,
+      "operation": "Load progress",
+      "milliseconds": 3.217899999999645
+    },
+    {
+      "trial": 28,
+      "operation": "Create request",
+      "milliseconds": 4.486300000000483
+    },
+    {
+      "trial": 28,
+      "operation": "Evaluate and invite",
+      "milliseconds": 35.15340000000106
+    },
+    {
+      "trial": 28,
+      "operation": "Record willingness",
+      "milliseconds": 39.65700000000106
+    },
+    {
+      "trial": 28,
+      "operation": "Select donor",
+      "milliseconds": 10.953499999999622
+    },
+    {
+      "trial": 28,
+      "operation": "Withdraw and resume",
+      "milliseconds": 5.383900000000722
+    },
+    {
+      "trial": 28,
+      "operation": "Complete request",
+      "milliseconds": 9.965900000001056
+    },
+    {
+      "trial": 28,
+      "operation": "Load progress",
+      "milliseconds": 5.456500000000233
+    },
+    {
+      "trial": 29,
+      "operation": "Create request",
+      "milliseconds": 7.22899999999936
+    },
+    {
+      "trial": 29,
+      "operation": "Evaluate and invite",
+      "milliseconds": 39.16150000000016
+    },
+    {
+      "trial": 29,
+      "operation": "Record willingness",
+      "milliseconds": 6.3355999999985215
+    },
+    {
+      "trial": 29,
+      "operation": "Select donor",
+      "milliseconds": 11.09310000000005
+    },
+    {
+      "trial": 29,
+      "operation": "Withdraw and resume",
+      "milliseconds": 7.93119999999908
+    },
+    {
+      "trial": 29,
+      "operation": "Complete request",
+      "milliseconds": 12.375599999999395
+    },
+    {
+      "trial": 29,
+      "operation": "Load progress",
+      "milliseconds": 7.2665000000015425
+    },
+    {
+      "trial": 30,
+      "operation": "Create request",
+      "milliseconds": 5.943600000000515
+    },
+    {
+      "trial": 30,
+      "operation": "Evaluate and invite",
+      "milliseconds": 38.96049999999923
+    },
+    {
+      "trial": 30,
+      "operation": "Record willingness",
+      "milliseconds": 6.241600000001199
+    },
+    {
+      "trial": 30,
+      "operation": "Select donor",
+      "milliseconds": 11.87170000000151
+    },
+    {
+      "trial": 30,
+      "operation": "Withdraw and resume",
+      "milliseconds": 6.2401000000008935
+    },
+    {
+      "trial": 30,
+      "operation": "Complete request",
+      "milliseconds": 5.895599999999831
+    },
+    {
+      "trial": 30,
+      "operation": "Load progress",
+      "milliseconds": 3.6010999999998603
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import {authDestination} from '../config/authDestination';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Auth.module.css';
@@ -43,7 +44,7 @@ export default function Login() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/home');
+      navigate(authDestination(), {replace:true});
     } catch {
       setError('Unable to connect to server. Please try again.');
     } finally {

@@ -4,14 +4,11 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Broadcast = require('../models/Broadcast');
 
+const { normalizeLocation } = require('../services/location');
 const router = express.Router();
 
-function auth(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ message: 'No token' });
-  try { req.user = jwt.verify(token, process.env.JWT_SECRET); next(); }
-  catch { res.status(401).json({ message: 'Invalid token' }); }
-}
+const auth = require('../middleware/memberAuth');
+const Outreach = require('../models/DonorOutreach');
 
 // GET /api/users/me — get own profile
 router.get('/me', auth, async (req, res) => {
@@ -35,26 +32,26 @@ router.patch('/profile', auth, async (req, res) => {
     if (state       !== undefined) update.state       = state;
     if (district    !== undefined) update.district    = district;
     if (isAvailable !== undefined) update.isAvailable = isAvailable;
-    if (location    !== undefined) update.location    = location;
+    if (location    !== undefined) update.location    = normalizeLocation(location);
     // Allow blood group update for donors (they may have entered wrong group)
     if (bloodGroup  !== undefined) update.bloodGroup  = bloodGroup;
 
     const user = await User.findByIdAndUpdate(
-      req.user.userId, { $set: update }, { new: true }
+      req.user.userId, { $set: update }, { new: true, runValidators: true }
     ).select('-password');
 
     const io = req.app.get('io');
-    if (io) io.emit('donor_updated', {
+    if (io) io.to('authenticated-feed').emit('donor_updated', {
       userId: user._id,
       district: user.district,
       state: user.state,
       isAvailable: user.isAvailable,
-      location: user.location,
+
     });
 
     res.json({ message: 'Profile updated', user });
-  } catch {
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    res.status(err.status || (err.name === 'ValidationError' ? 400 : 500)).json({ message: err.status ? err.message : 'Unable to update profile' });
   }
 });
 
@@ -89,7 +86,7 @@ router.get('/donors', auth, async (req, res) => {
     if (district) filter.district = district;
 
     const donors = await User.find(filter)
-      .select('fullName bloodGroup country state district location isAvailable')
+      .select('fullName bloodGroup country state district isAvailable')
       .lean();
     res.json(donors);
   } catch {
@@ -101,13 +98,13 @@ router.get('/donors', auth, async (req, res) => {
 router.get('/mystats', auth, async (req, res) => {
   try {
     const uid = req.user.userId;
-    const [requestsPosted, responsesGiven, fulfilled, sos] = await Promise.all([
+    const [requestsPosted, completedDonations, fulfilled, sos] = await Promise.all([
       Broadcast.countDocuments({ requestedBy: uid }),
-      Broadcast.countDocuments({ 'responses.donorId': uid }),
+      Outreach.countDocuments({ donor: uid, state: 'completed' }),
       Broadcast.countDocuments({ requestedBy: uid, status: 'fulfilled' }),
       Broadcast.countDocuments({ requestedBy: uid, isSOS: true }),
     ]);
-    res.json({ requestsPosted, responsesGiven, fulfilled, sos });
+    res.json({ requestsPosted, completedDonations, fulfilled, sos });
   } catch {
     res.status(500).json({ message: 'Server error' });
   }

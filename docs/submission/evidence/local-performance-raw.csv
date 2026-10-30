@@ -1,0 +1,211 @@
+trial,operation,milliseconds
+1,Create request,8.303700
+1,Evaluate and invite,65.958500
+1,Record willingness,12.208500
+1,Select donor,19.421300
+1,Withdraw and resume,13.100800
+1,Complete request,12.097400
+1,Load progress,7.846300
+2,Create request,14.106100
+2,Evaluate and invite,67.584400
+2,Record willingness,12.234400
+2,Select donor,17.561700
+2,Withdraw and resume,12.733400
+2,Complete request,13.050900
+2,Load progress,7.244800
+3,Create request,6.506800
+3,Evaluate and invite,56.967800
+3,Record willingness,10.288900
+3,Select donor,20.817600
+3,Withdraw and resume,13.990500
+3,Complete request,13.194000
+3,Load progress,8.398800
+4,Create request,8.818400
+4,Evaluate and invite,66.163700
+4,Record willingness,10.169800
+4,Select donor,14.783300
+4,Withdraw and resume,12.696400
+4,Complete request,14.230100
+4,Load progress,8.485700
+5,Create request,7.677400
+5,Evaluate and invite,54.986200
+5,Record willingness,10.066500
+5,Select donor,15.535900
+5,Withdraw and resume,11.200900
+5,Complete request,13.641300
+5,Load progress,10.485800
+6,Create request,8.270500
+6,Evaluate and invite,60.901200
+6,Record willingness,10.161400
+6,Select donor,16.561300
+6,Withdraw and resume,11.118000
+6,Complete request,12.920100
+6,Load progress,8.059100
+7,Create request,8.503100
+7,Evaluate and invite,61.509500
+7,Record willingness,12.216900
+7,Select donor,17.990500
+7,Withdraw and resume,14.212800
+7,Complete request,11.753100
+7,Load progress,6.195300
+8,Create request,11.021700
+8,Evaluate and invite,75.653000
+8,Record willingness,11.227100
+8,Select donor,20.607200
+8,Withdraw and resume,12.824000
+8,Complete request,12.286100
+8,Load progress,6.746800
+9,Create request,10.848000
+9,Evaluate and invite,89.571100
+9,Record willingness,16.620000
+9,Select donor,29.877200
+9,Withdraw and resume,13.587000
+9,Complete request,15.505500
+9,Load progress,8.566500
+10,Create request,8.868100
+10,Evaluate and invite,69.474900
+10,Record willingness,11.702900
+10,Select donor,15.536100
+10,Withdraw and resume,12.209900
+10,Complete request,10.252300
+10,Load progress,5.365100
+11,Create request,9.800400
+11,Evaluate and invite,68.167900
+11,Record willingness,13.346000
+11,Select donor,21.432400
+11,Withdraw and resume,14.506800
+11,Complete request,11.475500
+11,Load progress,7.656500
+12,Create request,10.543100
+12,Evaluate and invite,66.596800
+12,Record willingness,11.503300
+12,Select donor,17.371300
+12,Withdraw and resume,13.055100
+12,Complete request,12.286800
+12,Load progress,7.755300
+13,Create request,11.947100
+13,Evaluate and invite,77.924400
+13,Record willingness,10.098300
+13,Select donor,18.967700
+13,Withdraw and resume,13.850200
+13,Complete request,14.371300
+13,Load progress,8.211700
+14,Create request,8.457800
+14,Evaluate and invite,76.658300
+14,Record willingness,11.233700
+14,Select donor,20.606700
+14,Withdraw and resume,14.156900
+14,Complete request,12.725400
+14,Load progress,6.349100
+15,Create request,10.489900
+15,Evaluate and invite,83.106300
+15,Record willingness,11.069900
+15,Select donor,21.773200
+15,Withdraw and resume,11.692700
+15,Complete request,12.655000
+15,Load progress,8.950900
+16,Create request,9.077500
+16,Evaluate and invite,68.653300
+16,Record willingness,10.765800
+16,Select donor,19.128100
+16,Withdraw and resume,15.289900
+16,Complete request,12.040600
+16,Load progress,6.642300
+17,Create request,7.870800
+17,Evaluate and invite,59.250700
+17,Record willingness,10.572500
+17,Select donor,16.380300
+17,Withdraw and resume,11.137400
+17,Complete request,12.973400
+17,Load progress,6.847100
+18,Create request,7.357400
+18,Evaluate and invite,60.450800
+18,Record willingness,9.646600
+18,Select donor,16.394700
+18,Withdraw and resume,10.366000
+18,Complete request,14.961800
+18,Load progress,8.394000
+19,Create request,11.606700
+19,Evaluate and invite,74.488300
+19,Record willingness,7.837000
+19,Select donor,14.469300
+19,Withdraw and resume,10.596900
+19,Complete request,50.054500
+19,Load progress,10.753400
+20,Create request,10.873500
+20,Evaluate and invite,56.667100
+20,Record willingness,8.553300
+20,Select donor,11.097400
+20,Withdraw and resume,7.854500
+20,Complete request,8.083600
+20,Load progress,4.401900
+21,Create request,6.235000
+21,Evaluate and invite,35.151800
+21,Record willingness,5.690900
+21,Select donor,10.903700
+21,Withdraw and resume,7.850400
+21,Complete request,9.141700
+21,Load progress,6.975300
+22,Create request,12.450000
+22,Evaluate and invite,53.898700
+22,Record willingness,6.020800
+22,Select donor,9.940700
+22,Withdraw and resume,8.323800
+22,Complete request,7.369600
+22,Load progress,3.348200
+23,Create request,4.578100
+23,Evaluate and invite,27.969700
+23,Record willingness,5.150700
+23,Select donor,9.128900
+23,Withdraw and resume,5.328300
+23,Complete request,5.283500
+23,Load progress,2.815000
+24,Create request,5.659900
+24,Evaluate and invite,38.312000
+24,Record willingness,7.400400
+24,Select donor,9.102800
+24,Withdraw and resume,6.244100
+24,Complete request,6.041500
+24,Load progress,3.099600
+25,Create request,4.415400
+25,Evaluate and invite,32.947800
+25,Record willingness,4.771700
+25,Select donor,9.645000
+25,Withdraw and resume,6.787700
+25,Complete request,6.979900
+25,Load progress,3.974400
+26,Create request,5.137600
+26,Evaluate and invite,74.925200
+26,Record willingness,7.707700
+26,Select donor,13.942000
+26,Withdraw and resume,8.899900
+26,Complete request,9.162900
+26,Load progress,3.610100
+27,Create request,6.094200
+27,Evaluate and invite,42.688500
+27,Record willingness,7.211900
+27,Select donor,10.954000
+27,Withdraw and resume,6.147900
+27,Complete request,5.473400
+27,Load progress,3.217900
+28,Create request,4.486300
+28,Evaluate and invite,35.153400
+28,Record willingness,39.657000
+28,Select donor,10.953500
+28,Withdraw and resume,5.383900
+28,Complete request,9.965900
+28,Load progress,5.456500
+29,Create request,7.229000
+29,Evaluate and invite,39.161500
+29,Record willingness,6.335600
+29,Select donor,11.093100
+29,Withdraw and resume,7.931200
+29,Complete request,12.375600
+29,Load progress,7.266500
+30,Create request,5.943600
+30,Evaluate and invite,38.960500
+30,Record willingness,6.241600
+30,Select donor,11.871700
+30,Withdraw and resume,6.240100
+30,Complete request,5.895600
+30,Load progress,3.601100

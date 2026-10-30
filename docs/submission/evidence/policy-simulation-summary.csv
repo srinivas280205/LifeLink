@@ -1,0 +1,13 @@
+scenario,policy,trials,successPercent,meanAlerts,duplicateAlerts
+Dense city,Initial-alert baseline,1000,100,74.852,0
+Dense city,LifeLink rules,1000,100,14.73,0
+Sparse region,Initial-alert baseline,1000,99.1,18.76,0
+Sparse region,LifeLink rules,1000,99.1,13.517,0
+Low availability,Initial-alert baseline,1000,89.3,12.108,0
+Low availability,LifeLink rules,1000,89.3,9.25,0
+No responses,Initial-alert baseline,1000,0,75.087,0
+No responses,LifeLink rules,1000,0,57.576,0
+Withdrawal,Initial-alert baseline,1000,100,74.97,0
+Withdrawal,LifeLink rules,1000,100,17.588,0
+Critical,Initial-alert baseline,1000,100,75.044,0
+Critical,LifeLink rules,1000,100,72.876,0
