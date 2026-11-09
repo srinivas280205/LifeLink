@@ -1,14 +1,19 @@
+import { rememberDestination } from '../config/authDestination';
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import styles from './Landing.module.css';
+import homeContent from './homeContent';
 import BrandLogo from '../components/BrandLogo';
 import API_BASE from '../config/api.js';
 const API = API_BASE;
 
 export default function Landing() {
   const { theme, toggle } = useTheme();
+  const signedIn = Boolean(localStorage.getItem('token'));
+  const donorDestination = '/donate';
+  const requestDestination = '/request';
   const { t, lang, toggle: toggleLang } = useLanguage();
 
   const features = [
@@ -26,26 +31,9 @@ export default function Landing() {
     { num: '03', title: t('step3Title'), desc: t('step3Desc') },
   ];
 
-  const [stats, setStats] = useState([
-    { value: '—', labelKey: 'registeredDonors' },
-    { value: '—', labelKey: 'livesSaved' },
-    { value: '—', labelKey: 'statesCoveredStat' },
-    { value: '—', labelKey: 'avgResponseTime' },
-  ]);
-
-  useEffect(() => {
-    fetch(`${API}/api/stats`)
-      .then(r => r.json())
-      .then(d => {
-        setStats([
-          { value: d.totalDonors   > 0 ? d.totalDonors.toLocaleString('en-IN')  : '0', labelKey: 'registeredDonors' },
-          { value: d.livesSaved    > 0 ? d.livesSaved.toLocaleString('en-IN')   : '0', labelKey: 'livesSaved' },
-          { value: d.statesCovered > 0 ? String(d.statesCovered)                : '0', labelKey: 'statesCoveredStat' },
-          { value: d.avgResponseTime,                                                    labelKey: 'avgResponseTime' },
-        ]);
-      })
-      .catch(() => {/* keep dashes on error */});
-  }, []);
+  const [activity,setActivity]=useState(null);
+  useEffect(()=>{const controller=new AbortController();fetch(`${API}/api/stats/activity`,{signal:controller.signal}).then(r=>{if(!r.ok)throw Error();return r.json()}).then(setActivity).catch(()=>{});return()=>controller.abort();},[]);
+  const stats=['availableDonors','activeRequests','completedRequests','completedDonations'].map((key,i)=>({label:homeContent[lang].counts[i],value:Number.isFinite(activity?.[key])?activity[key].toLocaleString(lang==='ta'?'ta-IN':'en-IN'):'—'}));
 
   return (
     <div className={styles.page}>
@@ -71,11 +59,10 @@ export default function Landing() {
             >
               {lang === 'en' ? 'தமிழ்' : 'EN'}
             </button>
-            <button className={styles.themeBtn} onClick={toggle} title="Toggle theme">
+            <button className={styles.themeBtn} onClick={toggle} title={lang === 'ta' ? 'ஒளி / இருள் தோற்றம்' : 'Light / dark mode'}>
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
-            <Link to="/login" className={styles.loginBtn}>{t('logIn')}</Link>
-            <Link to="/signup" className={styles.signupBtn}>{t('signUpFree')}</Link>
+            {signedIn ? <Link to="/history" className={styles.signupBtn}>{lang === 'ta' ? 'எனது கோரிக்கைகள்' : 'My requests'}</Link> : <><Link to="/login" className={styles.loginBtn}>{t('logIn')}</Link><Link to="/signup" className={styles.signupBtn}>{t('signUpFree')}</Link></>}
           </div>
         </div>
       </nav>
@@ -91,8 +78,8 @@ export default function Landing() {
           </h1>
           <p className={styles.heroSub}>{t('landingHeroSub')}</p>
           <div className={styles.heroCtas}>
-            <Link to="/signup" className={styles.ctaPrimary}>{t('joinAsDonor')}</Link>
-            <Link to="/signup?role=requester" className={styles.ctaSecondary}>{t('requestBloodBtn')}</Link>
+            <Link to={signedIn ? donorDestination : "/signup"} onClick={() => rememberDestination(donorDestination)} className={styles.ctaPrimary}>{t('joinAsDonor')}</Link>
+            <Link to={signedIn ? requestDestination : "/login"} onClick={() => rememberDestination(requestDestination)} className={styles.ctaSecondary}>{t('requestBloodBtn')}</Link>
           </div>
           {/* Blood group pills */}
           <div className={styles.bloodPills}>
@@ -109,15 +96,15 @@ export default function Landing() {
           <div className={styles.heroCard}>
             <div className={styles.heroCardLive}>
               <span className={styles.liveDot} />
-              <span>LIVE</span>
+              <span>{lang === 'ta' ? 'செயல்முறை எடுத்துக்காட்டு' : 'WORKFLOW EXAMPLE'}</span>
             </div>
             <div className={styles.heroCardTop}>
               <div className={styles.heroBloodBadge}>O+</div>
-              <span className={styles.heroUrgency}>🚨 CRITICAL</span>
+              <span className={styles.heroUrgency}>{lang === 'ta' ? '🚨 மிக அவசரம்' : '🚨 CRITICAL'}</span>
             </div>
             <p className={styles.heroCardTitle}>{t('emergencyRequest')}</p>
-            <p className={styles.heroCardHospital}>🏥 Apollo Hospital, Chennai</p>
-            <p className={styles.heroCardSub}>📍 2.3 km away · 2 units needed</p>
+            <p className={styles.heroCardHospital}>🏥 {lang === 'ta' ? 'மருத்துவமனை, சென்னை' : 'Hospital, Chennai'}</p>
+            <p className={styles.heroCardSub}>📍 {lang === 'ta' ? 'மருத்துவமனையைச் சுற்றி தேடல்' : 'Search around the hospital'}</p>
             <div className={styles.heroCardBarLabel}>{t('notifyingDonors')}</div>
             <div className={styles.heroCardBarTrack}>
               <div className={styles.heroCardBar} />
@@ -129,23 +116,31 @@ export default function Landing() {
           </div>
 
           <div className={styles.heroCardFloat}>
-            <span>✅</span> {t('donorMatchedIn')} <strong>47s</strong>
+            <span>✅</span> <strong>{lang === 'ta' ? 'பதில்களுக்கு ஏற்ப தேடல் விரிவடையும்' : 'Search expands when more help is needed'}</strong>
           </div>
         </div>
       </section>
 
+      {import.meta.env.DEV && <p style={{textAlign:'center',padding:'8px 16px',color:'var(--muted)'}}>{lang==='ta'?'உள்ளூர் செயல்விளக்கம் · கீழுள்ள எண்ணிக்கைகளில் சோதனைப் பதிவுகளும் அடங்கும்.':'Local demonstration · counts below include synthetic test records.'}</p>}
       {/* Stats */}
       <section className={styles.statsSection}>
         <div className={styles.statsGrid}>
           {stats.map((s) => (
-            <div key={s.labelKey} className={styles.statItem}>
+            <div key={s.label} className={styles.statItem}>
               <p className={styles.statValue}>{s.value}</p>
-              <p className={styles.statLabel}>{t(s.labelKey)}</p>
+              <p className={styles.statLabel}>{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
+      <section className={styles.features}>
+        <div className={styles.sectionInner}>
+          <h2 className={styles.sectionTitle}>{homeContent[lang].who}</h2>
+          <div className={styles.audienceGrid}>{homeContent[lang].roles.map(([title,desc])=><article key={title} className={styles.featureCard}><h3 className={styles.featureTitle}>{title}</h3><p className={styles.featureDesc}>{desc}</p></article>)}</div>
+          <p style={{textAlign:'center',marginTop:20,color:'var(--muted)'}}>{homeContent[lang].sameAccount}</p>
+        </div>
+      </section>
       {/* Features */}
       <section className={styles.features}>
         <div className={styles.sectionInner}>

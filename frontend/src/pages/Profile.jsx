@@ -202,13 +202,16 @@ export default function Profile() {
           const res = await fetch(`${API}/api/users/profile`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-            body: JSON.stringify({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude } }),
+            body: JSON.stringify({ location: { lat: pos.coords.latitude, lng: pos.coords.longitude,
+              source: 'device', accuracyMeters: pos.coords.accuracy, measuredAt: pos.timestamp } }),
           });
-          if (res.ok) { setSaved(true); setTimeout(() => setSaved(false), 3000); }
+          if (res.ok) { const data = await res.json(); setProfile(previous => ({ ...previous, location: data.user.location })); setSaved(true); setTimeout(() => setSaved(false), 3000); }
+          else { const data = await res.json(); setError(data.message || 'Location save failed'); }
         } catch { setError('Location save failed'); }
         setLocating(false);
       },
-      () => { setError('Location permission denied'); setLocating(false); }
+      () => { setError('Location permission denied'); setLocating(false); },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 15000 }
     );
   };
 
@@ -369,57 +372,6 @@ export default function Profile() {
             </span>
           </div>
 
-          {/* Re-verify phone for unverified users */}
-          {!profile.isVerified && (
-            <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
-              {!showOtpInput ? (
-                <button
-                  onClick={handleResendVerification}
-                  disabled={reverifying}
-                  style={{ background: '#1976d2', color: '#fff', border: 'none', borderRadius: 8,
-                    padding: '0.5rem 1.1rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}
-                >
-                  {reverifying ? t('sendingOtpVerify') : t('verifyMyPhone')}
-                </button>
-              ) : (
-                <form onSubmit={handleVerifyOtp} style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                  <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>{t('enterOtpFor')} {profile.phone}</p>
-                  <div style={{ display: 'flex', gap: '0.35rem' }}>
-                    {verifyOtp.map((d, i) => (
-                      <input
-                        key={i}
-                        ref={el => otpRefs.current[i] = el}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={d}
-                        onChange={e => handleOtpKey(i, e)}
-                        onKeyDown={e => { if (e.key === 'Backspace' && !d && i > 0) otpRefs.current[i - 1]?.focus(); }}
-                        autoFocus={i === 0}
-                        style={{ width: 36, height: 42, textAlign: 'center', fontSize: '1.2rem',
-                          fontWeight: 700, border: '2px solid var(--border)', borderRadius: 8,
-                          background: 'var(--input-bg, var(--card-bg))', color: 'var(--text)' }}
-                      />
-                    ))}
-                  </div>
-                  {verifyError && <p style={{ color: '#d32f2f', fontSize: '0.8rem', margin: 0 }}>{verifyError}</p>}
-                  <button
-                    type="submit"
-                    disabled={verifyLoading || verifyOtp.join('').length < 6}
-                    style={{ background: '#388e3c', color: '#fff', border: 'none', borderRadius: 8,
-                      padding: '0.45rem 1.1rem', cursor: 'pointer', fontSize: '0.88rem', fontWeight: 600 }}
-                  >
-                    {verifyLoading ? t('verifying2') : t('verifyBtn2')}
-                  </button>
-                  <button type="button" onClick={() => { setShowOtpInput(false); setVerifyOtp(['','','','','','']); setVerifyError(''); }}
-                    style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '0.8rem' }}>
-                    {t('cancel')}
-                  </button>
-                </form>
-              )}
-              {verifyError && !showOtpInput && <p style={{ color: '#d32f2f', fontSize: '0.8rem', marginTop: '0.4rem' }}>{verifyError}</p>}
-            </div>
-          )}
         </div>
 
         {/* ── Email verified callback notification ── */}
@@ -517,7 +469,7 @@ export default function Profile() {
         {myStats && (
           <div className={styles.statsGrid}>
             <div className={styles.statBox}>
-              <span className={styles.statNum}>{myStats.responsesGiven}</span>
+              <span className={styles.statNum}>{myStats.completedDonations}</span>
               <span className={styles.statLabel}>{t('timesDonated')}</span>
             </div>
             <div className={styles.statBox}>
@@ -540,27 +492,27 @@ export default function Profile() {
           <div className={styles.badgesSection}>
             <h3 className={styles.badgesTitle}>{t('achievements')}</h3>
             <div className={styles.badgesGrid}>
-              <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 1 ? styles.earned : styles.locked}`}>
+              <div className={`${styles.achieveBadge} ${myStats.completedDonations >= 1 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>🩸</span>
                 <span className={styles.achieveLabel}>{t('achieveFirstDrop')}</span>
                 <span className={styles.achieveSub}>{t('achieveFirstSub')}</span>
               </div>
-              <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 5 ? styles.earned : styles.locked}`}>
+              <div className={`${styles.achieveBadge} ${myStats.completedDonations >= 5 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>💪</span>
                 <span className={styles.achieveLabel}>{t('achieveActiveDonor')}</span>
                 <span className={styles.achieveSub}>{t('achieveActiveSub')}</span>
               </div>
-              <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 10 ? styles.earned : styles.locked}`}>
+              <div className={`${styles.achieveBadge} ${myStats.completedDonations >= 10 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>⭐</span>
                 <span className={styles.achieveLabel}>{t('achieveHero')}</span>
                 <span className={styles.achieveSub}>{t('achieveHeroSub')}</span>
               </div>
-              <div className={`${styles.achieveBadge} ${myStats.responsesGiven >= 20 ? styles.earned : styles.locked}`}>
+              <div className={`${styles.achieveBadge} ${myStats.completedDonations >= 20 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>🏆</span>
                 <span className={styles.achieveLabel}>{t('achieveLegend')}</span>
                 <span className={styles.achieveSub}>{t('achieveLegendSub')}</span>
               </div>
-              <div className={`${styles.achieveBadge} ${myStats.fulfilled >= 1 ? styles.earned : styles.locked}`}>
+              <div className={`${styles.achieveBadge} ${myStats.completedDonations >= 1 ? styles.earned : styles.locked}`}>
                 <span className={styles.achieveIcon}>✅</span>
                 <span className={styles.achieveLabel}>{t('achieveLifeSaver')}</span>
                 <span className={styles.achieveSub}>{t('achieveLifeSub')}</span>
@@ -700,18 +652,18 @@ export default function Profile() {
               )}
               <div className={styles.dcStats}>
                 <div className={styles.dcStat}>
-                  <span className={styles.dcStatNum}>{myStats.responsesGiven}</span>
+                  <span className={styles.dcStatNum}>{myStats.completedDonations}</span>
                   <span className={styles.dcStatLabel}>{t('donated')}</span>
                 </div>
                 <div className={styles.dcDivider} />
                 <div className={styles.dcStat}>
                   <span className={styles.dcStatNum}>{myStats.fulfilled}</span>
-                  <span className={styles.dcStatLabel}>{t('livesSaved')}</span>
+                  <span className={styles.dcStatLabel}>{t('needsMetStat')}</span>
                 </div>
                 <div className={styles.dcDivider} />
                 <div className={styles.dcStat}>
                   <span className={styles.dcStatNum}>
-                    {myStats.responsesGiven >= 20 ? '🏆' : myStats.responsesGiven >= 10 ? '⭐' : myStats.responsesGiven >= 5 ? '💪' : myStats.responsesGiven >= 1 ? '🩸' : '—'}
+                    {myStats.completedDonations >= 20 ? '🏆' : myStats.completedDonations >= 10 ? '⭐' : myStats.completedDonations >= 5 ? '💪' : myStats.completedDonations >= 1 ? '🩸' : '—'}
                   </span>
                   <span className={styles.dcStatLabel}>{t('badge')}</span>
                 </div>
@@ -725,7 +677,7 @@ export default function Profile() {
                   `Blood Group: ${profile.bloodGroup}\n` +
                   `Name: ${profile.fullName}\n` +
                   `Location: ${[profile.district, profile.state].filter(Boolean).join(', ') || 'India'}\n` +
-                  `Donations: ${myStats.responsesGiven} | Lives Saved: ${myStats.fulfilled}\n\n` +
+                  `Donations: ${myStats.completedDonations} | Requests fulfilled: ${myStats.fulfilled}\n\n` +
                   `Download LifeLink and save lives 🆘`;
                 if (navigator.share) {
                   navigator.share({ title: 'My LifeLink Donor Card', text }).catch(() => {});
@@ -796,7 +748,7 @@ export default function Profile() {
           <h2 className={styles.cardTitle}>{t('gpsLocation')}</h2>
           <p className={styles.gpsNote}>
             {t('gpsNote')}
-            {profile.location?.lat && (
+            {Number.isFinite(profile.location?.lat) && Number.isFinite(profile.location?.lng) && (
               <span className={styles.gpsSet}>
                 {' '}✅ Set ({profile.location.lat.toFixed(4)}, {profile.location.lng.toFixed(4)})
               </span>

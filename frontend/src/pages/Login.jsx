@@ -1,10 +1,11 @@
+import {authDestination} from '../config/authDestination';
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './Auth.module.css';
 import BrandLogo from '../components/BrandLogo';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
-import PhoneInput, { toApiPhone } from '../components/PhoneInput';
+
 import API_BASE from '../config/api.js';
 const API = API_BASE;
 
@@ -13,7 +14,7 @@ export default function Login() {
   const { theme, toggle } = useTheme();
   const { lang, toggle: toggleLang, t } = useLanguage();
 
-  const [phone, setPhone] = useState({ countryCode: '+91', number: '' });
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError]   = useState('');
@@ -29,7 +30,7 @@ export default function Login() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          phone: toApiPhone(phone),   // e.g. "+919344763919"
+          identifier,
           password,
         }),
       });
@@ -43,7 +44,7 @@ export default function Login() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/home');
+      navigate(authDestination(), {replace:true});
     } catch {
       setError('Unable to connect to server. Please try again.');
     } finally {
@@ -84,11 +85,12 @@ export default function Login() {
         <h2 className={styles.title}>{t('welcomeBack')}</h2>
         <p className={styles.subtitle}>{t('signInAccount')}</p>
 
+        <p role="status">{lang==='ta'?'தொடர முதலில் உள்நுழையவும். புதிய பயனரா? கீழே பதிவு செய்யவும்.':'Please log in to continue. New here? Create an account below.'}</p>
         <form onSubmit={handleSubmit} className={styles.form}>
           {/* Phone with country code */}
           <div className={styles.field}>
-            <label>{t('phone')}</label>
-            <PhoneInput value={phone} onChange={setPhone} required />
+            <label htmlFor="identifier">{lang==='ta'?'தொலைபேசி எண் அல்லது மின்னஞ்சல்':'Phone or email'}</label>
+            <input id="identifier" autoComplete="username" required value={identifier} onChange={e=>setIdentifier(e.target.value)}/>
           </div>
 
           {/* Password */}

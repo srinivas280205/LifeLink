@@ -5,7 +5,10 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "dev:local": "node dev-local.cjs",
+    "test": "node --test tests/foundation.test.js tests/coordination.test.js tests/network.test.js",
+    "demo": "node dev-local.cjs --demo"
   },
   "dependencies": {
     "axios": "^1.15.0",

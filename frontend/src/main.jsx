@@ -5,7 +5,7 @@ import 'flag-icons/css/flag-icons.min.css'
 import App from './App.jsx'
 
 // Register service worker for PWA
-if ('serviceWorker' in navigator) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });

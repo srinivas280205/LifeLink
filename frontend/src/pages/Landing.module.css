@@ -568,3 +568,5 @@
 }
 .footerLink:hover { color: #fff; }
 .footerDot { color: rgba(255,255,255,0.3); font-size: 0.7rem; }
+
+.audienceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}.navInner{min-height:64px;height:auto;padding-top:12px;padding-bottom:12px;gap:12px;flex-wrap:wrap}.navActions{flex-wrap:wrap}.navActions button,.navActions a{min-height:44px;display:inline-flex;align-items:center;justify-content:center}.heroTitle{line-height:1.3}.featureDesc,.stepDesc{font-size:1rem;line-height:1.7}@media(max-width:640px){.audienceGrid{grid-template-columns:1fr}.heroCtas a{flex:1;text-align:center}.heroVisual{display:flex;min-height:340px}.hero{gap:1.5rem}.heroCardFloat{max-width:90%}}@media(prefers-reduced-motion:reduce){.page *{animation:none!important;transition:none!important}}

@@ -84,7 +84,7 @@ export default function Dashboard() {
   useEffect(() => {
     loadBroadcasts();
 
-    const socket = io({ transports: ['websocket'] });
+    const socket = io(API || undefined, { transports: ['websocket'], auth: callback => callback({ token: localStorage.getItem('token') }) });
     socketRef.current = socket;
 
     socket.on('connect', () => setConnected(true));
@@ -757,6 +757,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
 
       <div className={styles.layout}>
         {/* LEFT: Request form + blood group info */}

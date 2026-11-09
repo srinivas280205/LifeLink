@@ -211,12 +211,19 @@ router.delete('/users/:id', adminAuth, async (req, res) => {
 // PATCH /api/admin/broadcasts/:id/cancel
 router.patch('/broadcasts/:id/cancel', adminAuth, async (req, res) => {
   try {
+    const existing = await Broadcast.findById(req.params.id);
+    if (existing?.coordinationVersion === 1) {
+      const coordinator = require('../services/coordinator');
+      const b = await coordinator.act(existing._id, existing.requestedBy, 'cancel');
+      coordinator.emitUpdate(req.app.get('io'), b._id).catch(err => console.error(err.message));
+      return res.json({ message: 'Request cancelled and commitments released' });
+    }
     const b = await Broadcast.findByIdAndUpdate(
       req.params.id, { status: 'cancelled' }, { new: true }
     );
     if (!b) return res.status(404).json({ message: 'Not found' });
     const io = req.app.get('io');
-    if (io) io.emit('broadcast_updated', { broadcastId: b._id, status: 'cancelled' });
+    if (io) io.to('authenticated-feed').emit('broadcast_updated', { broadcastId: b._id, status: 'cancelled' });
     res.json({ message: 'Broadcast cancelled', broadcast: b });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -226,6 +233,8 @@ router.patch('/broadcasts/:id/cancel', adminAuth, async (req, res) => {
 // DELETE /api/admin/broadcasts/:id — hard delete a broadcast
 router.delete('/broadcasts/:id', adminAuth, async (req, res) => {
   try {
+    const existing = await Broadcast.findById(req.params.id);
+    if (existing?.coordinationVersion === 1) return res.status(409).json({ message: 'Cancel coordinated requests; retain their donation records and timeline' });
     await Broadcast.findByIdAndDelete(req.params.id);
     res.json({ message: 'Broadcast deleted' });
   } catch (err) {
@@ -245,8 +254,7 @@ router.post('/announce', adminAuth, async (req, res) => {
     const io = req.app.get('io');
     if (io) {
       allUsers.forEach(u => {
-        io.emit('new_notification', {
-          userId: u._id.toString(),
+        io.to('user:' + u._id.toString()).emit('new_notification', { userId: u._id.toString(),
           notification: { type: 'announcement', title, body, createdAt: new Date(), read: false },
         });
       });
@@ -279,8 +287,7 @@ router.post('/users/:id/message', adminAuth, async (req, res) => {
 
     const io = req.app.get('io');
     if (io) {
-      io.emit('new_notification', {
-        userId: target._id.toString(),
+      io.to('user:' + target._id.toString()).emit('new_notification', { userId: target._id.toString(),
         notification: { ...notif.toObject() },
       });
     }

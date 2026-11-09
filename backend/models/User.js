@@ -41,9 +41,15 @@ const userSchema = new mongoose.Schema(
     isAdmin:     { type: Boolean, default: false },
     donationCount: { type: Number, default: 0 },
     lastDonated:   { type: Date, default: null },
+    coordinationAlertDay: String,
+    coordinationAlertCount: { type: Number, default: 0 },
+    lastCoordinationRequestAt: Date,
     location: {
       lat: { type: Number, default: null },
       lng: { type: Number, default: null },
+      updatedAt: { type: Date, default: null },
+      accuracyMeters: { type: Number, min: 0, default: null },
+      source: { type: String, enum: ['device', 'manual', 'unknown'], default: 'unknown' },
     },
     notifPrefs: {
       bloodRequests:  { type: Boolean, default: true },

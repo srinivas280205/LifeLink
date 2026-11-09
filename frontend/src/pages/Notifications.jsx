@@ -102,7 +102,7 @@ export default function Notifications() {
                     className={`${styles.notifCard} ${!n.read ? styles.unread : ''}`}
                     onClick={() => {
                       if (n.type === 'admin_dm' || n.type === 'announcement') return; // stay on page
-                      navigate('/dashboard');
+                      navigate(n.coordinationRequest && n.broadcastId ? `/dashboard?coordination=${encodeURIComponent(n.broadcastId)}` : '/dashboard');
                     }}
                     style={{ cursor: (n.type === 'admin_dm' || n.type === 'announcement') ? 'default' : 'pointer' }}
                   >

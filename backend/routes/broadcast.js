@@ -1,3 +1,4 @@
+const { publicBroadcast } = require('../services/publicBroadcast');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const Broadcast = require('../models/Broadcast');
@@ -67,7 +68,7 @@ router.post('/', auth, async (req, res) => {
     });
 
     const io = req.app.get('io');
-    if (io) io.emit('new_broadcast', broadcast);
+    if (io) io.to('authenticated-feed').emit('new_broadcast', publicBroadcast(broadcast));
 
     // Notify all available compatible users who have bloodRequests pref enabled
     const compatibleGroups = COMPATIBLE_DONORS[bloodGroup] || [];
@@ -107,8 +108,7 @@ router.post('/', auth, async (req, res) => {
 
       if (io) {
         potentialDonors.forEach((d) => {
-          io.emit('new_notification', {
-            userId: d._id.toString(),
+          io.to('user:' + d._id.toString()).emit('new_notification', { userId: d._id.toString(),
             notification: {
               type: 'new_broadcast',
               title: `🩸 ${bloodGroup} blood needed in ${district}`,
@@ -134,7 +134,7 @@ router.post('/', auth, async (req, res) => {
 // GET /api/broadcasts — list active broadcasts
 router.get('/', auth, async (req, res) => {
   try {
-    const broadcasts = await Broadcast.find({ status: 'active' })
+    const broadcasts = await Broadcast.find({ status: 'active', coordinationVersion: { $ne: 1 } })
       .sort({ createdAt: -1 })
       .limit(50);
     res.json(broadcasts);
@@ -173,7 +173,7 @@ router.post('/sos', auth, async (req, res) => {
     });
 
     const io = req.app.get('io');
-    if (io) io.emit('new_broadcast', broadcast);
+    if (io) io.to('authenticated-feed').emit('new_broadcast', publicBroadcast(broadcast));
 
     // Find all available compatible users with GPS location, within radius, bloodRequests pref on
     const compatibleGroups = COMPATIBLE_DONORS[bloodGroup] || [];
@@ -203,15 +203,14 @@ router.post('/sos', auth, async (req, res) => {
 
       if (io) {
         nearbyDonors.forEach((d) => {
-          io.emit('sos_alert', {
+          io.to('user:' + d._id).emit('sos_alert', {
             userId: d._id.toString(),
             broadcast: {
-              ...broadcast.toObject(),
+              ...publicBroadcast(broadcast),
               _distanceKm: Math.round(haversineKm(lat, lng, d.location.lat, d.location.lng)),
             },
           });
-          io.emit('new_notification', {
-            userId: d._id.toString(),
+          io.to('user:' + d._id.toString()).emit('new_notification', { userId: d._id.toString(),
             notification: {
               type:  'new_broadcast',
               title: `🆘 SOS: ${bloodGroup} blood needed urgently`,
@@ -240,6 +239,7 @@ router.post('/sos', auth, async (req, res) => {
 router.post('/:id/respond', auth, async (req, res) => {
   try {
     const broadcast = await Broadcast.findById(req.params.id);
+    if (broadcast?.coordinationVersion === 1) return res.status(409).json({ message: 'Use the donor coordination controls for this request' });
     if (!broadcast) return res.status(404).json({ message: 'Broadcast not found' });
     if (broadcast.status !== 'active') {
       return res.status(400).json({ message: 'Broadcast is no longer active' });
@@ -265,7 +265,7 @@ router.post('/:id/respond', auth, async (req, res) => {
     await broadcast.save();
 
     const io = req.app.get('io');
-    if (io) io.emit('broadcast_response', {
+    if (io) io.to('user:' + broadcast.requestedBy).emit('broadcast_response', {
       broadcastId: broadcast._id,
       donor: { name: user.fullName, phone: user.phone, bloodGroup: user.bloodGroup },
     });
@@ -292,8 +292,7 @@ router.post('/:id/respond', auth, async (req, res) => {
         data: { url: '/history' },
       }).catch(() => {});
       if (io) {
-        io.emit('new_notification', {
-          userId: broadcast.requestedBy.toString(),
+        io.to('user:' + broadcast.requestedBy.toString()).emit('new_notification', { userId: broadcast.requestedBy.toString(),
           notification: {
             type: 'donor_responded',
             title: notif.title,
@@ -316,6 +315,7 @@ router.post('/:id/respond', auth, async (req, res) => {
 router.patch('/:id/status', auth, async (req, res) => {
   try {
     const broadcast = await Broadcast.findById(req.params.id);
+    if (broadcast?.coordinationVersion === 1) return res.status(409).json({ message: 'Use the donor coordination controls for this request' });
     if (!broadcast) return res.status(404).json({ message: 'Not found' });
     if (broadcast.requestedBy.toString() !== req.user.userId) {
       return res.status(403).json({ message: 'Not authorized' });
@@ -324,7 +324,7 @@ router.patch('/:id/status', auth, async (req, res) => {
     await broadcast.save();
 
     const io = req.app.get('io');
-    if (io) io.emit('broadcast_updated', { broadcastId: broadcast._id, status: broadcast.status });
+    if (io) io.to('authenticated-feed').emit('broadcast_updated', { broadcastId: broadcast._id, status: broadcast.status });
 
     res.json({ message: 'Status updated', broadcast });
   } catch (err) {
@@ -335,7 +335,7 @@ router.patch('/:id/status', auth, async (req, res) => {
 // GET /api/broadcasts/mine — own broadcasts posted
 router.get('/mine', auth, async (req, res) => {
   try {
-    const broadcasts = await Broadcast.find({ requestedBy: req.user.userId })
+    const broadcasts = await Broadcast.find({ requestedBy: req.user.userId, coordinationVersion: { $ne: 1 } })
       .sort({ createdAt: -1 }).limit(50);
     res.json(broadcasts);
   } catch (err) {
@@ -346,7 +346,7 @@ router.get('/mine', auth, async (req, res) => {
 // GET /api/broadcasts/myresponses — broadcasts user has responded to
 router.get('/myresponses', auth, async (req, res) => {
   try {
-    const broadcasts = await Broadcast.find({ 'responses.donorId': req.user.userId })
+    const broadcasts = await Broadcast.find({ 'responses.donorId': req.user.userId, coordinationVersion: { $ne: 1 } })
       .sort({ createdAt: -1 }).limit(50);
     res.json(broadcasts);
   } catch (err) {
@@ -362,6 +362,7 @@ router.post('/:id/rate', auth, async (req, res) => {
       return res.status(400).json({ message: 'Stars must be between 1 and 5' });
     }
     const broadcast = await Broadcast.findById(req.params.id);
+    if (broadcast?.coordinationVersion === 1) return res.status(409).json({ message: 'Use the donor coordination controls for this request' });
     if (!broadcast) return res.status(404).json({ message: 'Broadcast not found' });
     if (broadcast.status !== 'fulfilled') {
       return res.status(400).json({ message: 'Can only rate fulfilled requests' });

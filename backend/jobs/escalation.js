@@ -25,6 +25,7 @@ async function runEscalation(io) {
     // Find active broadcasts with 0 responses, older than 10 min, not yet escalated
     const stale = await Broadcast.find({
       status:   'active',
+      coordinationVersion: { $ne: 1 },
       urgency:  { $ne: 'critical' },
       'responses.0': { $exists: false },
       createdAt: { $lt: tenMinAgo },
@@ -38,7 +39,7 @@ async function runEscalation(io) {
       await b.save();
 
       // Emit real-time update
-      if (io) io.emit('broadcast_updated', { broadcastId: b._id, urgency: 'critical', escalated: true });
+      if (io) io.to('authenticated-feed').emit('broadcast_updated', { broadcastId: b._id, urgency: 'critical', escalated: true });
 
       // Re-notify compatible available users
       const compatibleGroups = COMPATIBLE_DONORS[b.bloodGroup] || [];
@@ -60,8 +61,7 @@ async function runEscalation(io) {
 
         if (io) {
           donors.forEach(d => {
-            io.emit('new_notification', {
-              userId: d._id.toString(),
+            io.to('user:' + d._id.toString()).emit('new_notification', { userId: d._id.toString(),
               notification: {
                 type:  'new_broadcast',
                 title: `🔴 URGENT: ${b.bloodGroup} blood still needed in ${b.district}`,

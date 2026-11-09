@@ -3,3 +3,14 @@ node_modules/
 .env
 *.log
 backend/.env
+test-results/
+
+.local-db/
+logs/
+
+.env.*
+!.env.example
+dist/
+.vercel/
+references/
+docs/submission/

@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     historyApiFallback: true,
     proxy: {
-      '/api': { target: 'http://localhost:3456', changeOrigin: true },
-      '/socket.io': { target: 'http://localhost:3456', ws: true, changeOrigin: true },
+      '/api': { target: 'http://127.0.0.1:3460', changeOrigin: true },
+      '/socket.io': { target: 'http://127.0.0.1:3460', ws: true, changeOrigin: true },
     },
   },
 })

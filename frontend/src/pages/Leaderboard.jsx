@@ -57,13 +57,13 @@ export default function Leaderboard() {
               </div>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
-                <span className={styles.statVal}>{data.stats.totalResponses}</span>
-                <span className={styles.statLbl}>{t('totalResponses')}</span>
+                <span className={styles.statVal}>{data.stats.completedDonations}</span>
+                <span className={styles.statLbl}>{'Completed donations'}</span>
               </div>
               <div className={styles.statDivider} />
               <div className={styles.statItem}>
                 <span className={styles.statVal}>{data.stats.fulfilledCount}</span>
-                <span className={styles.statLbl}>{t('livesSaved')}</span>
+                <span className={styles.statLbl}>{'Requests fulfilled'}</span>
               </div>
             </div>
           )}

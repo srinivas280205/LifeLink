@@ -1,253 +1,44 @@
-# 🩸 LifeLink — India's Emergency Blood Donor Network
+# LifeLink final-year project
 
-**Real-time emergency blood request broadcasting across India**
+Response-Aware Donor Coordination with Staged Radius Expansion for Emergency Blood Requests.
 
-[![Backend](https://img.shields.io/badge/Backend-Render-purple?style=flat-square&logo=render)](https://lifelink-safp.onrender.com)
-[![Frontend](https://img.shields.io/badge/Frontend-Vercel-black?style=flat-square&logo=vercel)](https://vercel.com)
-[![MongoDB](https://img.shields.io/badge/Database-MongoDB%20Atlas-green?style=flat-square&logo=mongodb)](https://mongodb.com)
-[![PWA](https://img.shields.io/badge/PWA-Ready-blue?style=flat-square)](https://web.dev/progressive-web-apps/)
+## Run locally
 
----
+Node.js 22+ is required. Dependencies are installed in this folder. From PowerShell run `./start-local.ps1`, then open http://127.0.0.1:4180/. The API uses port 3460.
 
-## What is LifeLink?
+Alternatively run `npm run dev:local` in backend and `npm run dev -- --host 127.0.0.1 --port 4180` in frontend in two terminals.
 
-LifeLink instantly connects people who need blood with available donors nearby. When someone posts an emergency blood request, all compatible donors in the area are notified in real-time via the app, push notifications, and WebSocket broadcasts — no delays, no middlemen.
+The local launcher stores data in backend/.local-db and uses a MongoDB replica set. Preserve that folder to keep local accounts and requests. backend/.env holds local secrets and must never be committed. For deployment, configure a real MongoDB replica-set URI, JWT_SECRET, ADMIN_SECRET and COORDINATION_ENABLED=true; run npm start with NODE_ENV=production. No production database was copied.
 
----
+## User workflow
 
-## ✨ Features
+Home → sign up/log in → Request blood or Donate blood. Requesters confirm the hospital map pin, blood group, urgency, units and donor target. Donors set their profile, availability and recent location, then respond to invitations. Requesters select willing donors. Alerts pause at the selected-donor target and resume on withdrawal unless manually paused. Record actual donors on completion. Cancellation and expiry stop the search.
 
-### For Donors
-- 🩸 **Real-Time Feed** — live stream of blood requests matching your blood group
-- 📡 **Instant Notifications** — push alerts the moment someone near you needs your blood type
-- 🗺️ **Donor Map** — see active requests and nearby donors on an interactive Leaflet map
-- 🏆 **Leaderboard** — ranked by donation count with achievement badges
-- 📋 **History** — track all responses and rate the donor experience
-- 🩺 **Eligibility Checker** — 10-question assessment to check if you can donate today
-- 📍 **GPS Location** — share precise coordinates for SOS proximity matching
+Units and donor target are separate. The hospital decides eligibility and compatibility. Map distance is geographic distance, not travel time. Location is updated with consent; this is not background GPS tracking. Accounts and requests are self-reported. SMS OTP, hospital QR and ML ranking are outside scope. Email password recovery is not configured.
 
-### For Requesters
-- 🚨 **Emergency Broadcast** — instantly notify all compatible donors in your district
-- 🆘 **SOS Mode** — GPS-based alert to all donors within 50 km
-- ⭐ **Rate Donors** — leave star rating + note after a fulfilled request
-- 🩸 **Blood Drive Events** — create and join local donation camps
+## Validation
 
-### Platform
-- 🌙 **Dark / Light Theme**
-- 🇮🇳 **Tamil / English** — full bilingual UI with semantically correct Tamil (not transliterations)
-- 📲 **PWA** — installable, works offline
-- 🔔 **Notification Preferences** — per-type control (blood requests, donor responded, announcements, admin messages)
-- 🛡️ **Admin Panel** — user management, broadcast monitoring, announcements, direct messages, CSV export, 14-day trend charts
-- 🔒 **Secure** — bcrypt, JWT + silent refresh, rate limiting, NoSQL injection protection
+Backend: `npm test`. Frontend: `npm run build`. Tests use an isolated database, not local user records. UI testing status is recorded in VALIDATION.md.
 
----
+The references folder contains the supplied base paper, IEEE paper and report. Their simulation numbers are simulation-only and are not production performance measurements. The implementation uses rule-based follow-up, not the base paper's ML ranking.
 
-## 🛠️ Tech Stack
+## External review demonstration
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 18 + Vite, CSS Modules |
-| Backend | Node.js + Express + Socket.io |
-| Database | MongoDB Atlas (Mongoose) |
-| Auth | JWT (7-day + silent refresh) + OTP via Fast2SMS |
-| Maps | Leaflet.js + OpenStreetMap |
-| Push | Web Push API (VAPID) |
-| Hosting | Vercel (frontend) + Render (backend) |
-| i18n | Custom context — English + Tamil (300+ keys each) |
+Run `./start-local.ps1 -Demo` when the local servers are stopped. Open http://127.0.0.1:4180/demo. If servers are already running in normal mode, stop them before choosing Demo mode; the launcher does not replace running servers.
 
----
+Demo mode uses a separate database named lifelink_exam_demo and fictional accounts. It runs the actual API, MongoDB persistence, background worker and Socket.IO updates. Normal response windows are shortened to 15 seconds (urgent 10, critical 5); radii remain 5, 10, 20 and 50 km. This is a demonstration setting, not a measured emergency response guarantee.
 
-## 📁 Project Structure
+1. Click Start new demo request.
+2. Wait without responding to show the radius expanding.
+3. Use Switch participant / Demo guide to open the next donor (about 7 km). Agree to contact sharing and choose I can help.
+4. Switch to Requester and select that donor. New alerts pause.
+5. Switch back to the selected donor and withdraw. Show search resuming.
+6. Offer help as another invited donor; select that donor as requester, record the simulated donation and complete the request. Expand the timeline.
 
-```
-LifeLink/
-├── backend/
-│   ├── models/
-│   │   ├── User.js           # profile, notifPrefs, GPS location
-│   │   ├── Broadcast.js      # request + responses + rating subdoc
-│   │   ├── Notification.js   # new_broadcast | donor_responded | announcement | admin_dm
-│   │   ├── Event.js          # blood drive events
-│   │   ├── OTP.js
-│   │   └── PushSubscription.js
-│   ├── routes/
-│   │   ├── auth.js           # signup, login, OTP, forgot password, JWT refresh
-│   │   ├── broadcast.js      # create, SOS, respond, rate, status, notifPrefs-aware
-│   │   ├── users.js          # profile, donors, availability, notif-prefs
-│   │   ├── admin.js          # full admin CRUD + announce + DM + push
-│   │   ├── events.js         # blood drive CRUD + join/leave
-│   │   ├── notifications.js
-│   │   ├── push.js           # Web Push subscribe/send helper
-│   │   ├── stats.js
-│   │   └── leaderboard.js
-│   ├── jobs/escalation.js    # auto-escalate critical requests
-│   └── server.js
-│
-└── frontend/src/
-    ├── pages/                # Landing, Login, Signup, Dashboard, MapView,
-    │                         # DonorSearch, Leaderboard, Events, History,
-    │                         # Profile, Notifications, Admin, ForgotPassword
-    ├── components/           # AppShell, OnboardingModal, EligibilityChecker,
-    │                         # OfflineBanner, ErrorBoundary, PWA install prompt
-    ├── i18n/
-    │   ├── en.js             # 300+ English strings
-    │   └── ta.js             # 300+ Tamil translations
-    ├── data/
-    │   ├── locationData.js   # 36 states/UTs + districts + Tamil name maps
-    │   └── bloodBanks.js
-    ├── context/              # ThemeContext, LanguageContext
-    └── hooks/
-        └── usePushSubscription.js
-```
+Participant buttons sign in to fictional accounts through the normal login endpoint. One role is active per browser; use another browser/private window for simultaneous roles. Cancel unfinished requests before repeating. Normal alert, commitment and login limits still apply. Demo mode is unavailable in production. Do not use seeded passwords for real accounts.
 
----
+## Normal two-device use
 
-## 🚀 Local Development
+Use `./start-local.ps1 -Lan` (without -Demo). Register separate accounts from each device on the same Wi-Fi and use the normal homepage. See MANUAL_TEST.md for the steps and HOSTING.md for Vercel/Render/Atlas configuration. There is no fixed member-count cap; this is not a claim of unlimited capacity. In normal mode the prepared-account demo is disabled.
 
-### Prerequisites
-- Node.js 18+
-- MongoDB Atlas free account (M0 tier)
-
-### Setup
-
-```bash
-git clone https://github.com/srinivas280205/LifeLink.git
-cd LifeLink
-
-cd backend && npm install
-cd ../frontend && npm install
-```
-
-Edit `backend/.env` (copy from `.env.example`):
-
-```env
-PORT=3456
-MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/lifelink
-JWT_SECRET=<run: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))">
-ADMIN_SECRET=your-admin-promote-secret
-FAST2SMS_KEY=         # leave blank → OTP prints to console in dev mode
-VAPID_PUBLIC_KEY=     # generate below
-VAPID_PRIVATE_KEY=    # generate below
-VAPID_MAILTO=you@email.com
-```
-
-Generate VAPID keys:
-```bash
-node -e "const wp=require('web-push'); const k=wp.generateVAPIDKeys(); console.log(JSON.stringify(k,null,2))"
-```
-
-### Run
-
-```bash
-# Terminal 1
-cd backend && npm start        # → http://localhost:3456
-
-# Terminal 2
-cd frontend && npm run dev     # → http://localhost:5173
-```
-
-> **Dev OTP:** Without a Fast2SMS key, OTPs print to the backend console — no SMS needed for local testing.
-
----
-
-## 🌐 Production Deployment
-
-### Backend → Render.com
-
-1. New Web Service → GitHub repo → Root: `backend`
-2. Build: `npm install` | Start: `node server.js` | Health check: `/`
-3. Add all env vars from `.env` in Render dashboard
-
-### Frontend → Vercel
-
-1. New Project → GitHub repo → Root: `frontend`
-2. Build: `npm run build` | Output: `dist`
-3. Add env var: `VITE_API_URL=https://your-backend.onrender.com`
-
-### Promote First Admin
-
-```bash
-curl -X POST https://your-backend.onrender.com/api/admin/promote \
-  -H "Content-Type: application/json" \
-  -d '{"phone": "+91XXXXXXXXXX", "secret": "YOUR_ADMIN_SECRET"}'
-```
-
----
-
-## 🩸 Blood Group Compatibility
-
-| Needs | Compatible Donors |
-|---|---|
-| A+ | A+, A−, O+, O− |
-| A− | A−, O− |
-| B+ | B+, B−, O+, O− |
-| B− | B−, O− |
-| AB+ | All (universal recipient) |
-| AB− | A−, B−, AB−, O− |
-| O+ | O+, O− |
-| O− | O− (universal donor) |
-
----
-
-## 🔒 Security
-
-| Feature | Detail |
-|---|---|
-| Passwords | bcryptjs hash |
-| JWT | 7-day expiry + client-side silent refresh within 24h window |
-| OTP | 5-minute expiry, max 3 attempts |
-| Rate limits | Auth: 20 req/15min · API: 200 req/15min |
-| Headers | Helmet middleware |
-| Injection | mongoSanitize on all inputs |
-| Payload | 50 KB max JSON body |
-| Banned users | Blocked at every login check |
-
----
-
-## 📊 Admin Panel Capabilities
-
-- Live platform stats (users, broadcasts, fulfillment rate, SOS count)
-- 14-day trend charts (signups + broadcasts)
-- User search, view, verify, ban/unban, promote to admin
-- Export all users as CSV
-- View and cancel/delete any broadcast
-- Manage blood drive events
-- Send platform-wide announcements (push + real-time + notification)
-- Send direct messages to specific users
-
----
-
-## 📞 OTP Providers (Free Testing)
-
-| Provider | Free | Notes |
-|---|---|---|
-| **Dev mode** | Unlimited | OTP in console — no key needed |
-| **Fast2SMS** | ₹50 credit (~150 OTPs) | Already integrated |
-| **MSG91** | 500 OTPs on signup | India |
-| **Twilio** | $15 trial | Global |
-
----
-
-## 📱 PWA
-
-- Install to home screen on Android & iOS
-- Offline shell cached via service worker
-- Real-time device push notifications (even when app closed)
-
----
-
-## 🏅 Donor Achievements
-
-| Badge | Unlock |
-|---|---|
-| 🩸 First Drop | Respond to 1 request |
-| ✅ Life Saver | Have a request fulfilled |
-| 🌟 Active Donor | 5 donations |
-| 🦸 Hero | 10 donations |
-| 🏆 Legend | 20 donations |
-| 🆘 SOS Veteran | Send an SOS alert |
-
----
-
-## 📄 License
-
-MIT © 2026 LifeLink — Built to save lives.
+Latest validation: 21 backend tests passed, frontend build passed, and a three-new-member flow passed through the LAN URL with authenticated private live updates. Public deployment and physical phone testing remain separate checks.

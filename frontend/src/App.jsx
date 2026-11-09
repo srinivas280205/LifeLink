@@ -1,5 +1,10 @@
+import Demo from './pages/Demo';
+import DemoBanner from './components/DemoBanner';
+import Coordination from './pages/Coordination';
+import BackNavigation from './components/BackNavigation';
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { rememberDestination } from './config/authDestination';
 import API_BASE from './config/api.js';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -9,8 +14,8 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import MapView from './pages/MapView';
-import Profile from './pages/Profile';
-import DonorSearch from './pages/DonorSearch';
+import Profile from './pages/EssentialProfile';
+import DonorSearch from './pages/EssentialBanks';
 import History from './pages/History';
 import Admin from './pages/Admin';
 import Leaderboard from './pages/Leaderboard';
@@ -58,6 +63,8 @@ function useTokenRefresh() {
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
+  const location=useLocation();
+  if(!token) rememberDestination(location.pathname + location.search);
   return token ? children : <Navigate to="/login" replace />;
 }
 
@@ -71,14 +78,18 @@ function AnimatedRoutes() {
   return (
     <PageFade key={location.pathname}>
       <Routes>
-        <Route path="/"          element={<PublicRoute><Landing /></PublicRoute>} />
+        <Route path="/demo" element={<Demo />} />
+        <Route path="/"          element={<Landing />} />
         <Route path="/login"     element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/signup"    element={<PublicRoute><Signup /></PublicRoute>} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/dashboard" element={<PrivateRoute><Coordination /></PrivateRoute>} />
+        <Route path="/request" element={<PrivateRoute><Coordination /></PrivateRoute>} />
+        <Route path="/donate" element={<PrivateRoute><Coordination /></PrivateRoute>} />
+        <Route path="/coordination" element={<PrivateRoute><Coordination /></PrivateRoute>} />
         <Route path="/map"       element={<PrivateRoute><MapView /></PrivateRoute>} />
         <Route path="/profile"   element={<PrivateRoute><Profile /></PrivateRoute>} />
         <Route path="/search"    element={<PrivateRoute><DonorSearch /></PrivateRoute>} />
-        <Route path="/history"   element={<PrivateRoute><History /></PrivateRoute>} />
+        <Route path="/history"   element={<PrivateRoute><Coordination /></PrivateRoute>} />
         <Route path="/admin"     element={<PrivateRoute><Admin /></PrivateRoute>} />
         <Route path="/leaderboard"   element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><Notifications /></PrivateRoute>} />
@@ -108,13 +119,15 @@ export default function App() {
     <ErrorBoundary>
     <ThemeProvider>
     <LanguageProvider>
-      <InstallPrompt />
       <OfflineBanner />
       <SplashGate>
         <BrowserRouter>
+          <DemoBanner />
+          <BackNavigation />
           <AnimatedRoutes />
         </BrowserRouter>
       </SplashGate>
+      <InstallPrompt />
     </LanguageProvider>
     </ThemeProvider>
     </ErrorBoundary>
