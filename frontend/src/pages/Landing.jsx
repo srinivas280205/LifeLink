@@ -62,7 +62,8 @@ export default function Landing() {
             <button className={styles.themeBtn} onClick={toggle} title={lang === 'ta' ? 'ஒளி / இருள் தோற்றம்' : 'Light / dark mode'}>
               {theme === 'light' ? '🌙' : '☀️'}
             </button>
-            {signedIn ? <Link to="/history" className={styles.signupBtn}>{lang === 'ta' ? 'எனது கோரிக்கைகள்' : 'My requests'}</Link> : <><Link to="/login" className={styles.loginBtn}>{t('logIn')}</Link><Link to="/signup" className={styles.signupBtn}>{t('signUpFree')}</Link></>}
+            <Link to="/login" className={styles.loginBtn}>{t('logIn')}</Link>
+            <Link to="/signup" className={styles.signupBtn}>{lang === 'ta' ? 'பதிவு செய்' : 'Sign Up'}</Link>
           </div>
         </div>
       </nav>
