@@ -28,3 +28,10 @@ Not verified for release: deployment, real phones and GPS accuracy, external map
 - Normal mode (demo disabled): three new synthetic members registered through the LAN frontend proxy. Two authenticated WebSocket clients connected. Actual worker invitations, willingness, selected-target pause, withdrawal/resume, replacement and completion passed. Fifteen private update events observed; one simulated donation recorded. Test donors made unavailable afterwards.
 - LAN URL responded from the host at http://192.168.1.141:4180/. Physical phone connectivity still needs user verification; no firewall settings were changed.
 - Deployment configuration prepared; Vercel/Render/Atlas public deployment has not been performed or verified.
+
+## Authentication routing check — 10 November 2026
+
+- Login and Signup render their forms even when a saved session exists; no automatic public-route redirect.
+- Protected pages check the saved token against the backend. Invalid sessions return to Login; connection failure shows Retry instead of opening coordination.
+- Browser verified new synthetic account registration, valid login, logout, and both auth forms with an existing session. Invalid credentials were rejected.
+- Backend suite: 21 passed. Frontend production build passed. These are local checks; public Render/Atlas connectivity remains a separate deployment check.
