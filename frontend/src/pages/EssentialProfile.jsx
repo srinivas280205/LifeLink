@@ -1,3 +1,4 @@
+import {BLOOD_GROUPS} from '../config/bloodGroups';
 import { useEffect, useState } from 'react';
 import EssentialShell from '../components/EssentialShell';
 import { useLanguage } from '../context/LanguageContext';
@@ -18,7 +19,7 @@ export default function EssentialProfile() {
     {profile&&<form onSubmit={save} className={styles.card}><fieldset disabled={busy} style={{border:0,padding:0}}><div className={styles.fields}>
       <label>{tr('Name')}<input required maxLength={100} value={profile.fullName||''} onChange={e=>field('fullName',e.target.value)}/></label>
       <label>{tr('Phone')}<input readOnly value={profile.phone||''}/></label>
-      <label>{tr('Blood group')}<select required value={profile.bloodGroup||''} onChange={e=>field('bloodGroup',e.target.value)}><option value="">{tr('Choose group')}</option>{['A+','A-','B+','B-','AB+','AB-','O+','O-','A1+','A1-','A2+','A2-','A1B+','A1B-','A2B+','A2B-','Bombay (hh)','Oh+','Oh-'].map(g=><option key={g}>{g}</option>)}</select></label>
+      <label>{tr('Blood group')}<select required value={profile.bloodGroup||''} onChange={e=>field('bloodGroup',e.target.value)}><option value="">{tr('Choose group')}</option>{BLOOD_GROUPS.map(g=><option key={g}>{g}</option>)}</select></label>
       <label>{tr('District')}<input required maxLength={100} value={profile.district||''} onChange={e=>field('district',e.target.value)}/></label></div>
       <label className={styles.check}><input type="checkbox" checked={!!profile.isAvailable} onChange={e=>field('isAvailable',e.target.checked)}/>{tr('Available to donate')}</label>
       <p>{tr('Your phone number is shown only after selection.')}</p><button type="submit">{tr('Save')}</button></fieldset></form>}

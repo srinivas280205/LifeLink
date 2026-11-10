@@ -29,7 +29,7 @@ const { router: pushRoutes } = require('./routes/push');
 const verifyRoutes = require('./routes/verify');
 const { startEscalationJob } = require('./jobs/escalation');
 
-const coordinationEnabled = process.env.COORDINATION_ENABLED === 'true';
+const coordinationEnabled = process.env.COORDINATION_ENABLED !== 'false';
 const app = express();
 const server = http.createServer(app);
 

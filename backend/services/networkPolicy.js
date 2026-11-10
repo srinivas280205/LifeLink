@@ -10,7 +10,8 @@ function clientKey(req) {
 }
 function corsOptions(env = process.env) {
   const origins = (env.FRONTEND_ORIGINS || '').split(',').map(x => x.trim().replace(/\/$/, '')).filter(Boolean);
-  if (env.NODE_ENV === 'production' && !origins.length) throw new Error('FRONTEND_ORIGINS is required in production');
+  // Safe default for this app's existing public frontend; custom domains use FRONTEND_ORIGINS.
+  if (env.NODE_ENV === 'production' && !origins.length) origins.push('https://life-link-liart.vercel.app');
   return { origin(origin, callback) {
     callback(null, !origin || origins.includes(origin) || (env.NODE_ENV !== 'production' && !origins.length));
   }, methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'] };

@@ -12,6 +12,8 @@ const API = API_BASE;
 export default function Landing() {
   const { theme, toggle } = useTheme();
   const signedIn = Boolean(localStorage.getItem('token'));
+  let memberName = '';
+  try { memberName = JSON.parse(localStorage.getItem('user') || '{}').fullName || ''; } catch {}
   const donorDestination = '/donate';
   const requestDestination = '/request';
   const { t, lang, toggle: toggleLang } = useLanguage();
@@ -68,6 +70,10 @@ export default function Landing() {
         </div>
       </nav>
 
+      {signedIn && <div role="status" style={{padding:'14px 24px',textAlign:'center',background:'var(--card-bg)',color:'var(--text)'}}>
+        {lang === 'ta' ? 'உள்நுழைந்துள்ளீர்கள்' : 'You are signed in'}{memberName ? `: ${memberName}` : ''}{' · '}
+        <Link to="/history" style={{fontWeight:700,color:'var(--text)'}}>{lang === 'ta' ? 'தொடரவும்' : 'Continue to your account'}</Link>
+      </div>}
       {/* Hero */}
       <section className={styles.hero}>
         <div className={styles.heroInner}>

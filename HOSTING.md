@@ -21,3 +21,6 @@ Normal wait is 300 seconds, urgent 120, critical 45; worker checks every 5 secon
 Real-time updates require an open connected page. Closed-phone/background push is not a release-tested feature. A sleeping Render service cannot run the escalation worker while asleep. Free services sleep after inactivity; use an always-running service for uninterrupted coordination. Do not claim 24/7 operation from an untested free deployment.
 
 References: https://render.com/docs/free and https://vercel.com/docs/frameworks/frontend/vite
+
+### Existing LifeLink deployment defaults
+If FRONTEND_ORIGINS is unset in production, the backend allows only https://life-link-liart.vercel.app. Set FRONTEND_ORIGINS explicitly when using another domain. Coordination is enabled unless COORDINATION_ENABLED=false. No database URI or secrets are embedded in source.

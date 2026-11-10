@@ -159,11 +159,11 @@ Run `./start-local.ps1 -Demo`, then open `/demo`. Fictional accounts use a separ
 | Backend | Render | Root `backend`; build `npm ci`; start `npm start`; health check `/health` |
 | Database | MongoDB Atlas | Dedicated database and replica-set connection through `MONGO_URI` |
 
-Production requires `NODE_ENV=production`, `COORDINATION_ENABLED=true`, signing/admin secrets and `FRONTEND_ORIGINS` set to the exact frontend origin. Production refuses temporary database fallback. Follow [HOSTING.md](HOSTING.md). Continuous escalation needs a running backend; a sleeping service cannot evaluate requests while asleep.
+Production requires `NODE_ENV=production`, `COORDINATION_ENABLED=true`, signing/admin secrets and `FRONTEND_ORIGINS` for a custom frontend origin. If unset, production allows only the existing LifeLink Vercel origin (`https://life-link-liart.vercel.app`). Production refuses temporary database fallback. Follow [HOSTING.md](HOSTING.md). Continuous escalation needs a running backend; a sleeping service cannot evaluate requests while asleep.
 
 ## ✅ Validation
 
-- **21 backend tests passed** and the frontend production build passed.
+- **22 backend tests passed** and the frontend production build passed.
 - Three new synthetic accounts verified signup, invitations, private live updates, selection, withdrawal recovery and completion.
 - Local persistence was checked across a backend restart.
 - **Public end-to-end deployment and physical phone testing are not yet verified.** Details: [VALIDATION.md](VALIDATION.md).

@@ -3,6 +3,7 @@ const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
 
 const User     = require('../models/User');
+const {normalizePhone, phoneCandidates} = require('../services/loginIdentity');
 
 
 const router = express.Router();
@@ -10,7 +11,9 @@ const router = express.Router();
 // ── POST /api/auth/signup ─────────────────────────────────────────────────────
 router.post('/signup', async (req, res) => {
   try {
-    const { fullName, phone, password, gender, bloodGroup, country, state, district, dob, email } = req.body;
+    const { fullName, password, gender, bloodGroup, country, state, district, dob } = req.body;
+    const phone = normalizePhone(req.body.phone);
+    const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : req.body.email;
 
     if (!fullName || !phone || !password) {
       return res.status(400).json({ message: 'Name, phone and password are required' });
@@ -33,7 +36,7 @@ router.post('/signup', async (req, res) => {
     if (typeof fullName !== 'string' || typeof phone !== 'string' || typeof password !== 'string' || password.length < 8 || password.length > 128) return res.status(400).json({message:'Enter a name, phone and password of 8–128 characters'});
     if (email && (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return res.status(400).json({message:'Enter a valid email address'});
     if (email && await User.exists({email:email.trim().toLowerCase()})) return res.status(409).json({message:'Email is already registered'});
-    const existing = await User.findOne({ phone });
+    const existing = await User.findOne({ phone: {$in: phoneCandidates(phone)} });
     if (existing) {
       return res.status(409).json({ message: 'Phone number already registered' });
     }
@@ -101,7 +104,7 @@ router.post('/login', async (req, res) => {
     }
 
     const value = identifier.trim();
-    const candidates = await User.find(value.includes('@') ? {email:value.toLowerCase()} : {phone:{$in:[value, ...( /^\d{10}$/.test(value) ? ['+91'+value] : [])]}}).limit(2);
+    const candidates = await User.find(value.includes('@') ? {email:value.toLowerCase()} : {phone:{$in:phoneCandidates(value)}}).limit(2);
     const user = candidates.length === 1 ? candidates[0] : null;
     if (!user) {
       return res.status(401).json({ message: 'Invalid login or password' });

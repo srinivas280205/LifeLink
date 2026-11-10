@@ -35,3 +35,13 @@ Not verified for release: deployment, real phones and GPS accuracy, external map
 - Protected pages check the saved token against the backend. Invalid sessions return to Login; connection failure shows Retry instead of opening coordination.
 - Browser verified new synthetic account registration, valid login, logout, and both auth forms with an existing session. Invalid credentials were rejected.
 - Backend suite: 21 passed. Frontend production build passed. These are local checks; public Render/Atlas connectivity remains a separate deployment check.
+
+## Account and deployment regression checks — 11 November 2026
+
+- 22 isolated backend tests passed; frontend production build passed.
+- New signup/login regression verifies email case, phone country-code/spacing variants, password validation, profile access and duplicate-phone rejection.
+- Signup, Profile and Request Blood now share the existing full supported blood-group list.
+- Home retains the session and displays a signed-in indicator with a Continue link.
+- Missing FRONTEND_ORIGINS no longer crashes this deployment: production defaults to the exact existing LifeLink Vercel origin and still rejects other origins. Explicit configuration overrides that default.
+- Coordination is enabled by default; COORDINATION_ENABLED=false still disables it.
+- Public runtime verification remains pending until the new backend deployment is running; the previous public backend returned 404 for /health and /api/demo.

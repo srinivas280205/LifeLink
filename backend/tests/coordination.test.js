@@ -279,3 +279,25 @@ test('rankings and personal achievements count completed donors, not willing or 
     assert.equal((await fetch(`${base}/users/mystats`, { headers: { Authorization: `Bearer ${reset}` } })).status, 401);
   } finally { await new Promise(resolve => server.close(resolve)); }
 });
+
+test('signup credentials work with email case and supported phone formats; wrong passwords fail', async () => {
+ const express = require('express');
+ process.env.JWT_SECRET = 'signup-regression-test-only';
+ const app=express(); app.use(express.json()); app.use('/auth',require('../routes/auth')); app.use('/users',require('../routes/users'));
+ const server=app.listen(0,'127.0.0.1'); await new Promise(resolve=>server.once('listening',resolve));
+ const base=`http://127.0.0.1:${server.address().port}`;
+ const post=(path,data)=>fetch(base+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+ try {
+  const registered=await post('/auth/signup',{fullName:'Synthetic Signup Test',email:' Example@Test.invalid ',phone:'+91 98765 43210',password:'TestOnly!2026',bloodGroup:'A2B-'});
+  assert.equal(registered.status,201); const account=await registered.json();
+  for(const identifier of ['EXAMPLE@TEST.INVALID','9876543210','+91 98765 43210','919876543210']) {
+   const response=await post('/auth/login',{identifier,password:'TestOnly!2026'});
+   assert.equal(response.status,200,identifier); const login=await response.json();
+   assert.equal(login.user.id,account.user.id);
+   const me=await fetch(base+'/users/me',{headers:{Authorization:'Bearer '+login.token}});
+   assert.equal(me.status,200); assert.equal((await me.json()).bloodGroup,'A2B-');
+  }
+  assert.equal((await post('/auth/login',{identifier:'example@test.invalid',password:'wrong-password'})).status,401);
+  assert.equal((await post('/auth/signup',{fullName:'Duplicate',phone:'9876543210',password:'TestOnly!2026'})).status,409);
+ } finally { await new Promise(resolve=>server.close(resolve)); }
+});
