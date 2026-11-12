@@ -29,7 +29,10 @@ export default function PrivateRoute({children}) {
         if (!response.ok) throw new Error('Server unavailable');
         const user = await response.json();
         if (!user?._id) throw new Error('Invalid session response');
-        if (active) setState('valid');
+        if (active) {
+          localStorage.setItem('user', JSON.stringify(user));
+          setState('valid');
+        }
       })
       .catch(() => { if (active) setState('offline'); })
       .finally(() => clearTimeout(timeout));
